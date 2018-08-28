@@ -1,7 +1,7 @@
 import _dart from './_common';
 import {DartString} from "./string";
 import {mixin} from "./utils";
-import {UnsupportedError as DartUnsupportedError, ConcurrentModificationError as DartConcurrentModificationError} from "./errors";
+import {UnsupportedError as DartUnsupportedError, ConcurrentModificationError as DartConcurrentModificationError, RangeError as DartRangeError} from "./errors";
 import {DartObject, int, OPERATOR_INDEX_ASSIGN, OPERATOR_INDEX} from "./core";
 
 
@@ -851,7 +851,7 @@ abstract class DartIterable<E> implements Iterable<E> {
             }
         }
         if (foundMatching) return result;
-        throw DartterableElementError.noElement();
+        throw DartIterableElementError.noElement();
     }
 
     /**
@@ -1087,7 +1087,7 @@ abstract class DartListIterable<E> extends DartEfficientLengthIterable<E> {
         if (length == 0) throw DartIterableElementError.noElement();
         let value: E = this.elementAt(0);
         for (let i = 1; i < length; i++) {
-            value = combine(value, elementAt(i));
+            value = combine(value, this.elementAt(i));
             if (length != this.length) {
                 throw new DartConcurrentModificationError(this);
             }

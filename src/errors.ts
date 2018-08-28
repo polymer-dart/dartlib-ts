@@ -38,7 +38,7 @@ export class UnsupportedError extends DartError {
     }
 
     toString(): string {
-        return `Unsupported operation: $message`;
+        return `Unsupported operation: ${this.message}`;
     }
 }
 
@@ -73,7 +73,7 @@ export class ConcurrentModificationError extends DartError {
  * Error thrown when a function is passed an unacceptable argument.
  */
 @DartClass
-class ArgumentError extends DartError {
+export class ArgumentError extends DartError {
     /** Whether value was provided. */
     _hasValue: boolean;
     /** The invalid value. */
@@ -149,7 +149,7 @@ class ArgumentError extends DartError {
     toString(): string {
         let nameString = "";
         if (this.name != null) {
-            nameString = ` ($name)`;
+            nameString = ` (${name})`;
         }
         let message = (this.message == null) ? "" : `: ${this.message}`;
         let prefix = `${this._errorName}${nameString}${this.message}`;
@@ -166,7 +166,7 @@ class ArgumentError extends DartError {
  * Error thrown due to an index being outside a valid range.
  */
 @DartClass
-class RangeError extends ArgumentError {
+export class RangeError extends ArgumentError {
     protected _start: num;
     protected _end: num;
 
@@ -379,7 +379,7 @@ class RangeError extends ArgumentError {
  * and the invalid index itself.
  */
 @DartClass
-class IndexError extends RangeError {
+export class IndexError extends RangeError {
     /** The indexable object that [invalidValue] was not a valid index into. */
     indexable: any;
     /** The length of [indexable] at the time of the error. */
@@ -410,8 +410,14 @@ class IndexError extends RangeError {
         return 0;
     }
 
+    set start(v: int) {
+    }
+
     get end(): int {
         return this.length - 1;
+    }
+
+    set end(v: int) {
     }
 
     protected get _errorName(): string {
@@ -425,6 +431,6 @@ class IndexError extends RangeError {
         if (this.length == 0) {
             return ": no indices are valid";
         }
-        return ": index should be less than $length";
+        return `: index should be less than ${length}`;
     }
 }

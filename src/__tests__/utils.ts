@@ -1,5 +1,4 @@
 import {mixin, DartClass, defaultConstructor, namedConstructor, DartConstructor} from "../utils"
-import {UnsupportedError} from "../errors";
 
 describe("Utils", () => {
     it('mixes classes', () => {
