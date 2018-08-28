@@ -12,6 +12,8 @@ import {DartObject, int, OPERATOR_INDEX_ASSIGN, OPERATOR_INDEX} from "./core";
 import {DartComparator} from "./core/comparable";
 import {DartStringBuffer} from "./core/string_buffer";
 import {DartRandom} from "./math/random";
+import {DartMap} from "./core/map";
+import {DartSet} from "./core/set";
 
 
 /**
@@ -917,7 +919,7 @@ export abstract class DartIterable<E> implements Iterable<E> {
  * Marker interface for [Iterable] subclasses that have an efficient
  * [length] implementation.
  */
-abstract class DartEfficientLengthIterable<T> extends DartIterable<T> {
+export abstract class DartEfficientLengthIterable<T> extends DartIterable<T> {
     /**
      * Returns the number of elements in the iterable.
      *
@@ -1248,7 +1250,6 @@ class DartListMapView<E> implements DartMap<int, E> {
     }
 
     /** This operation is not supported by an unmodifiable map. */
-
     putIfAbsent(key: int, ifAbsent: () => E): E {
         throw new DartUnsupportedError("Cannot modify an unmodifiable map");
     }
@@ -2390,7 +2391,7 @@ class DartTakeIterable<E> extends DartIterable<E> {
         if (!_dart.is(takeCount, 'int') || takeCount < 0) {
             throw new DartArgumentError(takeCount);
         }
-        if (_dart.is(iterable, DartEfficientLengthIterable){
+        if (_dart.is(iterable, DartEfficientLengthIterable)){
             return new DartEfficientLengthTakeIterable<E>(iterable, takeCount);
         }
         return new DartTakeIterable<E>(iterable, takeCount);
@@ -2770,7 +2771,7 @@ class DartEmptyIterable<E> extends DartEfficientLengthIterable<E> {
 
 
     toSet(): DartSet<E> {
-        return new Set<E>();
+        return new DartSet<E>();
     }
 
 }
@@ -2902,7 +2903,7 @@ interface DartBidirectionalIterator<E> extends DartIterator<E> {
  * [Iteration](http://www.dartlang.org/docs/dart-up-and-running/contents/ch03.html#iteration)
  * in the [library tour](http://www.dartlang.org/docs/dart-up-and-running/contents/ch03.html)
  */
-interface DartIterator<E> extends Iterator<E> {
+export interface DartIterator<E> extends Iterator<E> {
     /**
      * Moves to the next element.
      *
