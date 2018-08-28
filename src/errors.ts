@@ -81,7 +81,7 @@ export class ArgumentError extends DartError {
     /** Name of the invalid argument, if available. */
     name: string;
     /** Message describing the problem. */
-    message: string;
+    message: any;
 
     /**
      * The [message] describes the erroneous argument.
@@ -91,13 +91,13 @@ export class ArgumentError extends DartError {
      * of a message.
      */
     @defaultConstructor
-    protected ArgumentError(message?: string) {
+    protected ArgumentError(message?: any) {
         this.message = message;
         this.invalidValue = null;
         this.name = null;
     }
 
-    constructor(message?: string) {
+    constructor(message?: any) {
         super();
     }
 
@@ -432,5 +432,30 @@ export class IndexError extends RangeError {
             return ": no indices are valid";
         }
         return `: index should be less than ${length}`;
+    }
+}
+
+
+/**
+ * The operation was not allowed by the current state of the object.
+ *
+ * This is a generic error used for a variety of different erroneous
+ * actions. The message should be descriptive.
+ */
+@DartClass
+export class StateError extends DartError {
+    message: string;
+
+    @defaultConstructor
+    protected StateError(message: string) {
+        this.message = message;
+    }
+
+    constructor(message: string) {
+        super();
+    }
+
+    toString(): string {
+        return `Bad state: ${this.message}`;
     }
 }

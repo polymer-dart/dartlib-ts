@@ -1,8 +1,17 @@
 import _dart from './_common';
 import {DartString} from "./string";
-import {mixin} from "./utils";
-import {UnsupportedError as DartUnsupportedError, ConcurrentModificationError as DartConcurrentModificationError, RangeError as DartRangeError} from "./errors";
+import {DartClass, defaultConstructor, defaultFactory, mixin, namedConstructor, namedFactory, NamedFactory} from "./utils";
+import {
+    UnsupportedError as DartUnsupportedError,
+    ConcurrentModificationError as DartConcurrentModificationError,
+    RangeError as DartRangeError,
+    StateError as DartStateError,
+    ArgumentError as DartArgumentError
+} from "./errors";
 import {DartObject, int, OPERATOR_INDEX_ASSIGN, OPERATOR_INDEX} from "./core";
+import {DartComparator} from "./core/comparable";
+import {DartStringBuffer} from "./core/string_buffer";
+import {DartRandom} from "./math/random";
 
 
 /**
@@ -314,7 +323,8 @@ abstract class FixedLengthListBase<E> extends mixin(DartFixedLengthListMixin, Li
  * argument function on every iteration, so those functions should also not
  * have side effects.
  */
-abstract class DartIterable<E> implements Iterable<E> {
+@DartClass
+export abstract class DartIterable<E> implements Iterable<E> {
     /**
      * A Dart Iterable is also a JS iterable and can be used in for loop syntax
      */
@@ -322,10 +332,6 @@ abstract class DartIterable<E> implements Iterable<E> {
         return this.iterator;
     }
 
-
-    constructor() {
-
-    }
 
     /**
      * Creates an `Iterable` which generates its elements dynamically.
@@ -342,12 +348,16 @@ abstract class DartIterable<E> implements Iterable<E> {
      * As an `Iterable`, `new Iterable.generate(n, generator))` is equivalent to
      * `const [0, ..., n - 1].map(generator)`.
      */
-    static generate<E>(count: int, generator?: (index: int) => E): DartIterable<E> {
+
+    @NamedFactory('generate')
+    protected static _generate<E>(count: int, generator?: (index: int) => E): DartIterable<E> {
         if (count <= 0)
             return new DartEmptyIterable<E>();
 
         return new _GeneratorIterable<E>(count, generator);
     }
+
+    static generate: new<E> (count: int, generator?: (index: int) => E) => DartIterable<E>;
 
     /**
      * Creates an empty iterable.
@@ -355,9 +365,13 @@ abstract class DartIterable<E> implements Iterable<E> {
      * The empty iterable has no elements, and iterating it always stops
      * immediately.
      */
-    static empty<E>() {
+
+    @NamedFactory('empty')
+    protected static _empty<E>() {
         return new DartEmptyIterable<E>();
     }
+
+    static empty: new<E>() => DartIterable<E>;
 
     /**
      * Returns a new `Iterator` that allows iterating the elements of this
@@ -570,7 +584,7 @@ abstract class DartIterable<E> implements Iterable<E> {
         separator = separator || "";
         let iterator: DartIterator<E> = this.iterator;
         if (!iterator.moveNext()) return "";
-        let buffer: StringBuffer = new StringBuffer();
+        let buffer: DartStringBuffer = new DartStringBuffer();
         if (separator == null || separator == "") {
             do {
                 buffer.write("${iterator.current}");
@@ -607,7 +621,7 @@ abstract class DartIterable<E> implements Iterable<E> {
      */
     toList(_?: { growable?: boolean  /* : true*/ }): DartList<E> {
         let {growable} = Object.assign({growable: true}, _);
-        return DartList.from(this, {
+        return new DartList.from(this, {
             growable: growable
         });
     }
@@ -622,7 +636,7 @@ abstract class DartIterable<E> implements Iterable<E> {
      * as for the iterable.
      */
     toSet(): DartSet<E> {
-        return DartSet.from<E>(this);
+        return new DartSet.from<E>(this);
     }
 
 
@@ -1063,7 +1077,7 @@ abstract class DartListIterable<E> extends DartEfficientLengthIterable<E> {
             }
             return buffer.toString();
         } else {
-            let buffer: StringBuffer = new StringBuffer();
+            let buffer: DartStringBuffer = new DartStringBuffer();
             for (let i = 0; i < length; i++) {
                 buffer.write(this.elementAt(i));
                 if (length != this.length) {
@@ -1107,7 +1121,7 @@ abstract class DartListIterable<E> extends DartEfficientLengthIterable<E> {
         return value;
     }
 
-    skip(count: int): Iterable<E> {
+    skip(count: int): DartIterable<E> {
         return new DartSubListIterable<E>(this, count, null);
     }
 
@@ -1127,10 +1141,10 @@ abstract class DartListIterable<E> extends DartEfficientLengthIterable<E> {
         let {growable} = Object.assign({growable: true}, _);
         let result: DartList<E>;
         if (growable) {
-            result = DartList.create<E>();
+            result = new DartList<E>();
             result.length = length;
         } else {
-            result = DartList.create<E>(length);
+            result = new DartList<E>(length);
         }
         for (let i = 0; i < length; i++) {
             result[i] = this.elementAt(i);
@@ -1198,7 +1212,7 @@ class DartListMapView<E> implements DartMap<int, E> {
     }
 
     get keys(): DartIterable<int> {
-        return new _ListIndicesIterable(_values);
+        return new _ListIndicesIterable(this._values);
     }
 
     get isEmpty(): boolean {
@@ -1429,7 +1443,8 @@ interface DartListConstructor {
  * directly or through iterating an [Iterable] that is backed by the list, will
  * break the iteration.
  */
-abstract class DartList<E> implements DartEfficientLengthIterable<E> {
+@DartClass
+export class DartList<E> implements DartEfficientLengthIterable<E> {
 
     [Symbol.iterator](): Iterator<E> {
         return this.iterator;
@@ -1457,8 +1472,15 @@ abstract class DartList<E> implements DartEfficientLengthIterable<E> {
      *
      * The [length] must not be negative or null, if it is provided.
      */
-    static create<E>(length?: int): DartList<E> {
-        return new _DartListJS(length);
+    @defaultFactory
+    protected static _create<E>(length?: int): DartList<E> {
+        // TODO : IMPLEMENT
+        //return new _DartListJS(length);
+        return undefined;
+    }
+
+    constructor(length?: int) {
+
     }
 
     /**
@@ -1492,10 +1514,14 @@ abstract class DartList<E> implements DartEfficientLengthIterable<E> {
      * print(unique); // => [[499], [], []]
      * ```
      */
-    static filled<E>(length: int, fill: E, _?: { growable: boolean }): DartList<E> {
+    @namedFactory
+    protected static _filled<E>(length: int, fill: E, _?: { growable: boolean }): DartList<E> {
         let {growable} = Object.assign({growable: false}, _);
+        // TODO : IMPLEMENT EXTERNAL
         return null;
     }
+
+    static filled: new<E>(length: int, fill: E, _?: { growable: boolean }) => DartList<E>;
 
     /**
      * Creates a list containing all [elements].
@@ -1505,10 +1531,14 @@ abstract class DartList<E> implements DartEfficientLengthIterable<E> {
      * This constructor returns a growable list when [growable] is true;
      * otherwise, it returns a fixed-length list.
      */
-    static from<E>(elements: DartIterable<E>, _?: { growable: boolean }): DartList<E> {
+    @namedFactory
+    protected static _from<E>(elements: DartIterable<E>, _?: { growable: boolean }): DartList<E> {
         let {growable} = Object.assign({growable: false}, _);
+        // TODO : IMPLEMENT EXTERNAL
         return null;
     }
+
+    static from: new<E>(elements: DartIterable<E>, _?: { growable: boolean }) => DartList<E>;
 
     /**
      * Generates a list of values.
@@ -1521,21 +1551,26 @@ abstract class DartList<E> implements DartEfficientLengthIterable<E> {
      *
      * The created list is fixed-length unless [growable] is true.
      */
-    static generate<E>(length: int, generator: (index: int) => E,
-                       _?: { growable: boolean }): DartList<E> {
+
+    @namedFactory
+    protected static _generate<E>(length: int, generator: (index: int) => E,
+                                  _?: { growable: boolean }): DartList<E> {
         let {growable} = Object.assign({growable: false}, _);
         let result: DartList<E>;
         if (growable) {
-            result = DartList.create<E>(length);
+            result = new DartList<E>(length);
             result.length = length;
         } else {
-            result = DartList.create<E>(length);
+            result = new DartList<E>(length);
         }
         for (let i: int = 0; i < length; i++) {
-            result[i] = generator(i);
+            result[OPERATOR_INDEX_ASSIGN](i, generator(i));
         }
         return result;
     }
+
+    static generate: new<E>(length: int, generator: (index: int) => E,
+                            _?: { growable: boolean }) => DartList<E>;
 
     /**
      * Creates an unmodifiable list containing all [elements].
@@ -1546,10 +1581,13 @@ abstract class DartList<E> implements DartEfficientLengthIterable<E> {
      * If the elements are themselves immutable, then the resulting list
      * is also immutable.
      */
-    static unmodifiable<E>(elements: DartIterable<E>): DartList<E> {
+    @namedFactory
+    protected static _unmodifiable<E>(elements: DartIterable<E>): DartList<E> {
         // TODO
         return null;
     }
+
+    static unmodifiable: new <E>(elements: DartIterable<E>) => DartList<E>;
 
     /**
      * Returns the object at the given [index] in the list
@@ -2054,7 +2092,7 @@ class DartSubListIterable<E> extends DartListIterable<E> {
             growable ? ((_) => {
                 _.length = length;
                 return _;
-            })(DartList.create<E>()) : DartList.create<E>(length);
+            })(new DartList<E>()) : new DartList<E>(length);
         for (let i = 0; i < length; i++) {
             result[i] = this._iterable.elementAt(start + i);
             if (this._iterable.length < end) throw new DartConcurrentModificationError(this);
@@ -2101,7 +2139,7 @@ class DartListIterator<E> extends _BaseJSIterator<E> implements DartIterator<E> 
 
     moveNext(): boolean {
         let length = this._iterable.length;
-        if (length != this.length) {
+        if (length != this._length) {
             throw new DartConcurrentModificationError(this._iterable);
         }
         if (this._index >= length) {
@@ -2116,28 +2154,36 @@ class DartListIterator<E> extends _BaseJSIterator<E> implements DartIterator<E> 
 
 type  _Transformation<S, T> = (value: S) => T;
 
+@DartClass
 class DartMappedIterable<S, T> extends DartIterable<T> {
-    _iterable: DartIterable<S>;
-    _f: _Transformation<S, T>;
+    protected _iterable: DartIterable<S>;
+    protected _f: _Transformation<S, T>;
 
-    static create<S, T>(iterable: DartIterable<S>, _function: (value: S) => T) {
+    @defaultFactory
+    protected static create<S, T>(iterable: DartIterable<S>, _function: (value: S) => T): DartMappedIterable<S, T> {
         if (_dart.is(iterable, DartEfficientLengthIterable)) {
             return new DartEfficientLengthMappedIterable<S, T>(iterable, _function);
         }
-        return new DartMappedIterable<S, T>(iterable, _function);
+        return new DartMappedIterable._<S, T>(iterable, _function);
     }
 
-    constructor(_iterable: DartIterable<S>, _f: _Transformation<S, T>) {
+    constructor(iterable: DartIterable<S>, _function: (value: S) => T) {
         super();
+    }
+
+    @namedConstructor
+    _(_iterable: DartIterable<S>, _f: _Transformation<S, T>) {
         this._iterable = _iterable;
         this._f = _f;
     }
 
+    protected static _: new<S, T>(_iterable: DartIterable<S>, _f: _Transformation<S, T>) => DartMappedIterable<S, T>;
+
     get iterator(): DartIterator<T> {
-        return DartMappedIterator.create<S, T>(this._iterable.iterator, this._f);
+        return new DartMappedIterator<S, T>(this._iterable.iterator, this._f);
     }
 
-// Length related functions are independent of the mapping.
+    // Length related functions are independent of the mapping.
     get length(): int {
         return this._iterable.length;
     }
@@ -2146,7 +2192,7 @@ class DartMappedIterable<S, T> extends DartIterable<T> {
         return this._iterable.isEmpty;
     }
 
-// Index based lookup can be done before transforming.
+    // Index based lookup can be done before transforming.
     get first(): T {
         return this._f(this._iterable.first);
     }
@@ -2164,8 +2210,16 @@ class DartMappedIterable<S, T> extends DartIterable<T> {
     }
 }
 
+@DartClass
 class DartEfficientLengthMappedIterable<S, T> extends DartMappedIterable<S, T>
     implements DartEfficientLengthIterable<T> {
+
+
+    @defaultConstructor
+    protected create(_iterable: DartIterable<S>, _function: (value: S) => T) {
+        super._(_iterable, _function);
+    }
+
     constructor(_iterable: DartIterable<S>, _function: (value: S) => T) {
         super(_iterable, _function);
     }
@@ -2201,7 +2255,7 @@ class DartMappedIterator<S, T> extends _BaseJSIterator<T> implements DartIterato
  *
  * Expects efficient `length` and `elementAt` on the source iterable.
  */
-class MappedListIterable<S, T> extends DartListIterable<T> {
+class DartMappedListIterable<S, T> extends DartListIterable<T> {
     _source: DartIterable<S>;
     _f: _Transformation<S, T>;
 
@@ -2433,25 +2487,34 @@ class DartTakeWhileIterator<E> extends _BaseJSIterator<E> implements DartIterato
     }
 }
 
+@DartClass
 class DartSkipIterable<E> extends DartIterable<E> {
 
     _iterable: DartIterable<E>;
     _skipCount: int;
 
 
-    static create<E>(iterable: DartIterable<E>, count: int): DartSkipIterable<E> {
+    @defaultFactory
+    protected static create<E>(iterable: DartIterable<E>, count: int): DartSkipIterable<E> {
         if (_dart.is(iterable, DartEfficientLengthIterable)) {
-            return DartEfficientLengthSkipIterable.create<E>(iterable, count);
+            return new DartEfficientLengthSkipIterable<E>(iterable, count);
         }
-        return new DartSkipIterable<E>(iterable, _checkCount(count));
+        return new DartSkipIterable._<E>(iterable, _checkCount(count));
     }
 
-    constructor(_iterable: DartIterable<E>,
-                _skipCount: int) {
+    constructor(iterable: DartIterable<E>, count: int) {
         super();
+    }
+
+    @namedConstructor
+    protected _(_iterable: DartIterable<E>,
+                _skipCount: int) {
         this._iterable = _iterable;
         this._skipCount = _skipCount;
     }
+
+    protected static _: new<E>(_iterable: DartIterable<E>,
+                               _skipCount: int) => DartSkipIterable<E>;
 
     skip(count: int): DartIterable<E> {
         return new DartSkipIterable<E>(this._iterable, this._skipCount + _checkCount(count));
@@ -2462,17 +2525,26 @@ class DartSkipIterable<E> extends DartIterable<E> {
     }
 }
 
+@DartClass
 class DartEfficientLengthSkipIterable<E> extends DartSkipIterable<E>
     implements DartEfficientLengthIterable<E> {
 
 
-    static create<E>(iterable: DartIterable<E>, count: int): DartEfficientLengthSkipIterable<E> {
-        return new DartEfficientLengthSkipIterable<E>(iterable, _checkCount(count));
+    @defaultFactory
+    protected static create<E>(iterable: DartIterable<E>, count: int): DartEfficientLengthSkipIterable<E> {
+        return new DartEfficientLengthSkipIterable._<E>(iterable, _checkCount(count));
     }
 
     constructor(iterable: DartIterable<E>, count: int) {
-        super(iterable, count);
+        super(null, null);
     }
+
+    @namedConstructor
+    protected _(iterable: DartIterable<E>, count: int) {
+        super._(iterable, count);
+    }
+
+    protected static _: new<E>(iterable: DartIterable<E>, count: int) => DartEfficientLengthSkipIterable<E>;
 
     get length(): int {
         let length = this._iterable.length - this._skipCount;
@@ -2506,7 +2578,7 @@ class DartSkipIterator<E> implements DartIterator<E> {
 
 
     moveNext(): boolean {
-        for (let i = 0; i < _skipCount; i++)
+        for (let i = 0; i < this._skipCount; i++)
             this._iterator.moveNext();
         this._skipCount = 0;
         return this._iterator.moveNext();
@@ -2693,7 +2765,7 @@ class DartEmptyIterable<E> extends DartEfficientLengthIterable<E> {
 
     toList(_?: { growable: boolean /* : true */ }): DartList<E> {
         let {growable} = Object.assign({growable: true}, _);
-        return growable ? DartList.create() : DartList.create<E>(0);
+        return growable ? new DartList<E>() : new DartList<E>(0);
     }
 
 

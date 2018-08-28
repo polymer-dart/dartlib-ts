@@ -15,5 +15,6 @@ export type long = number;
 export type float = number;
 export type double = number;
 export type num = number;
+export type bool = boolean;
 
 export const UNINITIALIZED = Symbol('_uninitialized_');

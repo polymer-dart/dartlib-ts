@@ -77,6 +77,11 @@ export function DartConstructor(_: { default?: boolean, factory?: boolean, name?
         } else {
             let ctor;
             if (factory) {
+                if ((name === undefined || name === null) && methodName.startsWith('_')) {
+                    name = methodName.substring(1);   // remove prefix '_' from method name
+                }
+
+
                 // use that as constructor
                 ctor = function (...args: any[]) {
                     return descriptor.value.call(null, ...args);
@@ -97,8 +102,13 @@ export function DartConstructor(_: { default?: boolean, factory?: boolean, name?
 }
 
 export const defaultConstructor = DartConstructor({default: true});
-export const namedConstructor = DartConstructor({default: false});
+export const defaultFactory = DartConstructor({default: true, factory: true});
 export const NamedConstructor = (name?: string) => DartConstructor({default: false, name: name});
+export const namedConstructor = NamedConstructor();
+export const NamedFactory = (name?: string) => DartConstructor({default: false, factory: true, name: name});
+export const namedFactory = NamedFactory();
+
+
 /**
  * Replace a constructor with a delayed construction logic
  * @constructor
