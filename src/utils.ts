@@ -33,10 +33,14 @@ export function mixin<Mixin, Base>(mixin: Constructor<Mixin>, base: Constructor<
 
 const META_DATA = Symbol('META_DATA');
 
+interface ConstructorData {
+    ctor: Function,
+    factory: boolean
+}
+
 interface Metadata {
     parent?: Metadata,
-    constructors?: Map<string, Function>,
-    defaultIsFactory?: boolean
+    constructors?: Map<string, ConstructorData>
 }
 
 function getMetadata(o: any): Metadata {
@@ -55,13 +59,13 @@ function callConstructor(ctor: any, name: string, target: any, ...args: any[]) {
     }
     let m = getMetadata(ctor);
     if (m.constructors.has(name)) {
-        m.constructors.get(name).apply(target, args);
+        m.constructors.get(name).ctor.apply(target, args);
     }
 }
 
 
 export function DartConstructor(_: { default?: boolean, factory?: boolean, name?: string }): MethodDecorator {
-    let {default: isDefault, factory, name} = Object.assign({default: true, factory: false}, _);
+    let {default: isDefault, factory, name} = Object.assign({default: false, factory: false}, _);
     return (tgt: any, methodName: string, descriptor: TypedPropertyDescriptor<any>) => {
         // save it int the constructor table
 
@@ -69,19 +73,25 @@ export function DartConstructor(_: { default?: boolean, factory?: boolean, name?
         let meta = getMetadata(T);
 
         if (isDefault) {
-            meta.defaultIsFactory = factory;
-            meta.constructors.set('', descriptor.value);
+            meta.constructors.set('', {ctor: descriptor.value, factory: factory});
         } else {
-            meta.constructors.set(methodName, descriptor.value);
-
-            let ctor = function (...args: any[]) {
-                callConstructor(ctor, name || methodName, this, ...args);
-            };
+            let ctor;
+            if (factory) {
+                // use that as constructor
+                ctor = function (...args: any[]) {
+                    return descriptor.value.call(null, ...args);
+                }
+            } else {
+                ctor = function (...args: any[]) {
+                    descriptor.value.call(this, ...args);
+                }
+            }
 
             Object.setPrototypeOf(ctor, Object.getPrototypeOf(tgt.constructor));
             copyProps(tgt.constructor, ctor);
 
-            tgt.constructor[methodName] = ctor;
+            meta.constructors.set(methodName, {ctor: ctor, factory: factory});
+            T[name || methodName] = ctor;
         }
     };
 }
@@ -95,10 +105,11 @@ export const NamedConstructor = (name?: string) => DartConstructor({default: fal
  */
 export const DartClass: ClassDecorator = (target) => {
     let ctor;
-    if (getMetadata(target).defaultIsFactory) {
+    let def = getMetadata(target).constructors.get('');
+    if (def && def.factory) {
         // use that as constructor
-        ctor = function() {
-            return getMetadata(target).constructors.get('').call(null,...arguments);
+        ctor = function () {
+            return def.ctor.call(null, ...arguments);
         }
     } else {
         ctor = function (...args: any[]) {

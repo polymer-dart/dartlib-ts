@@ -304,7 +304,7 @@ describe("Utils", () => {
                 if (choose) {
                     return new Derived.named('Giovanni');
                 }
-                return new MyClass('John') as any;
+                return new MyClass('John');
             }
 
             @namedConstructor
@@ -327,6 +327,71 @@ describe("Utils", () => {
         let x = new Derived(true);
         expect(x.method()).toEqual('Ciao Giovanni');
         let y = new Derived(false);
+        expect(y.method()).toEqual('Hi John');
+        expect(Derived.staticMethod()).toEqual('STATIC');
+        expect(Derived.otherStaticMethod()).toEqual('BYE');
+    });
+
+    it('works with named factory constructors', () => {
+
+
+        @DartClass
+        class MyClass {
+            x: string;
+
+            @defaultConstructor
+            protected _default(v: string) {
+                this.x = v;
+            }
+
+            constructor(v: string) {
+            }
+
+            method(): string {
+                return `Hi ${this.x}`;
+            }
+
+            static otherStaticMethod(): string {
+                return "BYE";
+            }
+        }
+
+        @DartClass
+        class Derived extends MyClass {
+            constructor(choose: boolean) {
+                super('');
+            }
+
+            @DartConstructor({factory: true, name: 'create'})
+            protected static _create(choose: boolean) {
+                if (choose) {
+                    return new Derived.named('Giovanni');
+                }
+                return new MyClass('John');
+            }
+
+            static create: new(choose: boolean) => Derived;
+
+            @namedConstructor
+            protected named(s: string) {
+                this.x = s;
+            }
+
+            static named: new(s: string) => Derived;
+
+            method(): string {
+                return `Ciao ${this.x}`;
+            }
+
+            static staticMethod(): string {
+                return "STATIC";
+            }
+
+        }
+
+        let x = new Derived.create(true);
+        expect(x.method()).toEqual('Ciao Giovanni');
+        let y = new Derived.create(false);
         expect(y.method()).toEqual('Hi John');
         expect(Derived.staticMethod()).toEqual('STATIC');
         expect(Derived.otherStaticMethod()).toEqual('BYE');

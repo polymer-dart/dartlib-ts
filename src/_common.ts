@@ -19,8 +19,18 @@ export default {
      * @param a
      * @param b
      */
-    is: (a:any,b:any) => {
-        // TODO : should check if b is a string or if it is 'int'
-      return a instanceof b;
+    is: (a: any, b: any) => {
+        if (typeof b === 'string') {
+            if (b === 'num' || b === 'int' || b === 'float' || b === 'double') {
+                b = 'number';
+                // TODO : refine with int  checking in case of int
+            } else if (b === 'bool') {
+                b = 'boolean';
+            }
+
+            return typeof a === b;
+        }
+
+        return a instanceof b;
     }
 }
