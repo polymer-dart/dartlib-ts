@@ -1,6 +1,6 @@
 import _dart from './_common';
 import {DartString} from "./string";
-import {DartClass, defaultConstructor, defaultFactory, mixin, namedConstructor, namedFactory, NamedFactory} from "./utils";
+import {Abstract, DartClass, defaultConstructor, defaultFactory, mixin, namedConstructor, namedFactory, NamedFactory} from "./utils";
 import {
     UnsupportedError as DartUnsupportedError,
     ConcurrentModificationError as DartConcurrentModificationError,
@@ -14,7 +14,131 @@ import {DartStringBuffer} from "./core/string_buffer";
 import {DartRandom} from "./math/random";
 import {DartMap} from "./core/map";
 import {DartSet} from "./core/set";
+import {DartIterableBase} from "./core/iterable";
+import {DartListBase} from "./core/list";
+import {DartMaps} from "./core/maps";
+import {DartList} from "../core/core_patch";
 
+
+
+/**
+ * Mixin for an unmodifiable [List] class.
+ *
+ * This overrides all mutating methods with methods that throw.
+ * This mixin is intended to be mixed in on top of [ListMixin] on
+ * unmodifiable lists.
+ */
+export class DartUnmodifiableListMixin<E> {
+
+    /** This operation is not supported by an unmodifiable list. */
+    [OPERATOR_INDEX_ASSIGN](index: int, value: E) {
+        throw new DartUnsupportedError("Cannot modify an unmodifiable list");
+    }
+
+    /** This operation is not supported by an unmodifiable list. */
+    set length(newLength: int) {
+        throw new DartUnsupportedError("Cannot change the length of an unmodifiable list");
+    }
+
+    /** This operation is not supported by an unmodifiable list. */
+    setAll(at: int, iterable: DartIterable<E>): void {
+        throw new DartUnsupportedError("Cannot modify an unmodifiable list");
+    }
+
+    /** This operation is not supported by an unmodifiable list. */
+    add(value: E): void {
+        throw new DartUnsupportedError("Cannot add to an unmodifiable list");
+    }
+
+    /** This operation is not supported by an unmodifiable list. */
+    insert(index: int, element: E): void {
+        throw new DartUnsupportedError("Cannot add to an unmodifiable list");
+    }
+
+    /** This operation is not supported by an unmodifiable list. */
+    insertAll(at: int, iterable: DartIterable<E>): void {
+        throw new DartUnsupportedError("Cannot add to an unmodifiable list");
+    }
+
+    /** This operation is not supported by an unmodifiable list. */
+    addAll(iterable: DartIterable<E>): void {
+        throw new DartUnsupportedError("Cannot add to an unmodifiable list");
+    }
+
+    /** This operation is not supported by an unmodifiable list. */
+
+    remove(element: DartObject): boolean {
+        throw new DartUnsupportedError("Cannot remove from an unmodifiable list");
+    }
+
+    /** This operation is not supported by an unmodifiable list. */
+    removeWhere(test: (element: E) => boolean): void {
+        throw new DartUnsupportedError("Cannot remove from an unmodifiable list");
+    }
+
+    /** This operation is not supported by an unmodifiable list. */
+    retainWhere(test: (element: E) => boolean): void {
+        throw new DartUnsupportedError("Cannot remove from an unmodifiable list");
+    }
+
+    /** This operation is not supported by an unmodifiable list. */
+    sort(compare?: DartComparator<E>): void {
+        throw new DartUnsupportedError("Cannot modify an unmodifiable list");
+    }
+
+    /** This operation is not supported by an unmodifiable list. */
+    shuffle(random?: DartRandom): void {
+        throw new DartUnsupportedError("Cannot modify an unmodifiable list");
+    }
+
+    /** This operation is not supported by an unmodifiable list. */
+    clear(): void {
+        throw new DartUnsupportedError("Cannot clear an unmodifiable list");
+    }
+
+    /** This operation is not supported by an unmodifiable list. */
+
+    removeAt(index: int): E {
+        throw new DartUnsupportedError("Cannot remove from an unmodifiable list");
+    }
+
+    /** This operation is not supported by an unmodifiable list. */
+
+    removeLast(): E {
+        throw new DartUnsupportedError("Cannot remove from an unmodifiable list");
+    }
+
+    /** This operation is not supported by an unmodifiable list. */
+    setRange(start: int, end: int, iterable: DartIterable<E>, skipCount?: int /* = 0*/): void {
+        throw new DartUnsupportedError("Cannot modify an unmodifiable list");
+    }
+
+    /** This operation is not supported by an unmodifiable list. */
+    removeRange(start: int, end: int): void {
+        throw new DartUnsupportedError("Cannot remove from an unmodifiable list");
+    }
+
+    /** This operation is not supported by an unmodifiable list. */
+    replaceRange(start: int, end: int, iterable: DartIterable<E>): void {
+        throw new DartUnsupportedError("Cannot remove from an unmodifiable list");
+    }
+
+    /** This operation is not supported by an unmodifiable list. */
+    fillRange(start: int, end: int, fillValue?: E): void {
+        throw new DartUnsupportedError("Cannot modify an unmodifiable list");
+    }
+}
+
+
+/**
+ * Abstract implementation of an unmodifiable list.
+ *
+ * All operations are defined in terms of `length` and `operator[]`,
+ * which need to be implemented.
+ */
+
+export class DartUnmodifiableListBase<E> extends mixin(DartUnmodifiableListMixin, DartListBase) {
+}
 
 /**
  * An unmodifiable [List] view of another List.
@@ -133,120 +257,12 @@ class DartFixedLengthListMixin<E> {
 }
 
 /**
- * Mixin for an unmodifiable [List] class.
- *
- * This overrides all mutating methods with methods that throw.
- * This mixin is intended to be mixed in on top of [ListMixin] on
- * unmodifiable lists.
- */
-export class DartUnmodifiableListMixin<E> {
-
-    /** This operation is not supported by an unmodifiable list. */
-    [OPERATOR_INDEX_ASSIGN](index: int, value: E) {
-        throw new DartUnsupportedError("Cannot modify an unmodifiable list");
-    }
-
-    /** This operation is not supported by an unmodifiable list. */
-    set length(newLength: int) {
-        throw new DartUnsupportedError("Cannot change the length of an unmodifiable list");
-    }
-
-    /** This operation is not supported by an unmodifiable list. */
-    setAll(at: int, iterable: DartIterable<E>): void {
-        throw new DartUnsupportedError("Cannot modify an unmodifiable list");
-    }
-
-    /** This operation is not supported by an unmodifiable list. */
-    add(value: E): void {
-        throw new DartUnsupportedError("Cannot add to an unmodifiable list");
-    }
-
-    /** This operation is not supported by an unmodifiable list. */
-    insert(index: int, element: E): void {
-        throw new DartUnsupportedError("Cannot add to an unmodifiable list");
-    }
-
-    /** This operation is not supported by an unmodifiable list. */
-    insertAll(at: int, iterable: DartIterable<E>): void {
-        throw new DartUnsupportedError("Cannot add to an unmodifiable list");
-    }
-
-    /** This operation is not supported by an unmodifiable list. */
-    addAll(iterable: DartIterable<E>): void {
-        throw new DartUnsupportedError("Cannot add to an unmodifiable list");
-    }
-
-    /** This operation is not supported by an unmodifiable list. */
-
-    remove(element: DartObject): boolean {
-        throw new DartUnsupportedError("Cannot remove from an unmodifiable list");
-    }
-
-    /** This operation is not supported by an unmodifiable list. */
-    removeWhere(test: (element: E) => boolean): void {
-        throw new DartUnsupportedError("Cannot remove from an unmodifiable list");
-    }
-
-    /** This operation is not supported by an unmodifiable list. */
-    retainWhere(test: (element: E) => boolean): void {
-        throw new DartUnsupportedError("Cannot remove from an unmodifiable list");
-    }
-
-    /** This operation is not supported by an unmodifiable list. */
-    sort(compare?: DartComparator<E>): void {
-        throw new DartUnsupportedError("Cannot modify an unmodifiable list");
-    }
-
-    /** This operation is not supported by an unmodifiable list. */
-    shuffle(random?: DartRandom): void {
-        throw new DartUnsupportedError("Cannot modify an unmodifiable list");
-    }
-
-    /** This operation is not supported by an unmodifiable list. */
-    clear(): void {
-        throw new DartUnsupportedError("Cannot clear an unmodifiable list");
-    }
-
-    /** This operation is not supported by an unmodifiable list. */
-
-    removeAt(index: int): E {
-        throw new DartUnsupportedError("Cannot remove from an unmodifiable list");
-    }
-
-    /** This operation is not supported by an unmodifiable list. */
-
-    removeLast(): E {
-        throw new DartUnsupportedError("Cannot remove from an unmodifiable list");
-    }
-
-    /** This operation is not supported by an unmodifiable list. */
-    setRange(start: int, end: int, iterable: DartIterable<E>, skipCount?: int /* = 0*/): void {
-        throw new DartUnsupportedError("Cannot modify an unmodifiable list");
-    }
-
-    /** This operation is not supported by an unmodifiable list. */
-    removeRange(start: int, end: int): void {
-        throw new DartUnsupportedError("Cannot remove from an unmodifiable list");
-    }
-
-    /** This operation is not supported by an unmodifiable list. */
-    replaceRange(start: int, end: int, iterable: DartIterable<E>): void {
-        throw new DartUnsupportedError("Cannot remove from an unmodifiable list");
-    }
-
-    /** This operation is not supported by an unmodifiable list. */
-    fillRange(start: int, end: int, fillValue?: E): void {
-        throw new DartUnsupportedError("Cannot modify an unmodifiable list");
-    }
-}
-
-/**
  * Abstract implementation of a fixed-length list.
  *
  * All operations are defined in terms of `length`, `operator[]` and
  * `operator[]=`, which need to be implemented.
  */
-abstract class FixedLengthListBase<E> extends mixin(DartFixedLengthListMixin, ListBase) {
+export class FixedLengthListBase<E> extends mixin(DartFixedLengthListMixin, DartListBase) {
 }
 
 
@@ -326,7 +342,7 @@ abstract class FixedLengthListBase<E> extends mixin(DartFixedLengthListMixin, Li
  * have side effects.
  */
 @DartClass
-export abstract class DartIterable<E> implements Iterable<E> {
+export class DartIterable<E> implements Iterable<E> {
     /**
      * A Dart Iterable is also a JS iterable and can be used in for loop syntax
      */
@@ -403,7 +419,9 @@ export abstract class DartIterable<E> implements Iterable<E> {
      * Any *modifiable* iterable class should specify which operations will
      * break iteration.
      */
-    abstract get iterator(): DartIterator<E>;
+    get iterator(): DartIterator<E> {
+        throw new Error('abstract');
+    }
 
 
     /**
@@ -911,7 +929,7 @@ export abstract class DartIterable<E> implements Iterable<E> {
      */
 
     toString(): string {
-        return IterableBase.iterableToShortString(this, '(', ')');
+        return DartIterableBase.iterableToShortString(this, '(', ')');
     }
 }
 
@@ -926,7 +944,7 @@ export abstract class DartEfficientLengthIterable<T> extends DartIterable<T> {
      * This is an efficient operation that doesn't require iterating through
      * the elements.
      */
-    abstract get length(): int;
+    abstract get length();
 }
 
 /**
@@ -935,7 +953,7 @@ export abstract class DartEfficientLengthIterable<T> extends DartIterable<T> {
  * All other methods are implemented in terms of [length] and [elementAt],
  * including [iterator].
  */
-abstract class DartListIterable<E> extends DartEfficientLengthIterable<E> {
+export abstract class DartListIterable<E> extends DartEfficientLengthIterable<E> {
     abstract get length(): int;
 
     abstract elementAt(i: int): E;
@@ -1164,16 +1182,6 @@ abstract class DartListIterable<E> extends DartEfficientLengthIterable<E> {
 }
 
 
-/**
- * Abstract implementation of an unmodifiable list.
- *
- * All operations are defined in terms of `length` and `operator[]`,
- * which need to be implemented.
- */
-
-abstract class UnmodifiableListBase<E> extends mixin(DartUnmodifiableListMixin, ListBase) {
-}
-
 class _ListIndicesIterable extends DartListIterable<int> {
 
     _backedList: DartList<any>;
@@ -1193,7 +1201,7 @@ class _ListIndicesIterable extends DartListIterable<int> {
     }
 }
 
-class DartListMapView<E> implements DartMap<int, E> {
+export class DartListMapView<E> implements DartMap<int, E> {
     _values: DartList<E>;
 
     constructor(_values: DartList<E>) {
@@ -1276,7 +1284,7 @@ class DartListMapView<E> implements DartMap<int, E> {
     }
 }
 
-class DartReversedListIterable<E> extends DartListIterable<E> {
+export class DartReversedListIterable<E> extends DartListIterable<E> {
 
     _source: DartIterable<E>;
 
@@ -1369,7 +1377,7 @@ namespace DartNonGrowableListError {
  * conversion, at the cost of leaving the original list in an unspecified
  * state.
  */
-function makeListFixedLength<X>(growableList: DartList<X>): DartList<X> {
+export function makeListFixedLength<X>(growableList: DartList<X>): DartList<X> {
     return growableList;
 }
 
@@ -1387,7 +1395,7 @@ function makeListFixedLength<X>(growableList: DartList<X>): DartList<X> {
  *
  * The unmodifiable list type is similar to the one used by const lists.
  */
-function makeFixedListUnmodifiable<X>(fixedLengthList: DartList<X>): DartList<X> {
+export function makeFixedListUnmodifiable<X>(fixedLengthList: DartList<X>): DartList<X> {
     return fixedLengthList;
 }
 
@@ -1447,6 +1455,392 @@ interface DartListConstructor {
 @DartClass
 export class DartList<E> implements DartEfficientLengthIterable<E> {
 
+    @Abstract
+    get iterator(): DartIterator<E> {
+        throw new Error("Method not implemented.");
+    }
+
+    /**
+     * Returns a new lazy [Iterable] with elements that are created by
+     * calling `f` on each element of this `Iterable` in iteration order.
+     *
+     * This method returns a view of the mapped elements. As long as the
+     * returned [Iterable] is not iterated over, the supplied function [f] will
+     * not be invoked. The transformed elements will not be cached. Iterating
+     * multiple times over the returned [Iterable] will invoke the supplied
+     * function [f] multiple times on the same element.
+     *
+     * Methods on the returned iterable are allowed to omit calling `f`
+     * on any element where the result isn't needed.
+     * For example, [elementAt] may call `f` only once.
+     */
+    @Abstract
+    map<T>(f: (e: E) => T): DartIterable<T> {
+        throw new Error("Method not implemented.");
+    }
+
+    /**
+     * Returns a new lazy [Iterable] with all elements that satisfy the
+     * predicate [test].
+     *
+     * The matching elements have the same order in the returned iterable
+     * as they have in [iterator].
+     *
+     * This method returns a view of the mapped elements.
+     * As long as the returned [Iterable] is not iterated over,
+     * the supplied function [test] will not be invoked.
+     * Iterating will not cache results, and thus iterating multiple times over
+     * the returned [Iterable] may invoke the supplied
+     * function [test] multiple times on the same element.
+     */
+    @Abstract
+    where(test: (element: E) => boolean): DartIterable<E> {
+        throw new Error("Method not implemented.");
+    }
+
+    /**
+     * Expands each element of this [Iterable] into zero or more elements.
+     *
+     * The resulting Iterable runs through the elements returned
+     * by [f] for each element of this, in iteration order.
+     *
+     * The returned [Iterable] is lazy, and calls [f] for each element
+     * of this every time it's iterated.
+     *
+     * Example:
+     *
+     *     var pairs = [[1, 2], [3, 4]];
+     *     var flattened = pairs.expand((pair) => pair).toList();
+     *     print(flattened); // => [1, 2, 3, 4];
+     *
+     *     var input = [1, 2, 3];
+     *     var duplicated = input.expand((i) => [i, i]).toList();
+     *     print(duplicated); // => [1, 1, 2, 2, 3, 3]
+     *
+     */
+    @Abstract
+    expand<T>(f: (element: E) => DartIterable<T>): DartIterable<T> {
+        throw new Error("Method not implemented.");
+    }
+
+    /**
+     * Returns true if the collection contains an element equal to [element].
+     *
+     * This operation will check each element in order for being equal to
+     * [element], unless it has a more efficient way to find an element
+     * equal to [element].
+     *
+     * The equality used to determine whether [element] is equal to an element of
+     * the iterable defaults to the [Object.==] of the element.
+     *
+     * Some types of iterable may have a different equality used for its elements.
+     * For example, a [Set] may have a custom equality
+     * (see [Set.identity]) that its `contains` uses.
+     * Likewise the `Iterable` returned by a [Map.keys] call
+     * should use the same equality that the `Map` uses for keys.
+     */
+    @Abstract
+    contains(element: Object): boolean {
+        throw new Error("Method not implemented.");
+    }
+
+    /**
+     * Applies the function [f] to each element of this collection in iteration
+     * order.
+     */
+    @Abstract
+    forEach(f: (element: E) => any): void {
+        throw new Error("Method not implemented.");
+    }
+
+    /**
+     * Reduces a collection to a single value by iteratively combining elements
+     * of the collection using the provided function.
+     *
+     * The iterable must have at least one element.
+     * If it has only one element, that element is returned.
+     *
+     * Otherwise this method starts with the first element from the iterator,
+     * and then combines it with the remaining elements in iteration order,
+     * as if by:
+     *
+     *     E value = iterable.first;
+     *     iterable.skip(1).forEach((element) {
+     *       value = combine(value, element);
+     *     });
+     *     return value;
+     *
+     * Example of calculating the sum of an iterable:
+     *
+     *     iterable.reduce((value, element) => value + element);
+     *
+     */
+    @Abstract
+    reduce(combine: (value: E, element: E) => E): E {
+        throw new Error("Method not implemented.");
+    }
+
+    /**
+     * Reduces a collection to a single value by iteratively combining each
+     * element of the collection with an existing value
+     *
+     * Uses [initialValue] as the initial value,
+     * then iterates through the elements and updates the value with
+     * each element using the [combine] function, as if by:
+     *
+     *     var value = initialValue;
+     *     for (E element in this) {
+     *       value = combine(value, element);
+     *     }
+     *     return value;
+     *
+     * Example of calculating the sum of an iterable:
+     *
+     *     iterable.fold(0, (prev, element) => prev + element);
+     *
+     */
+    @Abstract
+    fold<T>(initialValue: T, combine: (previousValue: T, element: E) => T): T {
+        throw new Error("Method not implemented.");
+    }
+
+    /**
+     * Checks whether every element of this iterable satisfies [test].
+     *
+     * Checks every element in iteration order, and returns `false` if
+     * any of them make [test] return `false`, otherwise returns `true`.
+     */
+    @Abstract
+    every(f: (element: E) => boolean): boolean {
+        throw new Error("Method not implemented.");
+    }
+
+    /**
+     * Converts each element to a [String] and concatenates the strings.
+     *
+     * Iterates through elements of this iterable,
+     * converts each one to a [String] by calling [Object.toString],
+     * and then concatenates the strings, with the
+     * [separator] string interleaved between the elements.
+     */
+    @Abstract
+    join(separator?: string): string {
+        throw new Error("Method not implemented.");
+    }
+
+    /**
+     * Checks whether any element of this iterable satisfies [test].
+     *
+     * Checks every element in iteration order, and returns `true` if
+     * any of them make [test] return `true`, otherwise returns false.
+     */
+    @Abstract
+    any(f: (element: E) => boolean): boolean {
+        throw new Error("Method not implemented.");
+    }
+
+    /**
+     * Creates a [List] containing the elements of this [Iterable].
+     *
+     * The elements are in iteration order.
+     * The list is fixed-length if [growable] is false.
+     */
+    @Abstract
+    toList(_?: { growable?: boolean; }): DartList<E> {
+        throw new Error("Method not implemented.");
+    }
+
+    /**
+     * Creates a [Set] containing the same elements as this iterable.
+     *
+     * The set may contain fewer elements than the iterable,
+     * if the iterable contains an element more than once,
+     * or it contains one or more elements that are equal.
+     * The order of the elements in the set is not guaranteed to be the same
+     * as for the iterable.
+     */
+    @Abstract
+    toSet(): DartSet<E> {
+        throw new Error("Method not implemented.");
+    }
+
+    @Abstract
+    get isEmpty(): boolean {
+        throw new Error("Method not implemented.");
+    }
+
+    @Abstract
+    get isNotEmpty(): boolean {
+        throw new Error("Method not implemented.");
+    }
+
+    /**
+     * Returns a lazy iterable of the [count] first elements of this iterable.
+     *
+     * The returned `Iterable` may contain fewer than `count` elements, if `this`
+     * contains fewer than `count` elements.
+     *
+     * The elements can be computed by stepping through [iterator] until [count]
+     * elements have been seen.
+     *
+     * The `count` must not be negative.
+     */
+    @Abstract
+    take(count: number): DartIterable<E> {
+        throw new Error("Method not implemented.");
+    }
+
+    /**
+     * Returns a lazy iterable of the leading elements satisfying [test].
+     *
+     * The filtering happens lazily. Every new iterator of the returned
+     * iterable starts iterating over the elements of `this`.
+     *
+     * The elements can be computed by stepping through [iterator] until an
+     * element is found where `test(element)` is false. At that point,
+     * the returned iterable stops (its `moveNext()` returns false).
+     */
+    @Abstract
+    takeWhile(test: (value: E) => boolean): DartIterable<E> {
+        throw new Error("Method not implemented.");
+    }
+
+    /**
+     * Returns an [Iterable] that provides all but the first [count] elements.
+     *
+     * When the returned iterable is iterated, it starts iterating over `this`,
+     * first skipping past the initial [count] elements.
+     * If `this` has fewer than `count` elements, then the resulting Iterable is
+     * empty.
+     * After that, the remaining elements are iterated in the same order as
+     * in this iterable.
+     *
+     * Some iterables may be able to find later elements without first iterating
+     * through earlier elements, for example when iterating a [List].
+     * Such iterables are allowed to ignore the initial skipped elements.
+     *
+     * The [count] must not be negative.
+     */
+    @Abstract
+    skip(count: number): DartIterable<E> {
+        throw new Error("Method not implemented.");
+    }
+
+    /**
+     * Returns an `Iterable` that skips leading elements while [test] is satisfied.
+     *
+     * The filtering happens lazily. Every new [Iterator] of the returned
+     * iterable iterates over all elements of `this`.
+     *
+     * The returned iterable provides elements by iterating this iterable,
+     * but skipping over all initial elements where `test(element)` returns
+     * true. If all elements satisfy `test` the resulting iterable is empty,
+     * otherwise it iterates the remaining elements in their original order,
+     * starting with the first element for which `test(element)` returns `false`.
+     */
+    @Abstract
+    skipWhile(test: (value: E) => boolean): DartIterable<E> {
+        throw new Error("Method not implemented.");
+    }
+
+    @Abstract
+    get first(): E {
+        throw new Error("Method not implemented.");
+    }
+
+    @Abstract
+    get last(): E {
+        throw new Error("Method not implemented.");
+    }
+
+    @Abstract
+    get single(): E {
+        throw new Error("Method not implemented.");
+    }
+
+    /**
+     * Returns the first element that satisfies the given predicate [test].
+     *
+     * Iterates through elements and returns the first to satisfy [test].
+     *
+     * If no element satisfies [test], the result of invoking the [orElse]
+     * function is returned.
+     * If [orElse] is omitted, it defaults to throwing a [StateError].
+     */
+    @Abstract
+    firstWhere(test: (element: E) => boolean, _?: { orElse: () => E; }): E {
+        throw new Error("Method not implemented.");
+    }
+
+    /**
+     * Returns the last element that satisfies the given predicate [test].
+     *
+     * An iterable that can access its elements directly may check its
+     * elements in any order (for example a list starts by checking the
+     * last element and then moves towards the start of the list).
+     * The default implementation iterates elements in iteration order,
+     * checks `test(element)` for each,
+     * and finally returns that last one that matched.
+     *
+     * If no element satisfies [test], the result of invoking the [orElse]
+     * function is returned.
+     * If [orElse] is omitted, it defaults to throwing a [StateError].
+     */
+    @Abstract
+    lastWhere(test: (element: E) => boolean, _?: { orElse: () => E; }): E {
+        throw new Error("Method not implemented.");
+    }
+
+    /**
+     * Returns the single element that satisfies [test].
+     *
+     * Checks all elements to see if `test(element)` returns true.
+     * If exactly one element satisfies [test], that element is returned.
+     * Otherwise, if there are no matching elements, or if there is more than
+     * one matching element, a [StateError] is thrown.
+     */
+    @Abstract
+    singleWhere(test: (element: E) => boolean): E {
+        throw new Error("Method not implemented.");
+    }
+
+    /**
+     * Returns the [index]th element.
+     *
+     * The [index] must be non-negative and less than [length].
+     * Index zero represents the first element (so `iterable.elementAt(0)` is
+     * equivalent to `iterable.first`).
+     *
+     * May iterate through the elements in iteration order, skipping the
+     * first `index` elements and returning the next.
+     * Some iterable may have more efficient ways to find the element.
+     */
+    @Abstract
+    elementAt(index: number): E {
+        throw new Error("Method not implemented.");
+    }
+
+    /**
+     * Returns a string representation of (some of) the elements of `this`.
+     *
+     * Elements are represented by their own `toString` results.
+     *
+     * The default representation always contains the first three elements.
+     * If there are less than a hundred elements in the iterable, it also
+     * contains the last two elements.
+     *
+     * If the resulting string isn't above 80 characters, more elements are
+     * included from the start of the iterable.
+     *
+     * The conversion may omit calling `toString` on some elements if they
+     * are known to not occur in the output, and it may stop iterating after
+     * a hundred elements.
+     */
+    @Abstract
+    toString(): string {
+        throw new Error("Method not implemented.");
+    }
+
     [Symbol.iterator](): Iterator<E> {
         return this.iterator;
     }
@@ -1473,12 +1867,6 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      *
      * The [length] must not be negative or null, if it is provided.
      */
-    @defaultFactory
-    protected static _create<E>(length?: int): DartList<E> {
-        // TODO : IMPLEMENT
-        //return new _DartListJS(length);
-        return undefined;
-    }
 
     constructor(length?: int) {
 
@@ -1515,12 +1903,7 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      * print(unique); // => [[499], [], []]
      * ```
      */
-    @namedFactory
-    protected static _filled<E>(length: int, fill: E, _?: { growable: boolean }): DartList<E> {
-        let {growable} = Object.assign({growable: false}, _);
-        // TODO : IMPLEMENT EXTERNAL
-        return null;
-    }
+
 
     static filled: new<E>(length: int, fill: E, _?: { growable: boolean }) => DartList<E>;
 
@@ -1532,12 +1915,6 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      * This constructor returns a growable list when [growable] is true;
      * otherwise, it returns a fixed-length list.
      */
-    @namedFactory
-    protected static _from<E>(elements: DartIterable<E>, _?: { growable: boolean }): DartList<E> {
-        let {growable} = Object.assign({growable: false}, _);
-        // TODO : IMPLEMENT EXTERNAL
-        return null;
-    }
 
     static from: new<E>(elements: DartIterable<E>, _?: { growable: boolean }) => DartList<E>;
 
@@ -1582,11 +1959,6 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      * If the elements are themselves immutable, then the resulting list
      * is also immutable.
      */
-    @namedFactory
-    protected static _unmodifiable<E>(elements: DartIterable<E>): DartList<E> {
-        // TODO
-        return null;
-    }
 
     static unmodifiable: new <E>(elements: DartIterable<E>) => DartList<E>;
 
@@ -1594,20 +1966,30 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      * Returns the object at the given [index] in the list
      * or throws a [RangeError] if [index] is out of bounds.
      */
-    abstract [OPERATOR_INDEX](index: int): E;
+
+    //@Abstract
+    [OPERATOR_INDEX](index: int): E {
+        throw new Error('abstract');
+    }
 
     /**
      * Sets the value at the given [index] in the list to [value]
      * or throws a [RangeError] if [index] is out of bounds.
      */
-    abstract [OPERATOR_INDEX_ASSIGN](index: int, value: E): void;
+    //@Abstract
+    [OPERATOR_INDEX_ASSIGN](index: int, value: E): void {
+        throw new Error('abstract');
+    }
 
     /**
      * Returns the number of objects in this list.
      *
      * The valid indices for a list are `0` through `length - 1`.
      */
-    abstract get length(): int;
+    @Abstract
+    get length(): int {
+        throw new Error('abstract');
+    }
 
     /**
      * Changes the length of this list.
@@ -1617,7 +1999,10 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      *
      * Throws an [UnsupportedError] if the list is fixed-length.
      */
-    abstract set length(newLength: int): void;
+    @Abstract
+    set length(newLength: int) {
+        throw new Error('abstract');
+    }
 
     /**
      * Adds [value] to the end of this list,
@@ -1625,7 +2010,10 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      *
      * Throws an [UnsupportedError] if the list is fixed-length.
      */
-    abstract add(value: E): void;
+    @Abstract
+    add(value: E): void {
+        throw new Error('abstract');
+    }
 
     /**
      * Appends all objects of [iterable] to the end of this list.
@@ -1633,12 +2021,18 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      * Extends the length of the list by the number of objects in [iterable].
      * Throws an [UnsupportedError] if this list is fixed-length.
      */
-    abstract addAll(iterable: DartIterable<E>): void;
+    @Abstract
+    addAll(iterable: DartIterable<E>): void {
+        throw new Error('abstract');
+    }
 
     /**
      * Returns an [Iterable] of the objects in this list in reverse order.
      */
-    abstract get reversed(): DartIterable<E>;
+    @Abstract
+    get reversed(): DartIterable<E> {
+        throw new Error('abstract');
+    }
 
     /**
      * Sorts this list according to the order specified by the [compare] function.
@@ -1666,12 +2060,18 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      *     numbers.sort((a, b) => a.length.compareTo(b.length));
      *     print(numbers);  // [one, two, four, three] OR [two, one, four, three]
      */
-    abstract sort(compare?: (a: E, b: E) => int): void;
+    @Abstract
+    sort(compare?: (a: E, b: E) => int): void {
+        throw new Error('abstract');
+    }
 
     /**
      * Shuffles the elements of this list randomly.
      */
-    abstract shuffle(random?: DartRandom): void;
+    @Abstract
+    shuffle(random?: DartRandom): void {
+        throw new Error('abstract');
+    }
 
     /**
      * Returns the first index of [element] in this list.
@@ -1688,7 +2088,10 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      *
      *     notes.indexOf('fa');    // -1
      */
-    abstract indexOf(element: E, start?: int): int;
+    @Abstract
+    indexOf(element: E, start?: int): int {
+        throw new Error('abstract');
+    }
 
     /**
      * Returns the last index of [element] in this list.
@@ -1710,7 +2113,10 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      *
      *     notes.lastIndexOf('fa');  // -1
      */
-    abstract lastIndexOf(element: E, start?: int): int;
+    @Abstract
+    lastIndexOf(element: E, start?: int): int {
+        throw new Error('abstract');
+    }
 
     /**
      * Removes all objects from this list;
@@ -1719,7 +2125,10 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      * Throws an [UnsupportedError], and retains all objects, if this
      * is a fixed-length list.
      */
-    abstract clear(): void;
+    @Abstract
+    clear(): void {
+        throw new Error('abstract');
+    }
 
     /**
      * Inserts the object at position [index] in this list.
@@ -1730,7 +2139,10 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      * An error occurs if the [index] is less than 0 or greater than length.
      * An [UnsupportedError] occurs if the list is fixed-length.
      */
-    abstract insert(index: int, element: E): void;
+    @Abstract
+    insert(index: int, element: E): void {
+        throw new Error('abstract');
+    }
 
     /**
      * Inserts all objects of [iterable] at position [index] in this list.
@@ -1741,7 +2153,10 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      * An error occurs if the [index] is less than 0 or greater than length.
      * An [UnsupportedError] occurs if the list is fixed-length.
      */
-    abstract insertAll(index: int, iterable: DartIterable<E>): void;
+    @Abstract
+    insertAll(index: int, iterable: DartIterable<E>): void {
+        throw new Error('abstract');
+    }
 
     /**
      * Overwrites objects of `this` with the objects of [iterable], starting
@@ -1761,7 +2176,10 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      * If `iterable` is based on this list, its values may change /during/ the
      * `setAll` operation.
      */
-    abstract setAll(index: int, iterable: DartIterable<E>): void;
+    @Abstract
+    setAll(index: int, iterable: DartIterable<E>): void {
+        throw new Error('abstract');
+    }
 
     /**
      * Removes the first occurrence of [value] from this list.
@@ -1780,7 +2198,10 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      *
      * An [UnsupportedError] occurs if the list is fixed-length.
      */
-    abstract remove(value: DartObject): boolean;
+    @Abstract
+    remove(value: DartObject): boolean {
+        throw new Error('abstract');
+    }
 
     /**
      * Removes the object at position [index] from this list.
@@ -1795,14 +2216,20 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      * Throws an [UnsupportedError] if this is a fixed-length list. In that case
      * the list is not modified.
      */
-    abstract removeAt(index: int): E;
+    @Abstract
+    removeAt(index: int): E {
+        throw new Error('abstract');
+    }
 
     /**
      * Pops and returns the last object in this list.
      *
      * Throws an [UnsupportedError] if this is a fixed-length list.
      */
-    abstract removeLast(): E;
+    @Abstract
+    removeLast(): E {
+        throw new Error('abstract');
+    }
 
     /**
      * Removes all objects from this list that satisfy [test].
@@ -1815,7 +2242,10 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      *
      * Throws an [UnsupportedError] if this is a fixed-length list.
      */
-    abstract removeWhere(test: (element: E) => boolean): void;
+    @Abstract
+    removeWhere(test: (element: E) => boolean): void {
+        throw new Error('abstract');
+    }
 
     /**
      * Removes all objects from this list that fail to satisfy [test].
@@ -1828,7 +2258,10 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      *
      * Throws an [UnsupportedError] if this is a fixed-length list.
      */
-    abstract retainWhere(test: (element: E) => boolean): void;
+    @Abstract
+    retainWhere(test: (element: E) => boolean): void {
+        throw new Error('abstract');
+    }
 
     /**
      * Returns a new list containing the objects from [start] inclusive to [end]
@@ -1844,7 +2277,10 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      * An error occurs if [start] is outside the range `0` .. `length` or if
      * [end] is outside the range `start` .. `length`.
      */
-    abstract sublist(start: int, end?: int): DartList<E>;
+    @Abstract
+    sublist(start: int, end?: int): DartList<E> {
+        throw new Error('abstract');
+    }
 
     /**
      * Returns an [Iterable] that iterates over the objects in the range
@@ -1866,7 +2302,10 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      *     colors.length = 3;
      *     range.join(', ');  // 'green, blue'
      */
-    abstract getRange(start: int, end: int): DartIterable<E>;
+    @Abstract
+    getRange(start: int, end: int): DartIterable<E> {
+        throw new Error('abstract');
+    }
 
     /**
      * Copies the objects of [iterable], skipping [skipCount] objects first,
@@ -1894,7 +2333,10 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      * If `iterable` depends on this list in some other way, no guarantees are
      * made.
      */
-    abstract setRange(start: int, end: int, iterable: DartIterable<E>, skipCount?: int /* = 0 */): void;
+    @Abstract
+    setRange(start: int, end: int, iterable: DartIterable<E>, skipCount?: int /* = 0 */): void {
+        throw new Error('abstract');
+    }
 
     /**
      * Removes the objects in the range [start] inclusive to [end] exclusive.
@@ -1907,7 +2349,10 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      * Throws an [UnsupportedError] if this is a fixed-length list. In that case
      * the list is not modified.
      */
-    abstract removeRange(start: int, end: int): void;
+    @Abstract
+    removeRange(start: int, end: int): void {
+        throw new Error('abstract');
+    }
 
     /**
      * Sets the objects in the range [start] inclusive to [end] exclusive
@@ -1918,7 +2363,10 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      * `len` is this list's `length`. The range starts at `start` and has length
      * `end - start`. An empty range (with `end == start`) is valid.
      */
-    abstract fillRange(start: int, end: int, fillValue?: E): void;
+    @Abstract
+    fillRange(start: int, end: int, fillValue?: E): void {
+        throw new Error('abstract');
+    }
 
     /**
      * Removes the objects in the range [start] inclusive to [end] exclusive
@@ -1937,7 +2385,10 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      * has the same number of elements as the replaced range. In that case use
      * [setRange] instead.
      */
-    abstract replaceRange(start: int, end: int, replacement: DartIterable<E>): void;
+    @Abstract
+    replaceRange(start: int, end: int, replacement: DartIterable<E>): void {
+        throw new Error('abstract');
+    }
 
     /**
      * Returns an unmodifiable [Map] view of `this`.
@@ -1951,59 +2402,10 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      *     map[0] + map[1];   // 'feefi';
      *     map.keys.toList(); // [0, 1, 2, 3]
      */
-    abstract asMap(): DartMap<int, E>;
-
-    abstract any(f: (element: E) => boolean): boolean;
-
-    abstract contains(element: Object): boolean;
-
-    abstract elementAt(index: int): E;
-
-    abstract every(f: (element: E) => boolean): boolean;
-
-    abstract expand<T>(f: (element: E) => DartIterable<T>): DartIterable<T>;
-
-    abstract get first(): E;
-
-    abstract firstWhere(test: (element: E) => boolean, _?: { orElse: () => E }): E;
-
-    abstract fold<T>(initialValue: T, combine: (previousValue: T, element: E) => T): T;
-
-    abstract forEach(f: (element: E) => any): void;
-
-    abstract get isEmpty(): boolean;
-
-    abstract get isNotEmpty(): boolean;
-
-    abstract get iterator(): DartIterator<E>;
-
-    abstract join(separator?: string): string;
-
-    abstract get last(): E;
-
-    abstract lastWhere(test: (element: E) => boolean, _?: { orElse: () => E }): E;
-
-    abstract map<T>(f: (e: E) => T): DartIterable<T>;
-
-    abstract reduce(combine: (value: E, element: E) => E): E;
-
-    abstract get single(): E;
-
-    abstract singleWhere(test: (element: E) => boolean): E;
-
-    abstract skip(count: int): DartIterable<E>;
-
-    abstract skipWhile(test: (value: E) => boolean): DartIterable<E>;
-
-    abstract take(count: int): DartIterable<E>;
-
-    abstract takeWhile(test: (value: E) => boolean): DartIterable<E>;
-
-    abstract toList(_?: { growable?: boolean }): DartList<E>;
-
-    abstract toSet(): DartSet<E>;
-
-    abstract where(test: (element: E) => boolean): DartIterable<E>;
+    @Abstract
+    asMap(): DartMap<int, E> {
+        throw new Error('abstract');
+    }
 }
 
 // Copyright (c) 2011, the Dart project authors.  Please see the AUTHORS file
@@ -2013,7 +2415,7 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
 // part of dart._internal;
 
 
-class DartSubListIterable<E> extends DartListIterable<E> {
+export class DartSubListIterable<E> extends DartListIterable<E> {
     _iterable: DartIterable<E>; // Has efficient length and elementAt.
     _start: int;
     /** If null, represents the length of the iterable. */
@@ -2120,7 +2522,7 @@ abstract class _BaseJSIterator<E> implements DartIterator<E> {
  * [Iterable.elementAt]. These operations are fast for list-like
  * iterables.
  */
-class DartListIterator<E> extends _BaseJSIterator<E> implements DartIterator<E> {
+export class DartListIterator<E> extends _BaseJSIterator<E> implements DartIterator<E> {
     _iterable: DartIterable<E>;
     _length: int;
     _index: int;
@@ -2156,7 +2558,7 @@ class DartListIterator<E> extends _BaseJSIterator<E> implements DartIterator<E> 
 type  _Transformation<S, T> = (value: S) => T;
 
 @DartClass
-class DartMappedIterable<S, T> extends DartIterable<T> {
+export class DartMappedIterable<S, T> extends DartIterable<T> {
     protected _iterable: DartIterable<S>;
     protected _f: _Transformation<S, T>;
 
@@ -2256,7 +2658,7 @@ class DartMappedIterator<S, T> extends _BaseJSIterator<T> implements DartIterato
  *
  * Expects efficient `length` and `elementAt` on the source iterable.
  */
-class DartMappedListIterable<S, T> extends DartListIterable<T> {
+export class DartMappedListIterable<S, T> extends DartListIterable<T> {
     _source: DartIterable<S>;
     _f: _Transformation<S, T>;
 
@@ -2277,7 +2679,7 @@ class DartMappedListIterable<S, T> extends DartListIterable<T> {
 
 type  _ElementPredicate<E> = (element: E) => boolean;
 
-class DartWhereIterable<E> extends DartIterable<E> {
+export class DartWhereIterable<E> extends DartIterable<E> {
     _iterable: DartIterable<E>;
     _f: _ElementPredicate<E>;
 
@@ -2298,7 +2700,7 @@ class DartWhereIterable<E> extends DartIterable<E> {
     }
 }
 
-class DartWhereIterator<E> extends _BaseJSIterator<E> implements DartIterator<E> {
+export class DartWhereIterator<E> extends _BaseJSIterator<E> implements DartIterator<E> {
     _iterator: DartIterator<E>;
     _f: _ElementPredicate<E>;
 
@@ -2326,7 +2728,7 @@ class DartWhereIterator<E> extends _BaseJSIterator<E> implements DartIterator<E>
 
 type  _ExpandFunction<S, T> = (sourceElement: S) => DartIterable<T>;
 
-class DartExpandIterable<S, T> extends DartIterable<T> {
+export class DartExpandIterable<S, T> extends DartIterable<T> {
     private _iterable: DartIterable<S>;
     private _f: _ExpandFunction<S, T>;
 
@@ -2344,7 +2746,7 @@ class DartExpandIterable<S, T> extends DartIterable<T> {
     }
 }
 
-class DartExpandIterator<S, T> extends _BaseJSIterator<T> implements DartIterator<T> {
+export class DartExpandIterator<S, T> extends _BaseJSIterator<T> implements DartIterator<T> {
     protected _iterator: DartIterator<S>;
     protected _f: _ExpandFunction<S, T>;
     // Initialize _currentExpansion to an empty iterable. A null value
@@ -2382,7 +2784,7 @@ class DartExpandIterator<S, T> extends _BaseJSIterator<T> implements DartIterato
     }
 }
 
-class DartTakeIterable<E> extends DartIterable<E> {
+export class DartTakeIterable<E> extends DartIterable<E> {
 
     _iterable: DartIterable<E>;
     _takeCount: int;
@@ -2391,7 +2793,7 @@ class DartTakeIterable<E> extends DartIterable<E> {
         if (!_dart.is(takeCount, 'int') || takeCount < 0) {
             throw new DartArgumentError(takeCount);
         }
-        if (_dart.is(iterable, DartEfficientLengthIterable)){
+        if (_dart.is(iterable, DartEfficientLengthIterable)) {
             return new DartEfficientLengthTakeIterable<E>(iterable, takeCount);
         }
         return new DartTakeIterable<E>(iterable, takeCount);
@@ -2447,7 +2849,7 @@ class DartTakeIterator<E> extends _BaseJSIterator<E> implements DartIterator<E> 
     }
 }
 
-class DartTakeWhileIterable<E> extends DartIterable<E> {
+export class DartTakeWhileIterable<E> extends DartIterable<E> {
     _iterable: DartIterable<E>;
     _f: _ElementPredicate<E>;
 
@@ -2489,7 +2891,7 @@ class DartTakeWhileIterator<E> extends _BaseJSIterator<E> implements DartIterato
 }
 
 @DartClass
-class DartSkipIterable<E> extends DartIterable<E> {
+export class DartSkipIterable<E> extends DartIterable<E> {
 
     _iterable: DartIterable<E>;
     _skipCount: int;
@@ -2595,7 +2997,7 @@ class DartSkipIterator<E> implements DartIterator<E> {
     }
 }
 
-class DartSkipWhileIterable<E> extends DartIterable<E> {
+export class DartSkipWhileIterable<E> extends DartIterable<E> {
 
     _iterable: DartIterable<E>;
     _f: _ElementPredicate<E>;
@@ -2806,7 +3208,7 @@ function _JSnext<X>(dartIterator: DartIterator<X>): IteratorResult<X> {
 /**
  * Creates errors throw by [Iterable] when the element count is wrong.
  */
-abstract class DartIterableElementError {
+export abstract class DartIterableElementError {
     /** Error thrown thrown by, e.g., [Iterable.first] when there is no result. */
     static noElement(): DartStateError {
         return new DartStateError("No element");

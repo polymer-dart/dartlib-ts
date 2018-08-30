@@ -4,9 +4,10 @@
 
 // part of dart.core;
 
-import {DartClass, defaultFactory, namedFactory} from "../utils";
+import {Abstract, DartClass, defaultFactory, namedFactory} from "../utils";
 import {DartIterable} from "../collections";
 import {bool, int, OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN} from "../core";
+import {DartLinkedHashMap} from "../collections/collection_patch";
 
 /**
  * An collection of key-value pairs, from which you retrieve a value
@@ -42,11 +43,12 @@ export class DartMap<K, V> {
      */
 
     /* external */
-    @defaultFactory
-    protected static create<K, V>(): DartMap<K, V> {
-        // TODO
-        return undefined;
-    }
+
+    /* @defaultFactory
+     protected static create<K, V>(): DartMap<K, V> {
+         // TODO
+         return undefined;
+     }*/
 
     constructor() {
     }
@@ -64,7 +66,7 @@ export class DartMap<K, V> {
      */
     @namedFactory
     protected static _from<K, V>(other: DartMap<K, V>): DartMap<K, V> {
-        return new LinkedHashMap.from<K, V>(other);
+        return new DartLinkedHashMap.from<K, V>(other);
     }
 
     static from: new<K, V>(other: DartMap<K, V>) => DartMap<K, V>;
@@ -85,11 +87,11 @@ export class DartMap<K, V> {
      */
 
     /* external */
-    @namedFactory
-    protected static _unmodifiable<K, V>(other: DartMap<K, V>): DartMap<K, V> {
-        // TODO
-        return undefined;
-    }
+    /* @namedFactory
+     protected static _unmodifiable<K, V>(other: DartMap<K, V>): DartMap<K, V> {
+         // TODO
+         return undefined;
+     }*/
 
     static unmodifiable: new<K, V>(other: DartMap<K, V>) => DartMap<K, V>;
 
@@ -101,7 +103,7 @@ export class DartMap<K, V> {
      */
     @namedFactory
     protected static _identity<K, V>(): DartMap<K, V> {
-        return new LinkedHashMap.identity<K, V>();
+        return new DartLinkedHashMap.identity<K, V>();
     }
 
     static identity: new<K, V>() => DartMap<K, V>;
@@ -145,7 +147,7 @@ export class DartMap<K, V> {
      */
     @namedFactory
     protected static _fromIterable<K, V>(iterable: DartIterable<any>, _?: { key?: (element: any) => K, value?: (element) => V }): DartMap<K, V> {
-        return new LinkedHashMap.fromIterable<K, V>(iterable, _);
+        return new DartLinkedHashMap.fromIterable<K, V>(iterable, _);
     }
 
     static fromIterable: new<K, V>(iterable: DartIterable<any>, _?: { key?: (element: any) => K, value?: (element) => V }) => DartMap<K, V>;
@@ -173,9 +175,10 @@ export class DartMap<K, V> {
      */
     @namedFactory
     protected static _fromIterables<K, V>(keys: DartIterable<K>, values: DartIterable<V>): DartMap<K, V> {
-        return new LinkedHashMap.fromIterables<K, V>(keys, values);
+        return new DartLinkedHashMap.fromIterables<K, V>(keys, values);
     }
 
+    static fromIterables: new<K, V>(keys: DartIterable<K>, values: DartIterable<V>) => DartMap<K, V>;
 
     /**
      * Returns true if this map contains the given [value].
@@ -183,7 +186,10 @@ export class DartMap<K, V> {
      * Returns true if any of the values in the map are equal to `value`
      * according to the `==` operator.
      */
-    containsValue?(value: any): bool;
+    @Abstract
+    containsValue(value: any): bool {
+        throw Error('abstract');
+    }
 
     /**
      * Returns true if this map contains the given [key].
@@ -191,7 +197,10 @@ export class DartMap<K, V> {
      * Returns true if any of the keys in the map are equal to `key`
      * according to the equality used by the map.
      */
-    containsKey?(key: any): bool;
+    @Abstract
+    containsKey(key: any): bool {
+        throw Error('abstract');
+    }
 
     /**
      * Returns the value for the given [key] or null if [key] is not in the map.
@@ -203,7 +212,6 @@ export class DartMap<K, V> {
      * Methods like [containsKey] or [putIfAbsent] can be use if the distinction
      * is important.
      */
-    [OPERATOR_INDEX]?(key: any): V;
 
     /**
      * Associates the [key] with the given [value].
@@ -230,7 +238,10 @@ export class DartMap<K, V> {
      *
      * Calling [ifAbsent] must not add or remove keys from the map.
      */
-    putIfAbsent?(key: K, ifAbsent: () => V): V;
+    @Abstract
+    putIfAbsent(key: K, ifAbsent: () => V): V {
+        throw Error('abstract');
+    }
 
     /**
      * Adds all key-value pairs of [other] to this map.
@@ -241,7 +252,10 @@ export class DartMap<K, V> {
      * and associated value in other. It iterates over [other], which must
      * therefore not change during the iteration.
      */
-    addAll?(other: DartMap<K, V>): void;
+    @Abstract
+    addAll(other: DartMap<K, V>): void {
+        throw Error('abstract');
+    }
 
     /**
      * Removes [key] and its associated value, if present, from the map.
@@ -252,21 +266,30 @@ export class DartMap<K, V> {
      * Note that values can be `null` and a returned `null` value doesn't
      * always mean that the key was absent.
      */
-    remove?(key: any): V;
+    @Abstract
+    remove(key: any): V {
+        throw Error('abstract');
+    }
 
     /**
      * Removes all pairs from the map.
      *
      * After this, the map is empty.
      */
-    clear?(): void;
+    @Abstract
+    clear(): void {
+        throw Error('abstract');
+    }
 
     /**
      * Applies [f] to each key-value pair of the map.
      *
      * Calling `f` must not add or remove keys from the map.
      */
-    forEach?(f: (key: K, value: V) => any): void;
+    @Abstract
+    forEach(f: (key: K, value: V) => any): void {
+        throw Error('abstract');
+    }
 
     /**
      * The keys of [this].
@@ -280,7 +303,10 @@ export class DartMap<K, V> {
      * Modifying the map while iterating the keys
      * may break the iteration.
      */
-    readonly keys?: DartIterable<K>;
+    @Abstract
+    get keys(): DartIterable<K> {
+        throw Error('abstract');
+    }
 
     /**
      * The values of [this].
@@ -297,20 +323,32 @@ export class DartMap<K, V> {
      * values may break the iteration.
      */
 
-    readonly values?: DartIterable<V>;
+    @Abstract
+    get values(): DartIterable<V> {
+        throw Error('abstract');
+    }
 
     /**
      * The number of key-value pairs in the map.
      */
-    readonly length?: int;
+    @Abstract
+    get length(): int {
+        throw Error('abstract');
+    }
 
     /**
      * Returns true if there is no key-value pair in the map.
      */
-    readonly isEmpty?: bool;
+    @Abstract
+    get isEmpty: bool {
+        throw Error('abstract');
+    }
 
     /**
      * Returns true if there is at least one key-value pair in the map.
      */
-    readonly isNotEmpty?: bool;
+    @Abstract
+    get isNotEmpty: bool {
+        throw Error('abstract');
+    }
 }

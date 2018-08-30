@@ -40,13 +40,15 @@ interface ConstructorData {
 
 interface Metadata {
     parent?: Metadata,
-    constructors?: Map<string, ConstructorData>
+    constructors?: Map<string, ConstructorData>,
+    abstracts?: Map<String, PropertyDescriptor>
 }
 
 function getMetadata(o: any): Metadata {
     if (!o.hasOwnProperty(META_DATA)) {
         o[META_DATA] = {
-            constructors: new Map()
+            constructors: new Map(),
+            abstracts: {}
         }
     }
 
@@ -130,6 +132,11 @@ export const DartClass: ClassDecorator = (target) => {
     Object.setPrototypeOf(ctor, Object.getPrototypeOf(target));
     copyProps(target, ctor);
 
+    // Remove abstract from prototype
+    for (let k in getMetadata(target).abstracts) {
+        delete ctor.prototype[k];
+    }
+
 
     return ctor as any;
     /*
@@ -140,4 +147,9 @@ export const DartClass: ClassDecorator = (target) => {
                 this[UNINITIALIZED].apply(this, args);
         }
     } as any;*/
+};
+
+/* Mark a method abstract to be removed by the DartClass */
+export const Abstract: MethodDecorator = (target, name, descr) => {
+    getMetadata(target.constructor).abstracts[name] = descr;
 };

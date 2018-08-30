@@ -1,4 +1,4 @@
-import {mixin, DartClass, defaultConstructor, namedConstructor, DartConstructor} from "../utils"
+import {mixin, DartClass, defaultConstructor, namedConstructor, DartConstructor, Abstract} from "../utils"
 
 describe("Utils", () => {
     it('mixes classes', () => {
@@ -394,6 +394,54 @@ describe("Utils", () => {
         expect(y.method()).toEqual('Hi John');
         expect(Derived.staticMethod()).toEqual('STATIC');
         expect(Derived.otherStaticMethod()).toEqual('BYE');
+    });
+
+    it('deletes abstract methods', () => {
+        @DartClass
+        class FakeAbstract {
+            @Abstract
+            doSomething(): string {
+                return 'abstract';
+            }
+
+        }
+
+        class Real extends FakeAbstract {
+            doSomething(): string {
+                return 'ok';
+            }
+        }
+
+        expect(new Real().doSomething()).toEqual('ok');
+        expect(FakeAbstract.prototype).not.toHaveProperty('doSomething');
+        expect(() => new FakeAbstract().doSomething()).toThrow(TypeError);
+
+    });
+
+    it('work NOT as abstract methods', () => {
+        @DartClass
+        class FakeAbstract {
+            doSomething: () => string;
+        }
+
+        class Real extends FakeAbstract {
+            doSomething = (): string => {
+                return 'ok';
+            }
+        }
+
+
+        class Child extends Real {
+            doSomething = (): string => {
+                // SUPER Is not working here !
+                return `hi + ${super.doSomething()}`;
+            }
+        }
+
+        expect(new Real().doSomething()).toEqual('ok');
+        expect(() => new Child().doSomething()).toThrow();
+
+
     });
 
 });

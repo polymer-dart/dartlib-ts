@@ -4,7 +4,7 @@
 
 // part of dart.core;
 
-import {DartClass, defaultFactory, namedFactory} from "../utils";
+import {Abstract, DartClass, defaultFactory, namedFactory} from "../utils";
 import {DartEfficientLengthIterable, DartIterable, DartIterator} from "../collections";
 import {bool, int} from "../core";
 
@@ -102,6 +102,7 @@ export class DartSet<E> extends DartEfficientLengthIterable<E> {
      * The order of iteration is defined by the individual `Set` implementation,
      * but must be consistent between changes to the set.
      */
+    @Abstract
     get iterator(): DartIterator<E> {
         throw new Error('abstract');
     }
@@ -109,6 +110,7 @@ export class DartSet<E> extends DartEfficientLengthIterable<E> {
     /**
      * Returns true if [value] is in the set.
      */
+    @Abstract
     contains(value: any): bool {
         throw new Error('abstract');
     }
@@ -226,10 +228,12 @@ export class DartSet<E> extends DartEfficientLengthIterable<E> {
      * If this set specifies an ordering of the elements,
      * the returned set will have the same order.
      */
+    @Abstract
     toSet(): DartSet<E> {
         throw new Error('abstract');
     }
 
+    @Abstract
     get length():int {
         throw new Error('abstract');
     }

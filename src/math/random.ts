@@ -4,7 +4,7 @@
 
 // part of dart.math;
 
-import {DartClass, defaultConstructor, defaultFactory, NamedFactory, namedFactory} from "../utils";
+import {Abstract, DartClass, defaultConstructor, defaultFactory, NamedFactory, namedFactory} from "../utils";
 import {bool, double, int} from "../core";
 
 /**
@@ -17,7 +17,7 @@ import {bool, double, int} from "../core";
  * purposes.
  */
 @DartClass
-export abstract class DartRandom {
+export class DartRandom {
     /**
      * Creates a random number generator.
      *
@@ -57,16 +57,25 @@ export abstract class DartRandom {
      * Implementation note: The default implementation supports [max] values
      * between 1 and (1<<32) inclusive.
      */
-    abstract nextInt(max: int): int;
+    @Abstract
+    nextInt(max: int): int {
+        throw new Error('abstract');
+    }
 
     /**
      * Generates a non-negative random floating point value uniformly distributed
      * in the range from 0.0, inclusive, to 1.0, exclusive.
      */
-    abstract nextDouble(): double;
+    @Abstract
+    nextDouble(): double {
+        throw new Error('abstract');
+    }
 
     /**
      * Generates a random boolean value.
      */
-    abstract nextBool(): bool;
+    @Abstract
+    nextBool(): bool {
+        throw new Error('abstract');
+    }
 }
