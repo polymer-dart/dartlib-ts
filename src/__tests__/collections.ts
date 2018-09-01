@@ -1,4 +1,5 @@
-import {DartList, DartMap, num, OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN} from "../core";
+import {DartHashMap, DartList, DartMap, DartObject, int, num, OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN} from "../core";
+import {EQUALS_OPERATOR} from "../_common";
 
 describe('DartList', () => {
     it('can create an list ', () => {
@@ -124,6 +125,129 @@ describe('DartMap', () => {
         let str = map2.toString();
         expect(str).toEqual("{string 0: [object Object], string 1: [object Object], string 2: [object Object], string 3: [object Object], string 4: [object Object], string 5: [object Object], string 6: [object Object], string 7: [object Object], string 8: [object Object], string 9: [object Object], string 10: [object Object], string 11: [object Object], string 12: [object Object], string 13: [object Object], string 14: [object Object], string 15: [object Object], string 16: [object Object], string 17: [object Object], string 18: [object Object], string 19: [object Object]}");
 
+    });
+
+    it('works with strange keys', () => {
+
+        let map = new DartHashMap.fromIterable(new DartList.generate(5, (i) => i), {
+            key: (i) => {
+                return {
+                    key: i
+                }
+            }
+        });
+
+        expect(map.length).toEqual(5);
+
+        for (let k of map.keys) {
+            expect(map[OPERATOR_INDEX](k)).toEqual(k.key);
+        }
+    });
+
+    it('works with dart objects keys', () => {
+
+        class MyObj extends DartObject {
+            key: int;
+
+            constructor(key: int) {
+                super();
+                this.key = key;
+            }
+        }
+
+        let map = new DartHashMap.fromIterable(new DartList.generate(5, (i) => i), {
+            key: (i) => new MyObj(i)
+        });
+
+        expect(map.length).toEqual(5);
+
+        for (let k of map.keys) {
+            expect(map[OPERATOR_INDEX](k)).toEqual(k.key);
+        }
+    });
+
+    it('works with dart objects also list', () => {
+
+        class MyObj extends DartObject {
+            key: int;
+
+            constructor(key: int) {
+                super();
+                this.key = key;
+            }
+        }
+
+        let map = new DartMap.fromIterable(new DartList.generate(5, (i) => i), {
+            key: (i) => new MyObj(i)
+        });
+
+        expect(map.length).toEqual(5);
+
+        for (let k of map.keys) {
+            expect(map[OPERATOR_INDEX](k)).toEqual(k.key);
+        }
+    });
+
+    it('works with custom dart objects also list', () => {
+
+        class MyObj extends DartObject {
+            key: int;
+
+            constructor(key: int) {
+                super();
+                this.key = key;
+            }
+
+            [EQUALS_OPERATOR](other: any) {
+                return (other as MyObj).key == this.key;
+            }
+
+            get hashCode() {
+                return this.key;
+            }
+        }
+
+        let map = new DartMap.fromIterable(new DartList.generate(5, (i) => i), {
+            key: (i) => new MyObj(i)
+        });
+
+        expect(map.length).toEqual(5);
+
+        for (let i = 0; i < map.length; i++) {
+            let k = new MyObj(i);
+            expect(map[OPERATOR_INDEX](k)).toEqual(i);
+        }
+    });
+
+    it('works with custom dart objects also list (hash)', () => {
+
+        class MyObj extends DartObject {
+            key: int;
+
+            constructor(key: int) {
+                super();
+                this.key = key;
+            }
+
+            [EQUALS_OPERATOR](other: any) {
+                return (other as MyObj).key == this.key;
+            }
+
+            get hashCode() {
+                return this.key;
+            }
+        }
+
+        let map: DartMap<MyObj, int> = new DartHashMap.fromIterable(new DartList.generate(5, (i) => i), {
+            key: (i) => new MyObj(i)
+        });
+
+        expect(map.length).toEqual(5);
+
+        for (let i = 0; i < map.length; i++) {
+            let k = new MyObj(i);
+            expect(map[OPERATOR_INDEX](k)).toEqual(i);
+        }
     });
 
 });

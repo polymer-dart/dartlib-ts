@@ -1191,7 +1191,10 @@ class _HashMapKeyIterator<E> implements DartIterator<E> {
     }
 
     next(value?: any): IteratorResult<E> {
-        return undefined;
+        return {
+            done: !this.moveNext(),
+            value: this.current
+        };
     }
 }
 
@@ -1492,7 +1495,7 @@ class DartJsLinkedHashMap<K, V> implements DartLinkedHashMap<K, V> {
         let length = bucket.length /* JS('int', '#.length', bucket)*/;
         for (let i = 0; i < length; i++) {
             let cell = bucket[i] /*JS('var', '#[#]', bucket, i)*/;
-            if (cell.hashMapCellKey == key) return i;
+            if (_dart.equals(cell.hashMapCellKey, key)) return i;
         }
         return -1;
     }
@@ -4820,7 +4823,7 @@ export abstract class DartComparable<T> {
 class DartObject {
     //@patch
     [EQUALS_OPERATOR](other) {
-        identical(this, other);
+        return identical(this, other);
     }
 
     //@patch
@@ -12196,16 +12199,5 @@ export {
     StateError,
     UnmodifiableMapBase,
     UnsupportedError,
-    _CustomHashMap,
-    _CustomHashSet,
-    _HashMap,
-    _HashSet,
-    _HashSetBase,
-    _IdentityHashMap,
-    _IdentityHashSet,
-    _LinkedCustomHashMap,
-    _LinkedCustomHashSet,
-    _LinkedHashSet,
-    _LinkedIdentityHashMap,
-    _LinkedIdentityHashSet
+    DartObject
 }
