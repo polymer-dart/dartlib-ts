@@ -3,11 +3,15 @@
 // BSD-style license that can be found in the LICENSE file.
 
 //part of dart.collection;
-import {DartHashSet} from "./collection_patch";
+
 import {DartSet} from "../core/set";
-import {Abstract, DartClass, namedFactory} from "../utils";
-import {DartIterable, DartIterator} from "../collections";
+import {Abstract, DartClass, defaultFactory, namedFactory} from "../utils";
+import {DartIterable, DartIterator, DartList} from "../collections";
 import {DartSetBase} from "./set";
+import {bool, int} from "../core";
+import {_defaultEquals, _defaultHashCode} from "./hash_map";
+import {identical, identityHashCode} from "../core/identical";
+import {_CustomHashSet, _HashSet, _IdentityHashSet} from "./collection_patch";
 
 /** Common parts of [HashSet] and [LinkedHashSet] implementations. */
 export class _HashSetBase<E> extends DartSetBase<E> {
@@ -160,5 +164,244 @@ export class DartHashSet<E> implements DartSet<E> {
     @Abstract
     get iterator(): DartIterator<E> {
         throw new Error('abstract');
+    }
+
+    //@patch
+    @defaultFactory
+    protected static _create<E>(
+        _?: {
+            equals?: (e1: E, e2: E) => bool,
+            hashCode?: (e: E) => int,
+            isValidKey?: (potentialKey: any) => bool
+        }): DartHashSet<E> {
+        let {equals, hashCode, isValidKey} = Object.assign({}, _);
+        if (isValidKey == null) {
+            if (hashCode == null) {
+                if (equals == null) {
+                    return new _HashSet<E>();
+                }
+                hashCode = _defaultHashCode;
+            } else {
+                if (identical(identityHashCode, hashCode) &&
+                    identical(identical, equals)) {
+                    return new _IdentityHashSet<E>();
+                }
+                if (equals == null) {
+                    equals = _defaultEquals;
+                }
+            }
+        } else {
+            if (hashCode == null) {
+                hashCode = _defaultHashCode;
+            }
+            if (equals == null) {
+                equals = _defaultEquals;
+            }
+        }
+        return new _CustomHashSet<E>(equals, hashCode, isValidKey);
+    }
+
+    constructor(_?: {
+        equals?: (e1: E, e2: E) => bool,
+        hashCode?: (e: E) => int,
+        isValidKey?: (potentialKey: any) => bool
+    }) {
+    }
+
+    @namedFactory
+    protected static _identity<E>(): DartHashSet<E> {
+        return new _IdentityHashSet<E>();
+    }
+
+    @Abstract
+    add(value: E): bool {
+        return undefined;
+    }
+
+    @Abstract
+    addAll(elements: DartIterable<E>): void {
+    }
+
+    @Abstract
+    clear(): void {
+    }
+
+    @Abstract
+    contains(value: any): bool {
+        return undefined;
+    }
+
+    @Abstract
+    containsAll(other: DartIterable<any>): bool {
+        return undefined;
+    }
+
+    @Abstract
+    difference(other: DartSet<any>): DartSet<E> {
+        return undefined;
+    }
+
+    @Abstract
+    intersection(other: DartSet<any>): DartSet<E> {
+        return undefined;
+    }
+
+    @Abstract
+    get length(): int {
+        return undefined;
+    }
+
+    @Abstract
+    lookup(object: any): E {
+        return undefined;
+    }
+
+    @Abstract
+    remove(value: any): bool {
+        return undefined;
+    }
+
+    @Abstract
+    removeAll(elements: DartIterable<any>): void {
+    }
+
+    @Abstract
+    removeWhere(test: (element: E) => bool): void {
+    }
+
+    @Abstract
+    retainAll(elements: DartIterable<any>): void {
+    }
+
+    @Abstract
+    retainWhere(test: (element: E) => bool): void {
+    }
+
+    @Abstract
+    toSet(): DartSet<E> {
+        return undefined;
+    }
+
+    @Abstract
+    union(other: DartSet<E>): DartSet<E> {
+        return undefined;
+    }
+
+    [Symbol.iterator](): Iterator<E> {
+        return this.iterator;
+    }
+
+    @Abstract
+    any(f: (element: E) => boolean): boolean {
+        return false;
+    }
+
+    @Abstract
+    elementAt(index: int): E {
+        return undefined;
+    }
+
+    @Abstract
+    every(f: (element: E) => boolean): boolean {
+        return false;
+    }
+
+    @Abstract
+    expand<T>(f: (element: E) => DartIterable<T>): DartIterable<T> {
+        return undefined;
+    }
+
+    @Abstract
+    get first(): E {
+        return undefined;
+    }
+
+    @Abstract
+    firstWhere(test: (element: E) => boolean, _?: { orElse: () => E }): E {
+        return undefined;
+    }
+
+    @Abstract
+    fold<T>(initialValue: T, combine: (previousValue: T, element: E) => T): T {
+        return undefined;
+    }
+
+    @Abstract
+    forEach(f: (element: E) => any): void {
+    }
+
+    @Abstract
+    get isEmpty(): boolean {
+        return false;
+    }
+
+    @Abstract
+    get isNotEmpty(): boolean {
+        return false;
+    }
+
+    @Abstract
+    join(separator?: string): string {
+        return "";
+    }
+
+    @Abstract
+    get last(): E {
+        return undefined;
+    }
+
+    @Abstract
+    lastWhere(test: (element: E) => boolean, _?: { orElse: () => E }): E {
+        return undefined;
+    }
+
+    @Abstract
+    map<T>(f: (e: E) => T): DartIterable<T> {
+        return undefined;
+    }
+
+    @Abstract
+    reduce(combine: (value: E, element: E) => E): E {
+        return undefined;
+    }
+
+    @Abstract
+    get single(): E {
+        return undefined;
+    }
+
+    @Abstract
+    singleWhere(test: (element: E) => boolean): E {
+        return undefined;
+    }
+
+    @Abstract
+    skip(count: int): DartIterable<E> {
+        return undefined;
+    }
+
+    @Abstract
+    skipWhile(test: (value: E) => boolean): DartIterable<E> {
+        return undefined;
+    }
+
+    @Abstract
+    take(count: int): DartIterable<E> {
+        return undefined;
+    }
+
+    @Abstract
+    takeWhile(test: (value: E) => boolean): DartIterable<E> {
+        return undefined;
+    }
+
+    @Abstract
+    toList(_?: { growable?: boolean }): DartList<E> {
+        return undefined;
+    }
+
+    @Abstract
+    where(test: (element: E) => boolean): DartIterable<E> {
+        return undefined;
     }
 }

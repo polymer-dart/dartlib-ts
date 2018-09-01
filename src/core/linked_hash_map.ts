@@ -4,12 +4,16 @@
 
 //part of dart.collection;
 
-import {DartHashMap} from "../collections/hash_map";
-import {Abstract, DartClass, namedFactory} from "../utils";
+import {_defaultEquals, _defaultHashCode, DartHashMap} from "../collections/hash_map";
+import {Abstract, DartClass, defaultFactory, namedFactory} from "../utils";
 import {bool, int, OPERATOR_INDEX_ASSIGN} from "../core";
 import {DartMap} from "./map";
-import {DartIterable} from "../collections";
+import {DartIterable, DartList} from "../collections";
 import {DartMaps} from "./maps";
+import {DartJsLinkedHashMap} from "../collections/linked_hash_map";
+import {identical, identityHashCode} from "./identical";
+import {_LinkedCustomHashMap, _LinkedIdentityHashMap} from "../collections/collection_patch";
+import {fillLiteralMap} from "../native/js_helper";
 
 /**
  * A hash-table based implementation of [Map].
@@ -215,5 +219,83 @@ export class DartLinkedHashMap<K, V> implements DartHashMap<K, V> {
     @Abstract
     get values(): DartIterable<V> {
         return undefined;
+    }
+
+    // @patch
+    @defaultFactory
+    protected static _create<K, V>(
+        _?: {
+            equals?: (key1: K, key2: K) => bool,
+            hashCode?: (key: K) => int,
+            isValidKey?: (potentialKey) => bool
+        }): DartLinkedHashMap<K, V> {
+        let {equals, hashCode, isValidKey} = Object.assign({}, _);
+        if (isValidKey == null) {
+            if (hashCode == null) {
+                if (equals == null) {
+                    return new DartJsLinkedHashMap.es6<K, V>();
+                }
+                hashCode = _defaultHashCode;
+            } else {
+                if (identical(identityHashCode, hashCode) &&
+                    identical(identical, equals)) {
+                    return new _LinkedIdentityHashMap.es6<K, V>();
+                }
+                if (equals == null) {
+                    equals = _defaultEquals;
+                }
+            }
+        } else {
+            if (hashCode == null) {
+                hashCode = _defaultHashCode;
+            }
+            if (equals == null) {
+                equals = _defaultEquals;
+            }
+        }
+        return new _LinkedCustomHashMap<K, V>(equals, hashCode, isValidKey);
+    }
+
+
+    //@patch
+    @namedFactory
+    protected static _identity<K, V>(): DartLinkedHashMap<K, V> {
+        return new _LinkedIdentityHashMap.es6<K, V>();
+    }
+
+    // Private factory constructor called by generated code for map literals.
+    //@NoInline()
+    @namedFactory
+    protected static __literal<K, V>(keyValuePairs: DartList<any>): DartLinkedHashMap<K, V> {
+        return fillLiteralMap(keyValuePairs, new DartJsLinkedHashMap.es6<K, V>());
+    }
+
+    protected static _literal: new<K, V>(keyValuePairs: DartList<any>) => DartLinkedHashMap<K, V>;
+
+    // Private factory constructor called by generated code for map literals.
+    // @NoThrows()
+    // @NoInline()
+    // @NoSideEffects()
+    @namedFactory
+    protected static __empty<K, V>(): DartLinkedHashMap<K, V> {
+        return new DartJsLinkedHashMap.es6<K, V>();
+    }
+
+    protected static _empty: new<K, V>() => DartLinkedHashMap<K, V>;
+
+    // Private factory static function called by generated code for map literals.
+    // This version is for map literals without type parameters.
+    //@NoThrows()
+    //@NoInline()
+    //@NoSideEffects()
+    protected static _makeEmpty<K, V>(): DartJsLinkedHashMap<K, V> {
+        return new DartJsLinkedHashMap();
+    }
+
+    // Private factory static function called by generated code for map literals.
+    // This version is for map literals without type parameters.
+    //@NoInline()
+    protected static _makeLiteral<K, V>(keyValuePairs): DartJsLinkedHashMap<K, V> {
+        return fillLiteralMap(keyValuePairs, new DartJsLinkedHashMap<K, V>());
     }
 }

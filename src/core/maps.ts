@@ -344,8 +344,12 @@ class DartMapView<K, V> implements DartMap<K, V> {
  * the constructor, except for operations that modify the map.
  * Modifying operations throw instead.
  */
-export class DartUnmodifiableMapView<K, V> extends mixin(_UnmodifiableMapMixin, DartMapView) {
 
+
+export class DartUnmodifiableMapView<K, V> extends (<K1, V1>() => (mixin(_UnmodifiableMapMixin, DartMapView) as any as DartMapView<K1, V1>))<K, V>() {
+    constructor(base: DartMap<K, V>) {
+        super(base);
+    }
 }
 
 /**

@@ -8,7 +8,7 @@ import {
     StateError as DartStateError,
     ArgumentError as DartArgumentError
 } from "./errors";
-import {DartObject, int, OPERATOR_INDEX_ASSIGN, OPERATOR_INDEX} from "./core";
+import {DartObject, int, OPERATOR_INDEX_ASSIGN, OPERATOR_INDEX, bool} from "./core";
 import {DartComparator} from "./core/comparable";
 import {DartStringBuffer} from "./core/string_buffer";
 import {DartRandom} from "./math/random";
@@ -17,7 +17,7 @@ import {DartSet} from "./core/set";
 import {DartIterableBase} from "./core/iterable";
 import {DartListBase} from "./core/list";
 import {DartMaps} from "./core/maps";
-import {DartList} from "../core/core_patch";
+import {JSArray} from "./native/js_array";
 
 
 
@@ -937,14 +937,18 @@ export class DartIterable<E> implements Iterable<E> {
  * Marker interface for [Iterable] subclasses that have an efficient
  * [length] implementation.
  */
-export abstract class DartEfficientLengthIterable<T> extends DartIterable<T> {
+@DartClass
+export class DartEfficientLengthIterable<T> extends DartIterable<T> {
     /**
      * Returns the number of elements in the iterable.
      *
      * This is an efficient operation that doesn't require iterating through
      * the elements.
      */
-    abstract get length();
+    @Abstract
+    get length():int {
+        throw new Error('abstract');
+    }
 }
 
 /**
@@ -1999,7 +2003,7 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
      *
      * Throws an [UnsupportedError] if the list is fixed-length.
      */
-    @Abstract
+
     set length(newLength: int) {
         throw new Error('abstract');
     }
@@ -2405,6 +2409,46 @@ export class DartList<E> implements DartEfficientLengthIterable<E> {
     @Abstract
     asMap(): DartMap<int, E> {
         throw new Error('abstract');
+    }
+
+    //@patch
+    @defaultFactory
+    protected static create<E>(length?: int): DartList<E> {
+        return new JSArray.list<E>(length);
+    }
+
+    //@patch
+    @namedFactory
+    protected static _filled<E>(length: int, fill: E, _?: { growable?: bool /*false*/ }) {
+        let {growable} = Object.assign({growable: false}, _);
+        let result: DartList<E> = growable
+            ? new JSArray.growable<E>(length)
+            : new JSArray.fixed<E>(length);
+        if (length != 0 && fill != null) {
+            for (let i = 0; i < result.length; i++) {
+                result[i] = fill;
+            }
+        }
+        return result;
+    }
+
+    //@patch
+    @namedFactory
+    protected static _from<E>(elements: DartIterable<E>, _?: { growable?: bool /*true*/ }) {
+        let {growable} = Object.assign({growable: true}, _);
+        let list = new DartList<E>();
+        for (let e of elements) {
+            list.add(e);
+        }
+        if (growable) return list;
+        return makeListFixedLength(list);
+    }
+
+    //@patch
+    @namedFactory
+    protected static _unmodifiable<E>(elements: DartIterable<E>) {
+        let result = new DartList.from<E>(elements, {growable: false});
+        return makeFixedListUnmodifiable(result);
     }
 }
 

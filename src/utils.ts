@@ -118,20 +118,24 @@ export const namedFactory = NamedFactory();
 export const DartClass: ClassDecorator = (target) => {
     let ctor;
     let def = getMetadata(target).constructors.get('');
-    if (def && def.factory) {
-        // use that as constructor
-        ctor = function () {
-            return def.ctor.call(null, ...arguments);
-        }
+    if (getMetadata(target).constructors.size==0) {
+        ctor = target;
     } else {
-        ctor = function (...args: any[]) {
-            callConstructor(ctor, '', this, ...args);
-        };
+        if (def && def.factory) {
+            // use that as constructor
+            ctor = function () {
+                return def.ctor.call(null, ...arguments);
+            }
+        } else {
+            ctor = function (...args: any[]) {
+                callConstructor(ctor, '', this, ...args);
+            };
+        }
+
+
+        Object.setPrototypeOf(ctor, Object.getPrototypeOf(target));
+        copyProps(target, ctor);
     }
-
-    Object.setPrototypeOf(ctor, Object.getPrototypeOf(target));
-    copyProps(target, ctor);
-
     // Remove abstract from prototype
     for (let k in getMetadata(target).abstracts) {
         delete ctor.prototype[k];

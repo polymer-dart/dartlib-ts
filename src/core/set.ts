@@ -7,6 +7,7 @@
 import {Abstract, DartClass, defaultFactory, namedFactory} from "../utils";
 import {DartEfficientLengthIterable, DartIterable, DartIterator} from "../collections";
 import {bool, int} from "../core";
+import {DartLinkedHashSet} from "../collections/linked_hash_set";
 
 /**
  * A collection of objects in which each object can occur only once.
@@ -49,7 +50,7 @@ export class DartSet<E> extends DartEfficientLengthIterable<E> {
      */
     @defaultFactory
     protected static create<E>(): DartSet<E> {
-        return new LinkedHashSet<E>();
+        return new DartLinkedHashSet<E>();
     }
 
     constructor() {
@@ -66,7 +67,7 @@ export class DartSet<E> extends DartEfficientLengthIterable<E> {
      */
     @namedFactory
     protected static _identity<E>(): DartSet<E> {
-        return new LinkedHashSet.identity<E>();
+        return new DartLinkedHashSet.identity<E>();
     }
 
     static identity: new<E>() => DartSet<E>;
@@ -91,7 +92,7 @@ export class DartSet<E> extends DartEfficientLengthIterable<E> {
      */
     @namedFactory
     protected static _from<E>(elements: DartIterable<E>): DartSet<E> {
-        return new LinkedHashSet.from<E>(elements);
+        return new DartLinkedHashSet.from<E>(elements);
     }
 
     static from: new<E>(elements: DartIterable<E>) => DartSet<E>;
@@ -136,7 +137,10 @@ export class DartSet<E> extends DartEfficientLengthIterable<E> {
      *     Expect.isTrue(set.length == 1);
      *     Expect.isTrue(identical(time1, set.first));
      */
-    add?(value: E): bool;
+    @Abstract
+    add(value: E): bool {
+        throw new Error('abstract');
+    }
 
     /**
      * Adds all [elements] to this Set.
@@ -144,14 +148,20 @@ export class DartSet<E> extends DartEfficientLengthIterable<E> {
      * Equivalent to adding each element in [elements] using [add],
      * but some collections may be able to optimize it.
      */
-    addAll?(elements: DartIterable<E>): void;
+    @Abstract
+    addAll(elements: DartIterable<E>): void {
+        throw new Error('abstract');
+    }
 
     /**
      * Removes [value] from the set. Returns true if [value] was
      * in the set. Returns false otherwise. The method has no effect
      * if [value] value was not in the set.
      */
-    remove?(value: any): bool;
+    @Abstract
+    remove(value: any): bool {
+        throw new Error('abstract');
+    }
 
     /**
      * If an object equal to [object] is in the set, return it.
@@ -159,12 +169,18 @@ export class DartSet<E> extends DartEfficientLengthIterable<E> {
      * Checks if there is an object in the set that is equal to [object].
      * If so, that object is returned, otherwise returns null.
      */
-    lookup?(object: any): E;
+    @Abstract
+    lookup(object: any): E {
+        throw new Error('abstract');
+    }
 
     /**
      * Removes each element of [elements] from this set.
      */
-    removeAll?(elements: DartIterable<any>): void;
+    @Abstract
+    removeAll(elements: DartIterable<any>): void {
+        throw new Error('abstract');
+    }
 
     /**
      * Removes all elements of this set that are not elements in [elements].
@@ -174,22 +190,34 @@ export class DartSet<E> extends DartEfficientLengthIterable<E> {
      * equal element in this set is retained, and elements that are not equal
      * to any element in `elements` are removed.
      */
-    retainAll?(elements: DartIterable<any>): void;
+    @Abstract
+    retainAll(elements: DartIterable<any>): void {
+        throw new Error('abstract');
+    }
 
     /**
      * Removes all elements of this set that satisfy [test].
      */
-    removeWhere?(test: (element: E) => bool): void;
+    @Abstract
+    removeWhere(test: (element: E) => bool): void {
+        throw new Error('abstract');
+    }
 
     /**
      * Removes all elements of this set that fail to satisfy [test].
      */
-    retainWhere?(test: (element: E) => bool): void;
+    @Abstract
+    retainWhere(test: (element: E) => bool): void {
+        throw new Error('abstract');
+    }
 
     /**
      * Returns whether this Set contains all the elements of [other].
      */
-    containsAll?(other: DartIterable<any>): bool;
+    @Abstract
+    containsAll(other: DartIterable<any>): bool {
+        throw new Error('abstract');
+    }
 
     /**
      * Returns a new set which is the intersection between this set and [other].
@@ -197,7 +225,10 @@ export class DartSet<E> extends DartEfficientLengthIterable<E> {
      * That is, the returned set contains all the elements of this [Set] that
      * are also elements of [other] according to `other.contains`.
      */
-    intersection?(other: DartSet<any>): DartSet<E>;
+    @Abstract
+    intersection(other: DartSet<any>): DartSet<E> {
+        throw new Error('abstract');
+    }
 
     /**
      * Returns a new set which contains all the elements of this set and [other].
@@ -205,7 +236,10 @@ export class DartSet<E> extends DartEfficientLengthIterable<E> {
      * That is, the returned set contains all the elements of this [Set] and
      * all the elements of [other].
      */
-    union?(other: DartSet<E>): DartSet<E> ;
+    @Abstract
+    union(other: DartSet<E>): DartSet<E> {
+        throw new Error('abstract');
+    }
 
     /**
      * Returns a new set with the elements of this that are not in [other].
@@ -213,12 +247,18 @@ export class DartSet<E> extends DartEfficientLengthIterable<E> {
      * That is, the returned set contains all the elements of this [DartSet] that
      * are not elements of [other] according to `other.contains`.
      */
-    difference?(other: DartSet<any>): DartSet<E>;
+    @Abstract
+    difference(other: DartSet<any>): DartSet<E> {
+        throw new Error('abstract');
+    }
 
     /**
      * Removes all elements in the set.
      */
-    clear?(): void;
+    @Abstract
+    clear(): void {
+        throw new Error('abstract');
+    }
 
     /* Creates a [Set] with the same elements and behavior as this `Set`.
      *
@@ -234,7 +274,7 @@ export class DartSet<E> extends DartEfficientLengthIterable<E> {
     }
 
     @Abstract
-    get length():int {
+    get length(): int {
         throw new Error('abstract');
     }
 }

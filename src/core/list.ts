@@ -27,8 +27,9 @@ import _dart from "../_common";
 import {DartComparable} from "./comparable";
 import {DartRandom} from "../math/random";
 import {DartMap} from "./map";
-import {identical} from "./itentical";
+import {identical} from "./identical";
 import {DartIterableBase} from "./iterable";
+import {DartSort} from "./sort";
 
 /**
  * Base implementation of a [List] class.

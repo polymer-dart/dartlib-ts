@@ -7,74 +7,23 @@
 
 import {bool, int, num, OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN} from "../core";
 import {DartClass, defaultFactory, namedConstructor, namedFactory} from "../utils";
-import {identical, identityHashCode} from "../core/itentical";
+import {identical, identityHashCode} from "../core/identical";
 import {DartEfficientLengthIterable, DartIterable, DartIterator, DartList, DartMappedIterable} from "../collections";
 import {DartMap} from "../core/map";
 import {ConcurrentModificationError, StateError} from "../errors";
 import _dart from '../_common';
-import {_defaultEquals, _defaultHashCode, _Equality, _Hasher, _Predicate} from "./hash_map";
+import {_defaultEquals, _defaultHashCode, _Equality, _Hasher, _Predicate, DartHashMap} from "./hash_map";
 import {DartMaps} from "../core/maps";
 import {DartSet} from "../core/set";
-import {_HashSetBase} from "./hash_set";
-import {DartLinkedHashMap} from "../core/linked_hash_map";
-import {DartJsLinkedHashMap} from "./linked_hash_map";
+import {_HashSetBase, DartHashSet} from "./hash_set";
+import {DartJsLinkedHashMap, LinkedHashMapCell} from "./linked_hash_map";
+import {DartLinkedHashSet} from "./linked_hash_set";
 
 const _USE_ES6_MAPS:bool =true;
 
 
-// @DartClass // <- does a patch need again it ?
-export class DartHashMap<K, V> {
 
-    @defaultFactory
-    protected static _create?<K,V>(
-        _?: {
-            equals?: (key1: K, key2: K) => bool,
-            hashCode?: (key: K) => int,
-            isValidKey?: (potentialKey: any) => bool
-        }): DartHashMap<K, V> {
-        let {equals, hashCode, isValidKey} = Object.assign({}, _);
-        if (isValidKey == null) {
-            if (hashCode == null) {
-                if (equals == null) {
-                    return new _HashMap<K, V>();
-                }
-                hashCode = _defaultHashCode;
-            } else {
-                if (identical(identityHashCode, hashCode) &&
-                    identical(identical, equals)) {
-                    return new _IdentityHashMap<K, V>();
-                }
-                if (equals == null) {
-                    equals = _defaultEquals;
-                }
-            }
-        } else {
-            if (hashCode == null) {
-                hashCode = _defaultHashCode;
-            }
-            if (equals == null) {
-                equals = _defaultEquals;
-            }
-        }
-        return new _CustomHashMap<K, V>(equals, hashCode, isValidKey);
-    }
-
-    constructor(_?: {
-        equals?: (key1: K, key2: K) => bool,
-        hashCode?: (key: K) => int,
-        isValidKey?: (potentialKey: any) => bool
-    }) {
-    }
-
-    @namedFactory
-    protected static _identity?<K, V>(): DartHashMap<K, V> {
-        return new _IdentityHashMap<K, V>();
-    }
-
-    static identity: new<K, V>() => DartHashMap<K, V>;
-}
-
-class _HashMap<K, V> implements DartHashMap<K, V> {
+export class _HashMap<K, V> implements DartHashMap<K, V> {
     protected _length:int = 0;
 
     // The hash map contents are divided into three parts: one part for
@@ -411,7 +360,7 @@ class _HashMap<K, V> implements DartHashMap<K, V> {
     }
 }
 
-class _IdentityHashMap<K, V> extends _HashMap<K, V> {
+export class _IdentityHashMap<K, V> extends _HashMap<K, V> {
 
     _computeHashCode(key: any): int {
         // We force the hash codes to be unsigned 30-bit integers to avoid
@@ -430,7 +379,7 @@ class _IdentityHashMap<K, V> extends _HashMap<K, V> {
     }
 }
 
-class _CustomHashMap<K, V> extends _HashMap<K, V> {
+export class _CustomHashMap<K, V> extends _HashMap<K, V> {
     protected  _equals: _Equality<K>;
     protected _hashCode: _Hasher<K>;
     protected _validKey: _Predicate<any>;
@@ -552,97 +501,8 @@ class _HashMapKeyIterator<E> implements DartIterator<E> {
     }
 }
 
-// @DartClass
-export class DartLinkedHashMap<K, V> {
-    // @patch
-    @defaultFactory
-    protected static _create<K, V>(
-        _?: {
-            equals?: (key1: K, key2: K) => bool,
-            hashCode?: (key: K) => int,
-            isValidKey?: (potentialKey) => bool
-        }): DartLinkedHashMap<K, V> {
-        let {equals, hashCode, isValidKey} = Object.assign({}, _);
-        if (isValidKey == null) {
-            if (hashCode == null) {
-                if (equals == null) {
-                    return new DartJsLinkedHashMap.es6<K, V>();
-                }
-                hashCode = _defaultHashCode;
-            } else {
-                if (identical(identityHashCode, hashCode) &&
-                    identical(identical, equals)) {
-                    return new _LinkedIdentityHashMap.es6<K, V>();
-                }
-                if (equals == null) {
-                    equals = _defaultEquals;
-                }
-            }
-        } else {
-            if (hashCode == null) {
-                hashCode = _defaultHashCode;
-            }
-            if (equals == null) {
-                equals = _defaultEquals;
-            }
-        }
-        return new _LinkedCustomHashMap<K, V>(equals, hashCode, isValidKey);
-    }
-
-    constructor(_?: {
-        equals?: (key1: K, key2: K) => bool,
-        hashCode?: (key: K) => int,
-        isValidKey?: (potentialKey) => bool
-    }) {
-    }
-
-    //@patch
-    @namedFactory
-    protected static _identity<K, V>(): DartLinkedHashMap<K, V> {
-        return new _LinkedIdentityHashMap.es6<K, V>();
-    }
-
-    static identity: new<K, V>() => DartLinkedHashMap<K, V>
-
-    // Private factory constructor called by generated code for map literals.
-    //@NoInline()
-    @namedFactory
-    protected static __literal<K, V>(keyValuePairs: DartList<any>): DartLinkedHashMap<K, V> {
-        return fillLiteralMap(keyValuePairs, new DartJsLinkedHashMap.es6<K, V>());
-    }
-
-    protected static _literal: new<K, V>(keyValuePairs: DartList<any>) => DartLinkedHashMap<K, V>;
-
-    // Private factory constructor called by generated code for map literals.
-    // @NoThrows()
-    // @NoInline()
-    // @NoSideEffects()
-    @namedFactory
-    protected static __empty<K, V>(): DartLinkedHashMap<K, V> {
-        return new DartJsLinkedHashMap.es6<K, V>();
-    }
-
-    protected static _empty: new<K, V>() => DartLinkedHashMap<K, V>;
-
-    // Private factory static function called by generated code for map literals.
-    // This version is for map literals without type parameters.
-    //@NoThrows()
-    //@NoInline()
-    //@NoSideEffects()
-    protected static _makeEmpty<K, V>(): DartJsLinkedHashMap {
-        return new DartJsLinkedHashMap();
-    }
-
-    // Private factory static function called by generated code for map literals.
-    // This version is for map literals without type parameters.
-    //@NoInline()
-    protected static _makeLiteral(keyValuePairs): DartJsLinkedHashMap {
-        return fillLiteralMap(keyValuePairs, new DartJsLinkedHashMap());
-    }
-}
-
 @DartClass
-class _LinkedIdentityHashMap<K, V> extends DartJsLinkedHashMap<K, V> {
+export class _LinkedIdentityHashMap<K, V> extends DartJsLinkedHashMap<K, V> {
     protected static get _supportsEs6Maps(): bool {
         return typeof Map != 'undefined' /* JS('returns:bool;depends:none;effects:none;throws:never;gvn:true',
             'typeof Map != "undefined"')*/;
@@ -672,15 +532,14 @@ class _LinkedIdentityHashMap<K, V> extends DartJsLinkedHashMap<K, V> {
         if (bucket == null) return -1;
         let length = bucket.length /* JS('int', '#.length', bucket)*/;
         for (let i = 0; i < length; i++) {
-            let cell: DartLinkedHashMapCell = bucket[i] /* JS('var', '#[#]', bucket, i)*/;
+            let cell: LinkedHashMapCell<K,V> = bucket[i] /* JS('var', '#[#]', bucket, i)*/;
             if (identical(cell.hashMapCellKey, key)) return i;
         }
         return -1;
     }
 }
 
-class _Es6LinkedIdentityHashMap<K, V> extends _LinkedIdentityHashMap<K, V>
-    implements DartInternalMap {
+class _Es6LinkedIdentityHashMap<K, V> extends _LinkedIdentityHashMap<K, V> {
     _map: Map<K,V>;
     _modifications: int = 0;
 
@@ -885,7 +744,7 @@ class _Es6MapIterator<E> implements DartIterator<E> {
 }
 
 // TODO(floitsch): use ES6 maps when available.
-class _LinkedCustomHashMap<K, V> extends DartJsLinkedHashMap<K, V> {
+export class _LinkedCustomHashMap<K, V> extends DartJsLinkedHashMap<K, V> {
     protected _equals: _Equality<K>;
     protected _hashCode: _Hasher<K>;
     protected _validKey: _Predicate<any>;
@@ -928,64 +787,14 @@ class _LinkedCustomHashMap<K, V> extends DartJsLinkedHashMap<K, V> {
         if (bucket == null) return -1;
         let length = bucket.length /*JS('int', '#.length', bucket)*/;
         for (let i = 0; i < length; i++) {
-            let cell: LinkedHashMapCell = bucket[i] /*JS('var', '#[#]', bucket, i)*/;
+            let cell: LinkedHashMapCell<K,V> = bucket[i] /*JS('var', '#[#]', bucket, i)*/;
             if (this._equals(cell.hashMapCellKey, key)) return i;
         }
         return -1;
     }
 }
 
-//@patch
-export class DartHashSet<E> {
-    //@patch
-    @defaultFactory
-    protected static _create<E>(
-        _?: {
-            equals?: (e1: E, e2: E) => bool,
-            hashCode?: (e: E) => int,
-            isValidKey?: (potentialKey: any) => bool
-        }): DartHashSet<E> {
-        let {equals, hashCode, isValidKey} = Object.assign({}, _);
-        if (isValidKey == null) {
-            if (hashCode == null) {
-                if (equals == null) {
-                    return new _HashSet<E>();
-                }
-                hashCode = _defaultHashCode;
-            } else {
-                if (identical(identityHashCode, hashCode) &&
-                    identical(identical, equals)) {
-                    return new _IdentityHashSet<E>();
-                }
-                if (equals == null) {
-                    equals = _defaultEquals;
-                }
-            }
-        } else {
-            if (hashCode == null) {
-                hashCode = _defaultHashCode;
-            }
-            if (equals == null) {
-                equals = _defaultEquals;
-            }
-        }
-        return new _CustomHashSet<E>(equals, hashCode, isValidKey);
-    }
-
-    constructor( _?: {
-        equals?: (e1: E, e2: E) => bool,
-        hashCode?: (e: E) => int,
-        isValidKey?: (potentialKey: any) => bool
-    }) {
-    }
-
-    @namedFactory
-    protected static _identity<E>(): DartHashSet<E> {
-        return new _IdentityHashSet<E>();
-    }
-}
-
-class _HashSet<E> extends _HashSetBase<E> implements DartHashSet<E> {
+export class _HashSet<E> extends _HashSetBase<E> implements DartHashSet<E> {
     protected _length:int = 0;
 
     // The hash set contents are divided into three parts: one part for
@@ -1075,7 +884,7 @@ class _HashSet<E> extends _HashSetBase<E> implements DartHashSet<E> {
             return this._addHashTableEntry(strings, element);
         } else if (_HashSet._isNumericElement(element)) {
             let nums = this._nums;
-            if (nums == null) _nums = nums = _HashSet._newHashTable();
+            if (nums == null) this._nums = nums = _HashSet._newHashTable();
             return this._addHashTableEntry(nums, element);
         } else {
             return this._add(element);
@@ -1108,9 +917,9 @@ class _HashSet<E> extends _HashSetBase<E> implements DartHashSet<E> {
 
     remove(object: any): bool {
         if (_HashSet._isStringElement(object)) {
-            return this._removeHashTableEntry(_strings, object);
+            return this._removeHashTableEntry(this._strings, object);
         } else if (_HashSet._isNumericElement(object)) {
-            return this._removeHashTableEntry(_nums, object);
+            return this._removeHashTableEntry(this._nums, object);
         } else {
             return this._remove(object);
         }
@@ -1194,16 +1003,16 @@ class _HashSet<E> extends _HashSetBase<E> implements DartHashSet<E> {
     }
 
     protected _addHashTableEntry(table: any, element: E): bool {
-        if (this._hasTableEntry(table, element)) return false;
-        this._setTableEntry(table, element, 0);
+        if (_HashSet._hasTableEntry(table, element)) return false;
+        _HashSet._setTableEntry(table, element, 0);
         this._length++;
         this._elements = null;
         return true;
     }
 
     protected _removeHashTableEntry(table: any, element: any): bool {
-        if (table != null && this._hasTableEntry(table, element)) {
-            this._deleteTableEntry(table, element);
+        if (table != null && _HashSet._hasTableEntry(table, element)) {
+            _HashSet._deleteTableEntry(table, element);
             this._length--;
             this._elements = null;
             return true;
@@ -1279,7 +1088,7 @@ class _HashSet<E> extends _HashSetBase<E> implements DartHashSet<E> {
     }
 }
 
-class _IdentityHashSet<E> extends _HashSet<E> {
+export class _IdentityHashSet<E> extends _HashSet<E> {
     protected _newSet(): DartSet<E> {
         return new _IdentityHashSet<E>();
     }
@@ -1301,7 +1110,7 @@ class _IdentityHashSet<E> extends _HashSet<E> {
     }
 }
 
-class _CustomHashSet<E> extends _HashSet<E> {
+export class _CustomHashSet<E> extends _HashSet<E> {
     protected _equality:_Equality<E>;
     protected _hasher:_Hasher<E>;
     protected _validKey:_Predicate<any>;
@@ -1360,7 +1169,7 @@ class _HashSetIterator<E> implements DartIterator<E> {
     protected _offset:int = 0;
     protected _current:E;
 
-    _HashSetIterator(_set: _HashSet<E>, _elements: Array<E>) {
+    constructor(_set: _HashSet<E>, _elements: Array<E>) {
         this._set = _set;
         this._elements = _elements;
     }
@@ -1395,60 +1204,7 @@ class _HashSetIterator<E> implements DartIterator<E> {
     }
 }
 
-//@patch
-export class DartLinkedHashSet<E> {
-    //@patch
-    @defaultFactory
-    protected static _create<E>(_?:
-                                    {
-                                        equals: (e1: E, e2: E) => bool,
-                                        hashCode?: (e: E) => int,
-                                        isValidKey?: (potentialKey: any) => bool
-                                    }): DartLinkedHashSet<E> {
-        let {equals, hashCode, isValidKey} = Object.assign({}, _);
-        if (isValidKey == null) {
-            if (hashCode == null) {
-                if (equals == null) {
-                    return new _LinkedHashSet<E>();
-                }
-                hashCode = _defaultHashCode;
-            } else {
-                if (identical(identityHashCode, hashCode) &&
-                    identical(identical, equals)) {
-                    return new _LinkedIdentityHashSet<E>();
-                }
-                if (equals == null) {
-                    equals = _defaultEquals;
-                }
-            }
-        } else {
-            if (hashCode == null) {
-                hashCode = _defaultHashCode;
-            }
-            if (equals == null) {
-                equals = _defaultEquals;
-            }
-        }
-        return new _LinkedCustomHashSet<E>(equals, hashCode, isValidKey);
-    }
-
-    constructor(_?:
-                    {
-                        equals: (e1: E, e2: E) => bool,
-                        hashCode?: (e: E) => int,
-                        isValidKey?: (potentialKey: any) => bool
-                    }){
-    }
-
-    @namedFactory
-    protected static _identity<E>(): DartLinkedHashSet<E> {
-        return new _LinkedIdentityHashSet<E>();
-    }
-
-    static identity: new<E>() => DartLinkedHashSet<E>;
-}
-
-class _LinkedHashSet<E> extends _HashSetBase<E> implements DartLinkedHashSet<E> {
+export class _LinkedHashSet<E> extends _HashSetBase<E> implements DartLinkedHashSet<E> {
     protected _length: int = 0;
 
     // The hash set contents are divided into three parts: one part for
@@ -1588,7 +1344,7 @@ class _LinkedHashSet<E> extends _HashSetBase<E> implements DartLinkedHashSet<E> 
         if (bucket == null) {
 
             let cell: _LinkedHashSetCell<E> = this._newLinkedCell(element);
-            this._setTableEntry(rest, hash, [cell] /*JS('var', '[#]', cell)*/);
+            _LinkedHashSet._setTableEntry(rest, hash, [cell] /*JS('var', '[#]', cell)*/);
         } else {
             let index = this._findBucketIndex(bucket, element);
             if (index >= 0) return false;
@@ -1776,7 +1532,7 @@ class _LinkedHashSet<E> extends _HashSetBase<E> implements DartLinkedHashSet<E> 
     }
 }
 
-class _LinkedIdentityHashSet<E> extends _LinkedHashSet<E> {
+export class _LinkedIdentityHashSet<E> extends _LinkedHashSet<E> {
     protected _newSet(): DartSet<E> {
         return new _LinkedIdentityHashSet<E>();
     }
@@ -1799,7 +1555,7 @@ class _LinkedIdentityHashSet<E> extends _LinkedHashSet<E> {
     }
 }
 
-class _LinkedCustomHashSet<E> extends _LinkedHashSet<E> {
+export class _LinkedCustomHashSet<E> extends _LinkedHashSet<E> {
     protected _equality: _Equality<E>;
     protected _hasher: _Hasher<E>;
     protected _validKey: _Predicate<any>;

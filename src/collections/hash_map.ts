@@ -6,11 +6,12 @@
 
 import {bool, int, OPERATOR_INDEX_ASSIGN} from "../core";
 import {DartMap} from "../core/map";
-import {DartHashMap} from "./collection_patch";
-import {Abstract, DartClass, namedFactory} from "../utils";
+import {_CustomHashMap, _HashMap, _IdentityHashMap} from "./collection_patch";
+import {Abstract, DartClass, defaultFactory, namedFactory} from "../utils";
 import _dart from '../_common';
 import {DartIterable} from "../collections";
 import {DartMaps} from "../core/maps";
+import {identical, identityHashCode} from "../core/identical";
 
 /** Default function for equality comparison in customized HashMaps */
 export function _defaultEquals(a, b): bool {
@@ -32,6 +33,67 @@ export type  _Hasher<K> = (object: K) => int;
 export type _Predicate<T> = (value: T) => bool ;
 
 
+@DartClass
+export class AbstractDartMap<K, V> {
+    @Abstract
+    addAll(other: DartMap<K, V>): void {
+    }
+
+    @Abstract
+    clear(): void {
+    }
+
+    @Abstract
+    containsKey(key: any): bool {
+        return undefined;
+    }
+
+    @Abstract
+    containsValue(value: any): bool {
+        return undefined;
+    }
+
+    @Abstract
+    forEach(f: (key: K, value: V) => any): void {
+    }
+
+    @Abstract
+    get isEmpty(): bool {
+        return undefined;
+    }
+
+    @Abstract
+    get isNotEmpty(): bool {
+        return undefined;
+    }
+
+    @Abstract
+    get keys(): DartIterable<K> {
+        return undefined;
+    }
+
+    @Abstract
+    get length(): int {
+        return undefined;
+    }
+
+    @Abstract
+    putIfAbsent(key: K, ifAbsent: () => V): V {
+        return undefined;
+    }
+
+    @Abstract
+    remove(key: any): V {
+        return undefined;
+    }
+
+    @Abstract
+    get values(): DartIterable<V> {
+        return undefined;
+    }
+}
+
+
 /**
  * A hash-table based implementation of [Map].
  *
@@ -51,7 +113,7 @@ export type _Predicate<T> = (value: T) => bool ;
  * will give matching key and value pairs.
  */
 @DartClass
-export class DartHashMap<K, V> implements DartMap<K, V> {
+export class DartHashMap<K, V> extends AbstractDartMap<K, V> implements DartMap<K, V> {
     /**
      * Creates an unordered hash-table based [Map].
      *
@@ -176,60 +238,54 @@ export class DartHashMap<K, V> implements DartMap<K, V> {
 
     static fromIterables: new<K, V>(keys: DartIterable<K>, values: DartIterable<V>) => DartHashMap<K, V>;
 
-    @Abstract
-    addAll(other: DartMap<K, V>): void {
+
+    @defaultFactory
+    protected static _create?<K, V>(
+        _?: {
+            equals?: (key1: K, key2: K) => bool,
+            hashCode?: (key: K) => int,
+            isValidKey?: (potentialKey: any) => bool
+        }): DartHashMap<K, V> {
+        let {equals, hashCode, isValidKey} = Object.assign({}, _);
+        if (isValidKey == null) {
+            if (hashCode == null) {
+                if (equals == null) {
+                    return new _HashMap<K, V>();
+                }
+                hashCode = _defaultHashCode;
+            } else {
+                if (identical(identityHashCode, hashCode) &&
+                    identical(identical, equals)) {
+                    return new _IdentityHashMap<K, V>();
+                }
+                if (equals == null) {
+                    equals = _defaultEquals;
+                }
+            }
+        } else {
+            if (hashCode == null) {
+                hashCode = _defaultHashCode;
+            }
+            if (equals == null) {
+                equals = _defaultEquals;
+            }
+        }
+        return new _CustomHashMap<K, V>(equals, hashCode, isValidKey);
     }
 
-    @Abstract
-    clear(): void {
+    constructor(_?: {
+        equals?: (key1: K, key2: K) => bool,
+        hashCode?: (key: K) => int,
+        isValidKey?: (potentialKey: any) => bool
+    }) {
+        super();
     }
 
-    @Abstract
-    containsKey(key: any): bool {
-        return undefined;
+    @namedFactory
+    protected static _identity?<K, V>(): DartHashMap<K, V> {
+        return new _IdentityHashMap<K, V>();
     }
 
-    @Abstract
-    containsValue(value: any): bool {
-        return undefined;
-    }
-
-    @Abstract
-    forEach(f: (key: K, value: V) => any): void {
-    }
-
-    @Abstract
-    get isEmpty(): bool {
-        return undefined;
-    }
-
-    @Abstract
-    get isNotEmpty(): bool {
-        return undefined;
-    }
-
-    @Abstract
-    get keys(): DartIterable<K> {
-        return undefined;
-    }
-
-    @Abstract
-    get length(): int {
-        return undefined;
-    }
-
-    @Abstract
-    putIfAbsent(key: K, ifAbsent: () => V): V {
-        return undefined;
-    }
-
-    @Abstract
-    remove(key: any): V {
-        return undefined;
-    }
-
-    @Abstract
-    get values(): DartIterable<V> {
-        return undefined;
-    }
+    static identity: new<K, V>() => DartHashMap<K, V>;
 }
+

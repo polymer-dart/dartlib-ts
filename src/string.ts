@@ -1,8 +1,18 @@
+import {DartIterable} from "./collections";
+import {int} from "./core";
+
 const VALUEOF = Symbol('valueOf');
 
 export interface DartString extends String {
     readonly isEmpty: boolean;
     [VALUEOF]: string;
+
+}
+
+export interface FromCharCodeConstructor {
+    new(charCode: int): DartString;
+
+    (...codes: number[]): string;
 }
 
 export interface DartStringConstructor extends StringConstructor {
@@ -11,6 +21,11 @@ export interface DartStringConstructor extends StringConstructor {
     (value?: any): string;
 
     readonly prototype: DartString;
+
+    fromCharCodes: new(charCodes: DartIterable<int>, start?: int /* = 0*/, end?: int) => DartString;
+
+    fromCharCode: FromCharCodeConstructor;
+
 }
 
 

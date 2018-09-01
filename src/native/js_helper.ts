@@ -1,7 +1,10 @@
 /// 'factory' for constructing ArgumentError.value to keep the call sites small.
 import {ArgumentError, ConcurrentModificationError, DartError, RangeError} from "../errors";
 import _dart from '../_common';
-import {int} from "../core";
+import {bool, int, OPERATOR_INDEX_ASSIGN} from "../core";
+import {DartIterable, DartList} from "../collections";
+import {JSArray} from "./js_array";
+import {DartMap} from "../core/map";
 
 export function argumentErrorValue(object: any): ArgumentError {
     return new ArgumentError.value(object);
@@ -71,4 +74,58 @@ export class DartPrimitives {
         }
         return hash /* JS('int', '#', hash)*/;
     }
+
+    static stringFromCharCode(charCode: int) {
+        return String.fromCharCode(charCode);
+    }
+
+    static stringFromCharCodes(list: DartList<any>) {
+        return String.fromCharCode(...(list as DartIterable<int>));
+    }
+
+    static stringFromNativeUint8List(charCodes: Array<int>, start: int, end: int) {
+        return String.fromCharCode(...charCodes.slice(start, end));
+    }
+
+    static flattenString(_contents: string) {
+        return _contents;
+    }
+
+    static stringConcatUnchecked(_contents: any, str: any) {
+        return `${_contents}${str}`;
+    }
+}
+
+/**
+ * Called by generated code to build a map literal. [keyValuePairs] is
+ * a list of key, value, key, value, ..., etc.
+ */
+export function fillLiteralMap(keyValuePairs, result: DartMap<any, any>) {
+    // TODO(johnniwinther): Use JSArray to optimize this code instead of calling
+    // [getLength] and [getIndex].
+    let index = 0;
+    let length = getLength(keyValuePairs);
+    while (index < length) {
+        let key = getIndex(keyValuePairs, index++);
+        let value = getIndex(keyValuePairs, index++);
+        result[OPERATOR_INDEX_ASSIGN](key, value);
+    }
+    return result;
+}
+
+/// Returns the property [index] of the JavaScript array [array].
+export function getIndex(array, index: int) {
+    //assert(isJsArray(array));
+    return array[index] /*JS('var', r'#[#]', array, index)*/;
+}
+
+/// Returns the length of the JavaScript array [array].
+export function getLength(array) {
+    //assert(isJsArray(array));
+    return array.length /*JS('int', r'#.length', array)*/;
+}
+
+/// Returns whether [value] is a JavaScript array.
+export function isJsArray(value): bool {
+    return _dart.is(value, Array);
 }

@@ -7,7 +7,9 @@
 import {Abstract, DartClass, defaultFactory, namedFactory} from "../utils";
 import {DartIterable} from "../collections";
 import {bool, int, OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN} from "../core";
-import {DartLinkedHashMap} from "../collections/collection_patch";
+import {DartLinkedHashMap} from "./linked_hash_map";
+import {DartJsLinkedHashMap} from "../collections/linked_hash_map";
+import {DartConstantMap} from "../collections/constant_map";
 
 /**
  * An collection of key-value pairs, from which you retrieve a value
@@ -340,7 +342,7 @@ export class DartMap<K, V> {
      * Returns true if there is no key-value pair in the map.
      */
     @Abstract
-    get isEmpty: bool {
+    get isEmpty(): bool {
         throw Error('abstract');
     }
 
@@ -348,7 +350,19 @@ export class DartMap<K, V> {
      * Returns true if there is at least one key-value pair in the map.
      */
     @Abstract
-    get isNotEmpty: bool {
+    get isNotEmpty(): bool {
         throw Error('abstract');
+    }
+
+    //@patch
+    @namedFactory
+    protected static _unmodifiable<K, V>(other: DartMap<K, V>) {
+        return new DartConstantMap.from<K, V>(other);
+    }
+
+    //@patch
+    @defaultFactory
+    protected static _create<K, V>(): DartMap<K, V> {
+        return new DartJsLinkedHashMap.es6<K, V>();
     }
 }

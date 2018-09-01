@@ -444,4 +444,24 @@ describe("Utils", () => {
 
     });
 
+    it('supports implicit constructors',()=>{
+        @DartClass
+        class FirstClass {
+            p:number;
+        }
+
+        @DartClass
+        class SecondClass extends FirstClass {
+            q:number;
+            constructor() {
+                super();
+                this.q=10;
+            }
+        }
+
+        let s = new SecondClass();
+        expect(s).not.toBeNull();
+        expect(s.q).toEqual(10);
+
+    });
 });

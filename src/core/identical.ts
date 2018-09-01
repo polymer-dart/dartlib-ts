@@ -12,7 +12,7 @@ import {DartPrimitives} from "../native/js_helper";
  */
 export function identical(a: any, b: any): bool {
     // need to check
-    return a === b;
+    return a == null ? b == null : a === b;
 }
 
 /**

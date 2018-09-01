@@ -5,14 +5,13 @@
 // Patch file for dart:core classes.
 
 
-import {identical, identityHashCode} from "./identical";
+import {identical} from "./identical";
 import {DartPrimitives} from "../native/js_helper";
 import {EQUALS_OPERATOR} from "../_common";
 import {defaultFactory, namedFactory} from "../utils";
 import {int} from "../core";
-import {JSArray} from "../native/js_array";
-import {DartIterable, DartList, makeFixedListUnmodifiable, makeListFixedLength} from "../collections";
-import {DartMap} from "./map";
+import _dart from "../_common";
+import {DartJsLinkedHashMap} from "../collections/linked_hash_map";
 
 //@patch
 
@@ -21,7 +20,9 @@ import {DartMap} from "./map";
 //@patch
 class DartObject {
     //@patch
-    [EQUALS_OPERATOR](other) { identical(this, other);}
+    [EQUALS_OPERATOR](other) {
+        identical(this, other);
+    }
 
     //@patch
     get hashCode(): int {
@@ -39,6 +40,7 @@ class DartObject {
     invocation.positionalArguments, invocation.namedArguments);
     */
 }
+
 /*
 @patch
 Type get runtimeType => getRuntimeType(this);
@@ -330,128 +332,95 @@ class Stopwatch {
     static int _now() => Primitives.timerTicks();
 }*/
 
-// Patch for List implementation.
+
+/*
 //@patch
-export class DartList<E> {
-    //@patch
-    @defaultFactory
-    protected static create<E>(length?: int): DartList<E> {
-        return new JSArray.list<E>(length);
+@DartClass
+class DartString extends String {
+
+    constructor(string: string) {
+        super(string);
     }
+
 
     //@patch
     @namedFactory
-    protected static _filled<E>(length: int, fill: E, _?: { growable?: bool /*false*/ }) {
-        let {growable} = Object.assign({growable:false}, _);
-        let result: DartList<E> = growable
-            ? new JSArray.growable<E>(length)
-            : new JSArray.fixed<E>(length);
-        if (length != 0 && fill != null) {
-            for (let i = 0; i < result.length; i++) {
-                result[i] = fill;
-            }
+    protected static _fromCharCodes(charCodes: DartIterable<int>,
+                                    start?: int , end?: int): DartString {
+        start = start || 0;
+        if (_dart.is(charCodes, JSArray)) {
+            return DartString._stringFromJSArray(charCodes as any, start, end);
         }
-        return result;
-    }
-
-    //@patch
-    @namedFactory
-    protected static _from<E>(elements: DartIterable<E>, _?: { growable?: bool /*true*/ }) {
-        let {growable} = Object.assign({growable: true}, _);
-        let list = new DartList<E>();
-        for (let e of elements) {
-            list.add(e);
+        if (_dart.is(charCodes, Array)) {
+            return DartString._stringFromUint8List(charCodes as any, start, end);
         }
-        if (growable) return list;
-        return makeListFixedLength(list);
+        return DartString._stringFromIterable(charCodes, start, end);
     }
 
-    //@patch
+    static fromCharCodes: new(charCodes: DartIterable<int>,
+                              start?: int , end?: int) => DartString;
+
     @namedFactory
-    protected static _unmodifiable<E>(elements: DartIterable<E>) {
-        let result = new DartList.from<E>(elements, {growable: false});
-        return makeFixedListUnmodifiable(result);
+    protected static _fromCharCode(charCode: int): DartString {
+        return DartPrimitives.stringFromCharCode(charCode);
     }
-}
 
-//@patch
-class Map<K, V> {
-    //@patch
+    static fromCharCode: new(charCode: int) => DartString;
+
     @namedFactory
-    protected static _unmodifiable(other:DartMap ) = ConstantMap<K, V>.from;
-
-    //@patch
-    factory Map() = JsLinkedHashMap<K, V>.es6;
-}
-
-@patch
-class String {
-    @patch
-    factory String.fromCharCodes(Iterable<int> charCodes,
-    [int start = 0, int end]) {
-    if (charCodes is JSArray) {
-    return _stringFromJSArray(charCodes, start, end);
-}
-if (charCodes is NativeUint8List) {
-    return _stringFromUint8List(charCodes, start, end);
-}
-return _stringFromIterable(charCodes, start, end);
-}
-
-@patch
-factory String.fromCharCode(int charCode) {
-    return Primitives.stringFromCharCode(charCode);
-}
-
-@patch
-factory String.fromEnvironment(String name, {String defaultValue}) {
-    throw new UnsupportedError(
-        'String.fromEnvironment can only be used as a const constructor');
-}
-
-static String _stringFromJSArray(List list, int start, int endOrNull) {
-    int len = list.length;
-    int end = RangeError.checkValidRange(start, endOrNull, len);
-    if (start > 0 || end < len) {
-        list = list.sublist(start, end);
+    protected static _fromEnvironment(name: string, _?: { defaultValue?: string }) {
+        throw new UnsupportedError(
+            'String.fromEnvironment can only be used as a const constructor');
     }
-    return Primitives.stringFromCharCodes(list);
-}
 
-static String _stringFromUint8List(
-    NativeUint8List charCodes, int start, int endOrNull) {
-    int len = charCodes.length;
-    int end = RangeError.checkValidRange(start, endOrNull, len);
-    return Primitives.stringFromNativeUint8List(charCodes, start, end);
-}
-
-static String _stringFromIterable(
-    Iterable<int> charCodes, int start, int end) {
-    if (start < 0) throw new RangeError.range(start, 0, charCodes.length);
-    if (end != null && end < start) {
-        throw new RangeError.range(end, start, charCodes.length);
-    }
-    var it = charCodes.iterator;
-    for (int i = 0; i < start; i++) {
-        if (!it.moveNext()) {
-            throw new RangeError.range(start, 0, i);
+    protected static _stringFromJSArray(list: DartList<any>, start: int, endOrNull: int): DartString {
+        let len = list.length;
+        let end = RangeError.checkValidRange(start, endOrNull, len);
+        if (start > 0 || end < len) {
+            list = list.sublist(start, end);
         }
+        return DartPrimitives.stringFromCharCodes(list);
     }
-    var list = [];
-    if (end == null) {
-        while (it.moveNext()) list.add(it.current);
-    } else {
-        for (int i = start; i < end; i++) {
+
+    protected static _stringFromUint8List(
+        charCodes: Array<int>, start: int, endOrNull: int): DartString {
+        let len = charCodes.length;
+        let end = RangeError.checkValidRange(start, endOrNull, len);
+        return DartPrimitives.stringFromNativeUint8List(charCodes, start, end);
+    }
+
+    static _stringFromIterable(
+        charCodes: DartIterable<int>, start: int, end: int): DartString {
+        if (start < 0) throw new RangeError.range(start, 0, charCodes.length);
+        if (end != null && end < start) {
+            throw new RangeError.range(end, start, charCodes.length);
+        }
+        let it = charCodes.iterator;
+        for (let i = 0; i < start; i++) {
             if (!it.moveNext()) {
-                throw new RangeError.range(end, start, i);
+                throw new RangeError.range(start, 0, i);
             }
-            list.add(it.current);
         }
+        let list = new DartList<int>();
+        if (end == null) {
+            while (it.moveNext()) list.add(it.current);
+        } else {
+            for (let i = start; i < end; i++) {
+                if (!it.moveNext()) {
+                    throw new RangeError.range(end, start, i);
+                }
+                list.add(it.current);
+            }
+        }
+        return DartPrimitives.stringFromCharCodes(list);
     }
-    return Primitives.stringFromCharCodes(list);
-}
-}
 
+    get isEmpty(): bool {
+        return this.length == 0;
+    }
+}
+*/
+/*
 @patch
 class bool {
     @patch
@@ -480,71 +449,9 @@ new JSSyntaxRegExp(source,
 bool identical(Object a, Object b) {
     return JS('bool', '(# == null ? # == null : # === #)', a, b, a, b);
 }
+*/
 
-@patch
-class StringBuffer {
-    String _contents;
-
-    @patch
-    StringBuffer([Object content = ""]) : _contents = '$content';
-
-    @patch
-    int get length => _contents.length;
-
-    @patch
-    void write(Object obj) {
-    _writeString('$obj');
-}
-
-@patch
-void writeCharCode(int charCode) {
-    _writeString(new String.fromCharCode(charCode));
-}
-
-@patch
-void writeAll(Iterable objects, [String separator = ""]) {
-    _contents = _writeAll(_contents, objects, separator);
-}
-
-@patch
-void writeln([Object obj = ""]) {
-    _writeString('$obj\n');
-}
-
-@patch
-void clear() {
-    _contents = "";
-}
-
-@patch
-String toString() => Primitives.flattenString(_contents);
-
-void _writeString(str) {
-    _contents = Primitives.stringConcatUnchecked(_contents, str);
-}
-
-static String _writeAll(String string, Iterable objects, String separator) {
-    Iterator iterator = objects.iterator;
-    if (!iterator.moveNext()) return string;
-    if (separator.isEmpty) {
-        do {
-            string = _writeOne(string, iterator.current);
-        } while (iterator.moveNext());
-    } else {
-        string = _writeOne(string, iterator.current);
-        while (iterator.moveNext()) {
-            string = _writeOne(string, separator);
-            string = _writeOne(string, iterator.current);
-        }
-    }
-    return string;
-}
-
-static String _writeOne(String string, Object obj) {
-    return Primitives.stringConcatUnchecked(string, '$obj');
-}
-}
-
+/*
 @patch
 class NoSuchMethodError {
     @patch
@@ -619,7 +526,7 @@ class _Uri {
      * This is the internal implementation of JavaScript's encodeURI function.
      * It encodes all characters in the string [text] except for those
      * that appear in [canonicalTable], and returns the escaped string.
-     */
+     * /
     @patch
     static String _uriEncode(List<int> canonicalTable, String text,
     Encoding encoding, bool spaceToPlus) {
@@ -746,3 +653,4 @@ _unresolvedTopLevelMethodError(receiver, memberName, positionalArguments,
     return new NoSuchMethodError(
         receiver, memberName, positionalArguments, namedArguments);
 }
+*/

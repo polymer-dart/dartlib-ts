@@ -10,7 +10,7 @@ import _dart from "../_common";
 import {DartStringBuffer} from "./string_buffer";
 import {DartSet} from "./set";
 import {ArgumentError, RangeError} from "../errors";
-import {identical} from "./itentical";
+import {identical} from "./identical";
 
 /**
  * This [Iterable] mixin implements all [Iterable] members except `iterator`.
