@@ -1,4 +1,4 @@
-import * as errors from '../errors';
+import * as errors from '../core';
 
 describe('errors', () => {
     it('creates index range error', () => {

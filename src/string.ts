@@ -1,5 +1,4 @@
-import {DartIterable} from "./collections";
-import {int} from "./core";
+import {int, DartIterable} from "./core";
 
 export const VALUEOF: unique symbol = Symbol('valueOf');
 

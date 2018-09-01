@@ -1,4 +1,5 @@
-import {UNINITIALIZED} from "./core";
+export const UNINITIALIZED = Symbol('_uninitialized_');
+
 
 type Constructor<X> = {
     new(...args: any[]): X,
@@ -82,7 +83,7 @@ function callConstructor(ctor: any, name: string, target: any, ...args: any[]) {
 
 
 export function DartConstructor(_: { default?: boolean, factory?: boolean, name?: string }): MethodDecorator {
-    let {default: isDefault, factory, name} = Object.assign({default: false, factory: false}, _);
+    let {default: isDefault, factory, name: _name} = Object.assign({default: false, factory: false, name: undefined}, _);
     return (tgt: any, methodName: string, descriptor: TypedPropertyDescriptor<any>) => {
         // save it int the constructor table
 
@@ -93,6 +94,7 @@ export function DartConstructor(_: { default?: boolean, factory?: boolean, name?
             meta.constructors.set('', {ctor: descriptor.value, factory: factory});
         } else {
             let ctor;
+            let name: string | symbol = _name;
             if (factory) {
                 if ((name === undefined || name === null) && methodName.startsWith('_')) {
                     name = methodName.substring(1);   // remove prefix '_' from method name
@@ -132,11 +134,12 @@ export const namedFactory = NamedFactory();
  */
 export const DartClass: ClassDecorator = (target) => {
     let ctor;
-    let def = getMetadata(target).constructors.get('');
-    if (getMetadata(target).constructors.size == 0) {
+    const metadata = getMetadata(target);
+    let def = metadata.constructors.get('');
+    if (def == null) {
         ctor = target;
     } else {
-        if (def && def.factory) {
+        if (def.factory) {
             // use that as constructor
             ctor = function () {
                 return def.ctor.call(null, ...arguments);
@@ -152,8 +155,8 @@ export const DartClass: ClassDecorator = (target) => {
         copyProps(target, ctor);
     }
     // Remove abstract from prototype
-    if (getMetadata(target).abstracts) {
-        for (let k of getMetadata(target).abstracts.keys()) {
+    if (metadata.abstracts) {
+        for (let k of metadata.abstracts.keys()) {
 
             delete ctor.prototype[k];
         }
