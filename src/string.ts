@@ -32,7 +32,7 @@ export const DartString: DartStringConstructor = function (this: DartString, arg
     if (this instanceof DartString) {
         // Call String
         let res = String.call(this, arg);
-        console.log(`RES: ${res}`);
+        //console.log(`RES: ${res}`);
         this[VALUEOF] = String(arg);
     } else {
         return arg;
