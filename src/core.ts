@@ -4,7 +4,7 @@
 
 // Patch file for dart:collection classes.
 
-import {Abstract, AbstractMethods, DartClass, defaultConstructor, defaultFactory, namedConstructor, namedFactory, With} from "./utils";
+import {Abstract, AbstractMethods, DartClass, defaultConstructor, defaultFactory, Implements, namedConstructor, namedFactory, With} from "./utils";
 import _dart, {EQUALS_OPERATOR} from './_common';
 import {DartString} from "./string";
 
@@ -5830,6 +5830,7 @@ class DartIterableBase<E> extends DartIterable<E> {
  * break the iteration.
  */
 @DartClass
+@Implements(DartEfficientLengthIterable)
 class DartList<E> implements DartEfficientLengthIterable<E> {
 
     @Abstract
@@ -6972,6 +6973,7 @@ function _iterablePartsToStrings(iterable: DartIterable<any>, parts: DartList<an
  */
 @DartClass
 @AbstractMethods(OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN)
+@Implements(DartHashMap)
 class DartLinkedHashMap<K, V> implements DartHashMap<K, V> {
     [OPERATOR_INDEX](key: K): V {
         throw 'abstract';
@@ -7271,6 +7273,7 @@ class DartLinkedHashMap<K, V> implements DartHashMap<K, V> {
  * to the growable list, or, if possible, use `DelegatingList` from
  * "package:collection/wrappers.dart" instead.
  */
+@Implements(DartList)
 class DartListMixin<E> implements DartList<E> {
     [Symbol.iterator](): Iterator<E> {
         return this.iterator;
@@ -8205,6 +8208,7 @@ class DartMap<K, V> {
  * A more efficient implementation is usually possible by overriding
  * some of the other members as well.
  */
+@Implements(DartMap)
 class DartMapMixin<K, V> implements DartMap<K, V> {
     get keys(): DartIterable<K> {
         throw new Error('abstract');
@@ -8352,6 +8356,7 @@ class _MapBaseValueIterable<K, V> extends DartEfficientLengthIterable<V> {
  * Iterates over the values of a map by iterating its keys and lookup up the
  * values.
  */
+//@Implements(DartIterator)
 class _MapBaseValueIterator<K, V> implements DartIterator<V> {
     protected _keys: DartIterator<K>;
     protected _map: DartMap<K, V>;
@@ -8851,6 +8856,7 @@ class DartSort {
  * called.
  */
 @DartClass
+//@Implements(DartStringSink)
 class DartStringBuffer implements DartStringSink {
     /** Creates the string buffer with an initial content. */
 
@@ -9508,6 +9514,7 @@ class _ListIndicesIterable extends DartListIterable<int> {
     }
 }
 
+@Implements(DartMap)
 class DartListMapView<E> implements DartMap<int, E> {
     _values: DartList<E>;
 
@@ -9808,7 +9815,7 @@ class DartSubListIterable<E> extends DartListIterable<E> {
     }
 }
 
-
+//@Implements(DartIterator)
 abstract class _BaseJSIterator<E> implements DartIterator<E> {
     abstract readonly current: E;
 
@@ -9826,6 +9833,7 @@ abstract class _BaseJSIterator<E> implements DartIterator<E> {
  * [Iterable.elementAt]. These operations are fast for list-like
  * iterables.
  */
+//@Implements(DartIterator)
 class DartListIterator<E> extends _BaseJSIterator<E> implements DartIterator<E> {
     _iterable: DartIterable<E>;
     _length: int;
@@ -9918,6 +9926,7 @@ class DartMappedIterable<S, T> extends DartIterable<T> {
 }
 
 @DartClass
+@Implements(DartEfficientLengthIterable)
 class DartEfficientLengthMappedIterable<S, T> extends DartMappedIterable<S, T>
     implements DartEfficientLengthIterable<T> {
     @defaultConstructor
@@ -9931,7 +9940,7 @@ class DartEfficientLengthMappedIterable<S, T> extends DartMappedIterable<S, T>
 
 }
 
-
+//@Implements(DartIterator)
 class DartMappedIterator<S, T> extends _BaseJSIterator<T> implements DartIterator<T> {
     _current: T;
     _iterator: DartIterator<S>;
@@ -10004,6 +10013,7 @@ class DartWhereIterable<E> extends DartIterable<E> {
     }
 }
 
+//@Implements(DartIterator)
 class DartWhereIterator<E> extends _BaseJSIterator<E> implements DartIterator<E> {
     _iterator: DartIterator<E>;
     _f: _ElementPredicate<E>;
@@ -10114,6 +10124,7 @@ class DartTakeIterable<E> extends DartIterable<E> {
     }
 }
 
+@Implements(DartEfficientLengthIterable)
 class DartEfficientLengthTakeIterable<E> extends DartTakeIterable<E>
     implements DartEfficientLengthIterable<E> {
     constructor(iterable: DartIterable<E>, takeCount: int) {
@@ -10233,6 +10244,7 @@ class DartSkipIterable<E> extends DartIterable<E> {
 }
 
 @DartClass
+@Implements(DartEfficientLengthIterable)
 class DartEfficientLengthSkipIterable<E> extends DartSkipIterable<E>
     implements DartEfficientLengthIterable<E> {
 
@@ -11219,6 +11231,7 @@ class X extends Array {
  * argument added to each member.
  */
 @DartClass
+@Implements(DartList)
 class JSArray<E> extends Array implements DartList<E>, JSIndexable<E> {
     constructor(len?: number) {
         super();

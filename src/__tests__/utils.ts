@@ -1,4 +1,4 @@
-import {mixin, DartClass, defaultConstructor, namedConstructor, DartConstructor, Abstract, With, AbstractProperty, AbstractMethods} from "../utils"
+import {mixin, DartClass, defaultConstructor, namedConstructor, DartConstructor, Abstract, With, AbstractProperty, AbstractMethods, Implements, isA} from "../utils"
 
 describe("Utils", () => {
     it('mixes classes', () => {
@@ -520,4 +520,45 @@ describe("Utils", () => {
 
         expect(new SomeClass().changeme()).toEqual('changed');
     });
+
+    it('records interfaces', () => {
+
+        class Parent {
+
+        }
+
+        class OtherParent {
+
+        }
+
+        @Implements(Parent)
+        class Interface extends OtherParent {
+
+        }
+
+        @Implements(Interface)
+        class SomeClass {
+
+        }
+
+        class Derived extends SomeClass {
+
+        }
+
+        @Implements(Interface)
+        class OtherClass {
+
+        }
+
+        let obj = new SomeClass();
+        expect(isA(obj, SomeClass));
+        expect(isA(obj, Interface));
+        expect(isA(obj, Parent));
+        expect(isA(obj, OtherParent));
+        obj = new Derived();
+        expect(isA(obj, Derived));
+        expect(isA(obj, SomeClass));
+        expect(isA(obj, Interface));
+        expect(isA(obj, OtherClass)).not;
+    })
 });

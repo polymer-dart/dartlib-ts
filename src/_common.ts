@@ -1,3 +1,5 @@
+import {isA} from "./utils";
+
 export const EQUALS_OPERATOR = Symbol('==');
 
 export default {
@@ -31,6 +33,6 @@ export default {
             return typeof a === b;
         }
 
-        return a instanceof b;
+        return isA(a, b);
     }
 }

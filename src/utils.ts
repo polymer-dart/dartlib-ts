@@ -57,14 +57,16 @@ interface ConstructorData {
 interface Metadata {
     parent?: Metadata,
     constructors?: Map<string, ConstructorData>,
-    abstracts?: Map<string | symbol, PropertyDescriptor | string | symbol>
+    abstracts?: Map<string | symbol, PropertyDescriptor | string | symbol>,
+    implements?: Array<any>
 }
 
 function getMetadata(o: any): Metadata {
     if (!o.hasOwnProperty(META_DATA)) {
         o[META_DATA] = {
             constructors: new Map(),
-            abstracts: new Map()
+            abstracts: new Map(),
+            implements: []
         }
     }
 
@@ -191,4 +193,35 @@ export function AbstractMethods(...props: Array<symbol | string>): ClassDecorato
         });
 
     }
+}
+
+export function Implements(...intf: any[]) {
+    return (ctor) => {
+        let meta = getMetadata(ctor);
+        meta.implements.push(...intf);
+    }
+}
+
+function _isA(ctor, cls): boolean {
+    if (ctor == null) {
+        return false;
+    }
+    if (ctor === cls) {
+        return true;
+    }
+    // Check interfaces
+    let meta = getMetadata(ctor);
+    if (meta.implements.some(((intf) => _isA(intf, cls)))) {
+        return true;
+    }
+
+    if (ctor !== Object) {
+        return _isA(Object.getPrototypeOf(ctor), cls);
+    }
+    return false;
+}
+
+export function isA(obj, cls): boolean {
+    let ctor = Object.getPrototypeOf(obj).constructor;
+    return _isA(ctor, cls);
 }
