@@ -4,9 +4,9 @@
 
 // part of dart.core;
 
-import {Abstract, DartClass, defaultFactory, namedFactory} from "../utils";
+import {Abstract, AbstractProperty, DartClass, defaultFactory, namedFactory} from "../utils";
 import {DartIterable} from "../collections";
-import {bool, int, OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN} from "../core";
+import {bool, int, OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN, PropertyGetter, PropertySetter} from "../core";
 import {DartLinkedHashMap} from "./linked_hash_map";
 import {DartJsLinkedHashMap} from "../collections/linked_hash_map";
 import {DartConstantMap} from "../collections/constant_map";
@@ -215,13 +215,21 @@ export class DartMap<K, V> {
      * is important.
      */
 
+
+    [OPERATOR_INDEX](key: K): V {
+        throw 'abstract';
+    }
+
     /**
      * Associates the [key] with the given [value].
      *
      * If the key was already in the map, its associated value is changed.
      * Otherwise the key-value pair is added to the map.
      */
-    [OPERATOR_INDEX_ASSIGN]?(key: K, value: V);
+
+    [OPERATOR_INDEX_ASSIGN](key: K, value: V): void {
+        throw 'abstract';
+    }
 
     /**
      * Look up the value of [key], or add a new value if it isn't there.

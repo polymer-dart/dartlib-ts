@@ -1,7 +1,7 @@
 import {DartIterable} from "./collections";
 import {int} from "./core";
 
-const VALUEOF = Symbol('valueOf');
+export const VALUEOF: unique symbol = Symbol('valueOf');
 
 export interface DartString extends String {
     readonly isEmpty: boolean;

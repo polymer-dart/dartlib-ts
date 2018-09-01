@@ -4,13 +4,27 @@
 
 // part of dart.collection;
 
-import {DartExpandIterable, DartIterable, DartIterableElementError, DartIterator, DartList, DartMappedIterable, DartSkipIterable, DartSkipWhileIterable, DartTakeIterable, DartTakeWhileIterable, DartWhereIterable} from "../collections";
+import {
+    DartEfficientLengthIterable,
+    DartExpandIterable,
+    DartIterable,
+    DartIterableElementError,
+    DartIterator,
+    DartList,
+    DartMappedIterable,
+    DartSkipIterable,
+    DartSkipWhileIterable,
+    DartTakeIterable,
+    DartTakeWhileIterable,
+    DartWhereIterable
+} from "../collections";
 import {bool, int} from "../core";
 import _dart from "../_common";
 import {DartStringBuffer} from "./string_buffer";
 import {DartSet} from "./set";
 import {ArgumentError, RangeError} from "../errors";
 import {identical} from "./identical";
+import {DartClass, defaultConstructor} from "../utils";
 
 /**
  * This [Iterable] mixin implements all [Iterable] members except `iterator`.
@@ -435,4 +449,18 @@ function _iterablePartsToStrings(iterable: DartIterable<any>, parts: DartList<an
     }
     parts.add(penultimateString);
     parts.add(ultimateString);
+}
+
+@DartClass
+export class DartEfficientLengthMappedIterable<S, T> extends DartMappedIterable<S, T>
+    implements DartEfficientLengthIterable<T> {
+    @defaultConstructor
+    protected _init(iterable: DartIterable<S>, _function: (value: S) => T) {
+        super._(iterable, _function);
+    }
+
+    constructor(iterable: DartIterable<S>, _function: (value: S) => T) {
+        super(iterable, _function);
+    }
+
 }

@@ -1,4 +1,4 @@
-import {mixin, DartClass, defaultConstructor, namedConstructor, DartConstructor, Abstract} from "../utils"
+import {mixin, DartClass, defaultConstructor, namedConstructor, DartConstructor, Abstract, With, AbstractProperty, AbstractMethods} from "../utils"
 
 describe("Utils", () => {
     it('mixes classes', () => {
@@ -404,16 +404,52 @@ describe("Utils", () => {
                 return 'abstract';
             }
 
+            @AbstractProperty
+            something: number = 5;
+
         }
 
         class Real extends FakeAbstract {
             doSomething(): string {
                 return 'ok';
             }
+
+            something: number = 6;
         }
 
         expect(new Real().doSomething()).toEqual('ok');
+        expect(new Real().something).toEqual(6);
         expect(FakeAbstract.prototype).not.toHaveProperty('doSomething');
+        expect(FakeAbstract.prototype).not.toHaveProperty('something');
+        expect(() => new FakeAbstract().doSomething()).toThrow(TypeError);
+
+    });
+
+    it('deletes abstract methods2', () => {
+        @DartClass
+        @AbstractMethods('doSomething', 'something')
+        class FakeAbstract {
+
+            doSomething(): string {
+                return 'abstract';
+            }
+
+            something: number = 5;
+
+        }
+
+        class Real extends FakeAbstract {
+            doSomething(): string {
+                return 'ok';
+            }
+
+            something: number = 6;
+        }
+
+        expect(new Real().doSomething()).toEqual('ok');
+        expect(new Real().something).toEqual(6);
+        expect(FakeAbstract.prototype).not.toHaveProperty('doSomething');
+        expect(FakeAbstract.prototype).not.toHaveProperty('something');
         expect(() => new FakeAbstract().doSomething()).toThrow(TypeError);
 
     });
@@ -444,18 +480,19 @@ describe("Utils", () => {
 
     });
 
-    it('supports implicit constructors',()=>{
+    it('supports implicit constructors', () => {
         @DartClass
         class FirstClass {
-            p:number;
+            p: number;
         }
 
         @DartClass
         class SecondClass extends FirstClass {
-            q:number;
+            q: number;
+
             constructor() {
                 super();
-                this.q=10;
+                this.q = 10;
             }
         }
 
@@ -463,5 +500,24 @@ describe("Utils", () => {
         expect(s).not.toBeNull();
         expect(s.q).toEqual(10);
 
+    });
+
+    it('with mixin works', () => {
+        class Mixin {
+            changeme(): string {
+                return "changed";
+            }
+        }
+
+
+        @DartClass
+        @With(Mixin)
+        class SomeClass {
+            changeme(): string {
+                return "original";
+            }
+        }
+
+        expect(new SomeClass().changeme()).toEqual('changed');
     });
 });

@@ -5,8 +5,8 @@
 //part of dart.collection;
 
 import {_defaultEquals, _defaultHashCode, DartHashMap} from "../collections/hash_map";
-import {Abstract, DartClass, defaultFactory, namedFactory} from "../utils";
-import {bool, int, OPERATOR_INDEX_ASSIGN} from "../core";
+import {Abstract, AbstractMethods, DartClass, defaultFactory, namedFactory} from "../utils";
+import {bool, int, OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN, PropertyGetter, PropertySetter} from "../core";
 import {DartMap} from "./map";
 import {DartIterable, DartList} from "../collections";
 import {DartMaps} from "./maps";
@@ -35,7 +35,17 @@ import {fillLiteralMap} from "../native/js_helper";
  * The map allows `null` as a key.
  */
 @DartClass
+@AbstractMethods(OPERATOR_INDEX,OPERATOR_INDEX_ASSIGN)
 export class DartLinkedHashMap<K, V> implements DartHashMap<K, V> {
+    [OPERATOR_INDEX](key: K): V {
+        throw 'abstract';
+    }
+
+    [OPERATOR_INDEX_ASSIGN](key: K, value: V): void {
+        throw 'abstract';
+    }
+
+
     /**
      * Creates an insertion-ordered hash-table based [Map].
      *
@@ -112,12 +122,12 @@ export class DartLinkedHashMap<K, V> implements DartHashMap<K, V> {
     protected static _from<K, V>(other: DartMap<K, V>): DartLinkedHashMap<K, V> {
         let result = new DartLinkedHashMap<K, V>();
         other.forEach((k, v) => {
-            result[OPERATOR_INDEX_ASSIGN](k as Object/*=K*/, v as Object/*=V*/);
+            result[OPERATOR_INDEX_ASSIGN](k/*=K*/, v/*=V*/);
         });
         return result;
     }
 
-    static from: new<K, V>(other: DartMap<K, V>) => DartLinkedHashMap<K, V>
+    static from: new<K, V>(other: DartMap<K, V>) => DartLinkedHashMap<K, V>;
 
     /**
      * Creates a [LinkedHashMap] where the keys and values are computed from the
@@ -296,6 +306,6 @@ export class DartLinkedHashMap<K, V> implements DartHashMap<K, V> {
     // This version is for map literals without type parameters.
     //@NoInline()
     protected static _makeLiteral<K, V>(keyValuePairs): DartJsLinkedHashMap<K, V> {
-        return fillLiteralMap(keyValuePairs, new DartJsLinkedHashMap<K, V>());
+        return fillLiteralMap(keyValuePairs, new DartJsLinkedHashMap<K, V>()) as any;
     }
 }

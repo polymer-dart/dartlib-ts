@@ -85,7 +85,11 @@ export class DartConstantMap<K, V> extends AbstractDartMap<K, V> implements Dart
     }
 
     protected static _throwUnmodifiable() {
-        throw new UnsupportedError("Cannot modify unmodifiable Map");
+        throw this._unsupportedError();
+    }
+
+    protected static _unsupportedError(): UnsupportedError {
+        return new UnsupportedError("Cannot modify unmodifiable Map");
     }
 
     [OPERATOR_INDEX_ASSIGN](key: K, val: V) {
@@ -93,11 +97,11 @@ export class DartConstantMap<K, V> extends AbstractDartMap<K, V> implements Dart
     }
 
     putIfAbsent(key: K, ifAbsent: () => V): V {
-        DartConstantMap._throwUnmodifiable();
+        throw DartConstantMap._unsupportedError();
     }
 
     remove(key: K): V {
-        DartConstantMap._throwUnmodifiable();
+        throw DartConstantMap._unsupportedError();
     }
 
     clear(): void {
@@ -113,6 +117,8 @@ export class DartConstantMap<K, V> extends AbstractDartMap<K, V> implements Dart
 class DartConstantStringMap<K, V> extends DartConstantMap<K, V> {
     // This constructor is not used for actual compile-time constants.
     // The instantiation of constant maps is shortcut by the compiler.
+
+    protected _(...args: any[])
     @namedConstructor
     protected _(_length: int, _jsObject: any, _keys: DartList<K>) {
         super._();
@@ -250,12 +256,12 @@ class DartGeneralConstantMap<K, V> extends DartConstantMap<K, V> {
 
 
     protected _getMap(): DartMap<K, V> {
-        let backingMap: DartLinkedHashMap<K, V> = this.$map /*JS('LinkedHashMap|Null', r'#.$map', this)*/;
+        let backingMap: DartLinkedHashMap<K, V> = (this as any).$map /*JS('LinkedHashMap|Null', r'#.$map', this)*/;
         if (backingMap == null) {
             backingMap = new DartJsLinkedHashMap<K, V>();
             fillLiteralMap(this._jsData, backingMap);
             //JS('', r'#.$map = #', this, backingMap);
-            this.$map = backingMap;
+            (this as any).$map = backingMap;
         }
         return backingMap;
     }

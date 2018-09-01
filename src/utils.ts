@@ -5,15 +5,19 @@ type Constructor<X> = {
     prototype: any
 }
 
-function copyProps(s: any, t: any): void {
+function copyProps(s: any, t: any, excludes?: Set<string | symbol>): void {
+    excludes = excludes || new Set(['constructor']);
     Object.getOwnPropertyNames(s).forEach(n => {
-        if (n === 'constructor') {
+        if (excludes.has(n)) {
             return;
         }
         Object.defineProperty(t, n, Object.getOwnPropertyDescriptor(s, n) as PropertyDescriptor);
     });
 
     Object.getOwnPropertySymbols(s).forEach(n => {
+        if (excludes.has(n)) {
+            return;
+        }
         Object.defineProperty(t, n, Object.getOwnPropertyDescriptor(s, n) as PropertyDescriptor);
     });
 
@@ -33,6 +37,17 @@ export function mixin<Mixin, Base>(mixin: Constructor<Mixin>, base: Constructor<
 
 const META_DATA = Symbol('META_DATA');
 
+/**
+ * Simple decorator to apply a mixin without adding type info
+ */
+
+export function With(mixin: any): ClassDecorator {
+    return (ctor) => {
+        copyProps(mixin.prototype, ctor.prototype);
+        copyProps(mixin, ctor, new Set(['constructor', 'prototype']));
+    };
+}
+
 interface ConstructorData {
     ctor: Function,
     factory: boolean
@@ -41,14 +56,14 @@ interface ConstructorData {
 interface Metadata {
     parent?: Metadata,
     constructors?: Map<string, ConstructorData>,
-    abstracts?: Map<String, PropertyDescriptor>
+    abstracts?: Map<string | symbol, PropertyDescriptor | string | symbol>
 }
 
 function getMetadata(o: any): Metadata {
     if (!o.hasOwnProperty(META_DATA)) {
         o[META_DATA] = {
             constructors: new Map(),
-            abstracts: {}
+            abstracts: new Map()
         }
     }
 
@@ -118,7 +133,7 @@ export const namedFactory = NamedFactory();
 export const DartClass: ClassDecorator = (target) => {
     let ctor;
     let def = getMetadata(target).constructors.get('');
-    if (getMetadata(target).constructors.size==0) {
+    if (getMetadata(target).constructors.size == 0) {
         ctor = target;
     } else {
         if (def && def.factory) {
@@ -137,8 +152,11 @@ export const DartClass: ClassDecorator = (target) => {
         copyProps(target, ctor);
     }
     // Remove abstract from prototype
-    for (let k in getMetadata(target).abstracts) {
-        delete ctor.prototype[k];
+    if (getMetadata(target).abstracts) {
+        for (let k of getMetadata(target).abstracts.keys()) {
+
+            delete ctor.prototype[k];
+        }
     }
 
 
@@ -155,5 +173,19 @@ export const DartClass: ClassDecorator = (target) => {
 
 /* Mark a method abstract to be removed by the DartClass */
 export const Abstract: MethodDecorator = (target, name, descr) => {
-    getMetadata(target.constructor).abstracts[name] = descr;
+    getMetadata(target.constructor).abstracts.set(name, descr);
 };
+
+export const AbstractProperty: PropertyDecorator = (target, name) => {
+    getMetadata(target.constructor).abstracts.set(name, name);
+};
+
+
+export function AbstractMethods(...props: Array<symbol | string>): ClassDecorator {
+    return (ctor) => {
+        props.forEach((p) => {
+            getMetadata(ctor).abstracts.set(p, Object.getOwnPropertyDescriptor(ctor.prototype, p));
+        });
+
+    }
+}

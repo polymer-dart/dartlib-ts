@@ -4,19 +4,20 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "test": "jest"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "typescript": "^3.0.1"
+    "typescript": "^3.0.3"
   },
   "devDependencies": {
     "@types/jest": "^23.3.1",
     "jest": "^23.5.0",
     "ts-jest": "^23.1.4"
   },
- "jest": {
+  "jest": {
     "transform": {
       "^.+\\.tsx?$": "ts-jest"
     },

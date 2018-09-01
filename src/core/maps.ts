@@ -4,7 +4,7 @@
 
 // part of dart.collection;
 
-import {mixin} from "../utils";
+import {With} from "../utils";
 import {bool, DartObject, int, OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN} from "../core";
 import {DartMap} from "./map";
 import {DartEfficientLengthIterable, DartIterable, DartIterator} from "../collections";
@@ -121,7 +121,8 @@ export class DartMapMixin<K, V> implements DartMap<K, V> {
  * A more efficient implementation is usually possible by overriding
  * some of the other members as well.
  */
-export class DartMapBase<K, V> extends mixin(DartMapMixin, DartObject) {
+
+export class DartMapBase<K, V> extends DartMapMixin<K, V> {
 
 }
 
@@ -256,7 +257,8 @@ class _UnmodifiableMapMixin<K, V> {
  * A more efficient implementation is usually possible by overriding
  * some of the other members as well.
  */
-export class UnmodifiableMapBase<K, V> extends mixin(_UnmodifiableMapMixin, DartMapBase) {
+@With(_UnmodifiableMapMixin)
+export class UnmodifiableMapBase<K, V> extends DartMapBase<K, V> {
 
 }
 
@@ -346,7 +348,8 @@ class DartMapView<K, V> implements DartMap<K, V> {
  */
 
 
-export class DartUnmodifiableMapView<K, V> extends (<K1, V1>() => (mixin(_UnmodifiableMapMixin, DartMapView) as any as DartMapView<K1, V1>))<K, V>() {
+@With(_UnmodifiableMapMixin)
+export class DartUnmodifiableMapView<K, V> extends DartMapView<K, V> {
     constructor(base: DartMap<K, V>) {
         super(base);
     }

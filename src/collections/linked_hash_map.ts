@@ -105,9 +105,9 @@ export class DartJsLinkedHashMap<K, V> implements DartLinkedHashMap<K, V> {
     }
 
     internalContainsKey(key: any): bool {
-        var rest = this._rest;
+        let rest = this._rest;
         if (rest == null) return false;
-        var bucket = this._getBucket(rest, key);
+        let bucket = this._getBucket(rest, key);
         return this.internalFindBucketIndex(bucket, key) >= 0;
     }
 
@@ -424,8 +424,9 @@ export class LinkedHashMapCell<K, V> {
 export class DartLinkedHashMapKeyIterable<E> extends DartEfficientLengthIterable<E> {
     protected _map: DartJsLinkedHashMap<E, any>;
 
+
     constructor(_map: DartJsLinkedHashMap<E, any>) {
-        super()
+        super();
         this._map = _map;
     }
 
@@ -490,7 +491,7 @@ export class DartLinkedHashMapKeyIterator<E> implements DartIterator<E> {
     next(value?: any): IteratorResult<E> {
         return {
             done: !this.moveNext(),
-            value: this.current()
+            value: this.current
         };
     }
 }

@@ -4,10 +4,10 @@
 
 // part of dart.collection;
 
-import {bool, int, OPERATOR_INDEX_ASSIGN} from "../core";
+import {bool, int, OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN, PropertyGetter, PropertySetter} from "../core";
 import {DartMap} from "../core/map";
 import {_CustomHashMap, _HashMap, _IdentityHashMap} from "./collection_patch";
-import {Abstract, DartClass, defaultFactory, namedFactory} from "../utils";
+import {Abstract, AbstractMethods, DartClass, defaultFactory, namedFactory} from "../utils";
 import _dart from '../_common';
 import {DartIterable} from "../collections";
 import {DartMaps} from "../core/maps";
@@ -34,7 +34,18 @@ export type _Predicate<T> = (value: T) => bool ;
 
 
 @DartClass
+@AbstractMethods(OPERATOR_INDEX,OPERATOR_INDEX_ASSIGN)
 export class AbstractDartMap<K, V> {
+
+
+    [OPERATOR_INDEX](key: K): V {
+        throw 'abstract';
+    }
+
+    [OPERATOR_INDEX_ASSIGN](key: K, value: V): void {
+        throw 'abstract';
+    }
+
     @Abstract
     addAll(other: DartMap<K, V>): void {
     }

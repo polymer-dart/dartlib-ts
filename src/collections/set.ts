@@ -11,9 +11,9 @@ import {DartSet} from "../core/set";
 import {bool, int, OPERATOR_INDEX_ASSIGN} from "../core";
 import {Abstract, DartClass} from "../utils";
 import {DartExpandIterable, DartIterable, DartIterableElementError, DartIterator, DartList, DartSkipIterable, DartSkipWhileIterable, DartTakeIterable, DartTakeWhileIterable, DartWhereIterable} from "../collections";
-import {DartIterableBase} from "../core/iterable";
+import {DartEfficientLengthMappedIterable, DartIterableBase} from "../core/iterable";
 import {DartStringBuffer} from "../core/string_buffer";
-import {ArgumentError,RangeError} from "../errors";
+import {ArgumentError, RangeError} from "../errors";
 import _dart from '../_common';
 
 /**
@@ -81,7 +81,7 @@ export class DartSetMixin<E> implements DartSet<E> {
         return this.length != 0;
     }
 
-    clear():void {
+    clear(): void {
         this.removeAll(this.toList());
     }
 
