@@ -362,6 +362,14 @@ class _HashMap<K, V> implements DartHashMap<K, V> {
         _HashMap._deleteTableEntry(table, temporaryKey);
         return table;
     }
+
+    get(k: K): V {
+        return this[OPERATOR_INDEX](k);
+    }
+
+    set(k: K, v: V) {
+        this[OPERATOR_INDEX_ASSIGN](k, v);
+    }
 }
 
 class _IdentityHashMap<K, V> extends _HashMap<K, V> {
@@ -1539,6 +1547,14 @@ class DartJsLinkedHashMap<K, V> implements DartLinkedHashMap<K, V> {
         this._setTableEntry(table, temporaryKey, table);
         this._deleteTableEntry(table, temporaryKey);
         return table;
+    }
+
+    get(k: K): V {
+        return this[OPERATOR_INDEX](k);
+    }
+
+    set(k: K, v: V) {
+        this[OPERATOR_INDEX_ASSIGN](k, v);
     }
 }
 
@@ -3162,6 +3178,14 @@ class DartMapView<K, V> implements DartMap<K, V> {
         this._map[OPERATOR_INDEX_ASSIGN](key, value);
     }
 
+    get(k: K): V {
+        return this[OPERATOR_INDEX](k);
+    }
+
+    set(k: K, v: V) {
+        this[OPERATOR_INDEX_ASSIGN](k, v);
+    }
+
     addAll(other: DartMap<K, V>): void {
         this._map.addAll(other);
     }
@@ -3251,6 +3275,14 @@ class AbstractDartMap<K, V> {
 
     [OPERATOR_INDEX_ASSIGN](key: K, value: V): void {
         throw 'abstract';
+    }
+
+    get(k: K): V {
+        return this[OPERATOR_INDEX](k);
+    }
+
+    set(k: K, v: V) {
+        this[OPERATOR_INDEX_ASSIGN](k, v);
     }
 
     @Abstract
@@ -6986,6 +7018,14 @@ class DartLinkedHashMap<K, V> implements DartHashMap<K, V> {
         throw 'abstract';
     }
 
+    get(k: K): V {
+        return this[OPERATOR_INDEX](k);
+    }
+
+    set(k: K, v: V) {
+        this[OPERATOR_INDEX_ASSIGN](k, v);
+    }
+
 
     /**
      * Creates an insertion-ordered hash-table based [Map].
@@ -8189,6 +8229,17 @@ class DartMap<K, V> {
     protected static _create<K, V>(): DartMap<K, V> {
         return new DartJsLinkedHashMap.es6<K, V>();
     }
+
+
+    // Better nameing for maps
+
+    get(k: K): V {
+        return this[OPERATOR_INDEX](k);
+    }
+
+    set(k: K, v: V) {
+        this[OPERATOR_INDEX_ASSIGN](k, v);
+    }
 }// Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
@@ -8223,6 +8274,14 @@ class DartMapMixin<K, V> implements DartMap<K, V> {
 
     [OPERATOR_INDEX_ASSIGN](key: K, value: V) {
         throw new Error('abstract');
+    }
+
+    get(k:K):V {
+        return this[OPERATOR_INDEX](k);
+    }
+
+    set(k:K,v:V) {
+        this[OPERATOR_INDEX_ASSIGN](k,v);
     }
 
     remove(key: any): V {
@@ -9598,6 +9657,14 @@ class DartListMapView<E> implements DartMap<int, E> {
 
     toString(): string {
         return DartMaps.mapToString(this);
+    }
+
+    get(k: int): E {
+        return this[OPERATOR_INDEX](k);
+    }
+
+    set(k: int, v: E) {
+        this[OPERATOR_INDEX_ASSIGN](k, v);
     }
 }
 

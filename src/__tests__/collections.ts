@@ -1,5 +1,49 @@
-import {DartHashMap, DartList, DartMap, DartObject, int, num, OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN} from "../core";
+import {DartHashMap, DartList, DartMap, DartObject, DartSet, int, num, OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN} from "../core";
 import {EQUALS_OPERATOR} from "../_common";
+
+class MyObj extends DartObject {
+    key: int;
+
+    constructor(key: int) {
+        super();
+        this.key = key;
+    }
+
+    [EQUALS_OPERATOR](other: any) {
+        return (other as MyObj).key == this.key;
+    }
+
+    get hashCode() {
+        return this.key;
+    }
+}
+
+
+class MyObjBadHash extends DartObject {
+    key: int;
+
+    constructor(key: int) {
+        super();
+        this.key = key;
+    }
+
+    [EQUALS_OPERATOR](other: any) {
+        return (other as MyObj).key == this.key;
+    }
+
+    get hashCode() {
+        return this.key % 3;
+    }
+}
+
+class MyObjId extends DartObject {
+    key: int;
+
+    constructor(key: int) {
+        super();
+        this.key = key;
+    }
+}
 
 describe('DartList', () => {
     it('can create an list ', () => {
@@ -81,6 +125,12 @@ describe('DartList', () => {
             expect(list4.lastIndexOf(list4[i])).toEqual(i);
         }
 
+        let sum = list2.fold(0, (prev, cur) => prev + cur);
+
+        expect(sum).toEqual(120);
+
+        expect(list2.reduce((a, b) => a + b)).toEqual(120);
+
     });
 
 });
@@ -88,9 +138,9 @@ describe('DartList', () => {
 describe('DartMap', () => {
     it('works in serveral ways', () => {
         let map1 = new DartMap<string, any>();
-        map1[OPERATOR_INDEX_ASSIGN]('one', 'uno');
-        map1[OPERATOR_INDEX_ASSIGN]('two', 'due');
-        map1[OPERATOR_INDEX_ASSIGN]('three', 'tre');
+        map1.set('one', 'uno');
+        map1.set('two', 'due');
+        map1.set('three', 'tre');
 
         expect(map1.length).toEqual(3);
 
@@ -106,7 +156,7 @@ describe('DartMap', () => {
 
         let I = 0;
         for (let k of map2.keys) {
-            expect(map2[OPERATOR_INDEX](k).num).toEqual(I++);
+            expect(map2.get(k).num).toEqual(I++);
         }
         expect(I).toEqual(20);
 
@@ -119,7 +169,7 @@ describe('DartMap', () => {
         for (let n of gen) {
             let k = `string ${n}`;
             expect(map2.containsKey(k));
-            expect(map2[OPERATOR_INDEX](k).num).toEqual(n);
+            expect(map2.get(k).num).toEqual(n);
         }
 
         let str = map2.toString();
@@ -140,72 +190,39 @@ describe('DartMap', () => {
         expect(map.length).toEqual(5);
 
         for (let k of map.keys) {
-            expect(map[OPERATOR_INDEX](k)).toEqual(k.key);
+            expect(map.get(k)).toEqual(k.key);
         }
     });
 
     it('works with dart objects keys', () => {
 
-        class MyObj extends DartObject {
-            key: int;
-
-            constructor(key: int) {
-                super();
-                this.key = key;
-            }
-        }
 
         let map = new DartHashMap.fromIterable(new DartList.generate(5, (i) => i), {
-            key: (i) => new MyObj(i)
+            key: (i) => new MyObjId(i)
         });
 
         expect(map.length).toEqual(5);
 
         for (let k of map.keys) {
-            expect(map[OPERATOR_INDEX](k)).toEqual(k.key);
+            expect(map.get(k)).toEqual(k.key);
         }
     });
 
     it('works with dart objects also list', () => {
 
-        class MyObj extends DartObject {
-            key: int;
-
-            constructor(key: int) {
-                super();
-                this.key = key;
-            }
-        }
 
         let map = new DartMap.fromIterable(new DartList.generate(5, (i) => i), {
-            key: (i) => new MyObj(i)
+            key: (i) => new MyObjId(i)
         });
 
         expect(map.length).toEqual(5);
 
         for (let k of map.keys) {
-            expect(map[OPERATOR_INDEX](k)).toEqual(k.key);
+            expect(map.get(k)).toEqual(k.key);
         }
     });
 
     it('works with custom dart objects also list', () => {
-
-        class MyObj extends DartObject {
-            key: int;
-
-            constructor(key: int) {
-                super();
-                this.key = key;
-            }
-
-            [EQUALS_OPERATOR](other: any) {
-                return (other as MyObj).key == this.key;
-            }
-
-            get hashCode() {
-                return this.key;
-            }
-        }
 
         let map = new DartMap.fromIterable(new DartList.generate(5, (i) => i), {
             key: (i) => new MyObj(i)
@@ -215,28 +232,33 @@ describe('DartMap', () => {
 
         for (let i = 0; i < map.length; i++) {
             let k = new MyObj(i);
-            expect(map[OPERATOR_INDEX](k)).toEqual(i);
+            expect(map.get(k)).toEqual(i);
         }
+
+        // Replace works
+        map.set(new MyObj(2), 100);
+        expect(map.get(new MyObj(2))).toEqual(100);
+    });
+
+    it('works with custom dart objects also list badhas', () => {
+
+        let map = new DartMap.fromIterable(new DartList.generate(5, (i) => i), {
+            key: (i) => new MyObjBadHash(i)
+        });
+
+        expect(map.length).toEqual(5);
+
+        for (let i = 0; i < map.length; i++) {
+            let k = new MyObjBadHash(i);
+            expect(map.get(k)).toEqual(i);
+        }
+
+        // Replace works
+        map.set(new MyObjBadHash(2), 100);
+        expect(map.get(new MyObjBadHash(2))).toEqual(100);
     });
 
     it('works with custom dart objects also list (hash)', () => {
-
-        class MyObj extends DartObject {
-            key: int;
-
-            constructor(key: int) {
-                super();
-                this.key = key;
-            }
-
-            [EQUALS_OPERATOR](other: any) {
-                return (other as MyObj).key == this.key;
-            }
-
-            get hashCode() {
-                return this.key;
-            }
-        }
 
         let map: DartMap<MyObj, int> = new DartHashMap.fromIterable(new DartList.generate(5, (i) => i), {
             key: (i) => new MyObj(i)
@@ -246,8 +268,42 @@ describe('DartMap', () => {
 
         for (let i = 0; i < map.length; i++) {
             let k = new MyObj(i);
-            expect(map[OPERATOR_INDEX](k)).toEqual(i);
+            expect(map.get(k)).toEqual(i);
         }
+
+        // Replace works
+        map.set(new MyObj(2), 100);
+        expect(map.get(new MyObj(2))).toEqual(100);
     });
 
+    it('works with custom dart objects also list (badhash)', () => {
+
+        let map: DartMap<MyObj, int> = new DartHashMap.fromIterable(new DartList.generate(10, (i) => i), {
+            key: (i) => new MyObjBadHash(i)
+        });
+
+        expect(map.length).toEqual(10);
+
+        for (let i = 0; i < map.length; i++) {
+            let k = new MyObjBadHash(i);
+            expect(map.get(k)).toEqual(i);
+        }
+
+        // Replace works
+        map.set(new MyObjBadHash(2), 100);
+        expect(map.get(new MyObjBadHash(2))).toEqual(100);
+    });
+
+});
+
+describe('DartSet', () => {
+    it('basically works', () => {
+        let set1 = new DartSet.from(new DartList.generate(5, (i) => new MyObj(i)));
+
+        for (let i = 0; i < 5; i++) {
+            expect(set1.contains(new MyObj(i)));
+        }
+
+        expect(set1.contains(new MyObj(set1.length))).not;
+    });
 });
