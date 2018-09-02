@@ -6,18 +6,43 @@ type Constructor<X> = {
     prototype: any
 }
 
-function copyProps(s: any, t: any, excludes?: Set<string | symbol>): void {
+const OLD_DEFS: symbol = Symbol('OLD_DEFS');
+
+function getOldDefs(t: any): any {
+    return t[OLD_DEFS] = t[OLD_DEFS] || {};
+
+}
+
+export function safeCallOriginal(target: any, name: string | symbol, ...args: any[]): any {
+    let f: Function;
+    if (target[OLD_DEFS] && target[OLD_DEFS].hasOwnProperty(name)) {
+        f = target[OLD_DEFS][name];
+    } else {
+        f = target[name];
+    }
+    f.apply(this, args);
+}
+
+export function copyProps(s: any, t: any, excludes?: Set<string | symbol>): void {
     excludes = excludes || new Set(['constructor']);
-    Object.getOwnPropertyNames(s).forEach(n => {
-        if (excludes.has(n)) {
-            return;
-        }
-        Object.defineProperty(t, n, Object.getOwnPropertyDescriptor(s, n) as PropertyDescriptor);
-    });
 
     Object.getOwnPropertySymbols(s).forEach(n => {
         if (excludes.has(n)) {
             return;
+        }
+        if (t.hasOwnProperty(n)) {
+            Object.defineProperty(getOldDefs(t), n, Object.getOwnPropertyDescriptor(t, n));
+        }
+        Object.defineProperty(t, n, Object.getOwnPropertyDescriptor(s, n) as PropertyDescriptor);
+    });
+
+    Object.getOwnPropertyNames(s).forEach(n => {
+        if (excludes.has(n)) {
+            return;
+        }
+        // save old def
+        if (t.hasOwnProperty(n)) {
+            Object.defineProperty(getOldDefs(t), n, Object.getOwnPropertyDescriptor(t, n));
         }
         Object.defineProperty(t, n, Object.getOwnPropertyDescriptor(s, n) as PropertyDescriptor);
     });

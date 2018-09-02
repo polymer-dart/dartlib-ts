@@ -4,7 +4,7 @@
 
 // Patch file for dart:collection classes.
 
-import {Abstract, AbstractMethods, DartClass, defaultConstructor, defaultFactory, Implements, namedConstructor, namedFactory, With} from "./utils";
+import {Abstract, AbstractMethods, DartClass, defaultConstructor, defaultFactory, Implements, namedConstructor, namedFactory, safeCallOriginal, With} from "./utils";
 import _dart, {EQUALS_OPERATOR} from './_common';
 import {DartString} from "./string";
 
@@ -8276,12 +8276,12 @@ class DartMapMixin<K, V> implements DartMap<K, V> {
         throw new Error('abstract');
     }
 
-    get(k:K):V {
+    get(k: K): V {
         return this[OPERATOR_INDEX](k);
     }
 
-    set(k:K,v:V) {
-        this[OPERATOR_INDEX_ASSIGN](k,v);
+    set(k: K, v: V) {
+        this[OPERATOR_INDEX_ASSIGN](k, v);
     }
 
     remove(key: any): V {
@@ -11593,11 +11593,15 @@ class JSArray<E> extends Array implements DartList<E>, JSIndexable<E> {
     }
 
     join(separator?: string /* = ''*/): string {
-        let list = new DartList(this.length);
+        let list = new DartList<string>(this.length);
         for (let i = 0; i < this.length; i++) {
             list[i] = `${this[i]}`;
         }
-        return list.join(separator) /*JS('String', '#.join(#)', list, separator)*/;
+        return (list as JSArray<string>)._join(separator) /*JS('String', '#.join(#)', list, separator)*/;
+    }
+
+    protected _join(separator: string) {
+        return super.join(separator);
     }
 
     take(n: int): DartIterable<E> {
