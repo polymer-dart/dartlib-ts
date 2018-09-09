@@ -1,10 +1,8 @@
-import {int, DartIterable} from "./core";
-
-export const VALUEOF: unique symbol = Symbol('valueOf');
+import {DartIterable} from "./core";
+import {DartClass, int, namedFactory} from "./utils";
 
 export interface DartString extends String {
     readonly isEmpty: boolean;
-    [VALUEOF]: string;
 
 }
 
@@ -28,39 +26,36 @@ export interface DartStringConstructor extends StringConstructor {
 }
 
 
-export const DartString: DartStringConstructor = function (this: DartString, arg?: any) {
-    if (this instanceof DartString) {
-        // Call String
-        let res = String.call(this, arg);
-        //console.log(`RES: ${res}`);
-        this[VALUEOF] = String(arg);
-    } else {
-        return arg;
-    }
-} as DartStringConstructor;
+// @ts-ignore
+export const DartString: DartStringConstructor = function (s: string) {
+    return new _DartString(s);
+};
 
-(DartString as any).prototype = Object.create(String.prototype);
-Object.defineProperty(DartString.prototype, 'isEmpty', {
-    get: function (this: DartString) {
-        return this.length == 0;
+@DartClass
+class _DartString extends String implements DartString {
+    constructor(s: string) {
+        super(s);
     }
-});
-Object.defineProperty(DartString.prototype, 'valueOf', {
-    get: function (this: DartString) {
-        return function (this: DartString) {
-            return this[VALUEOF];
-        };
+
+    get isEmpty(): boolean {
+        return this.length === 0;
     }
-});
-Object.defineProperty(DartString.prototype, 'toString', {
-    get: function (this: DartString) {
-        return function (this: DartString) {
-            return this[VALUEOF];
-        };
+
+    @namedFactory
+    protected static _fromCharCodes(charCodes: DartIterable<int>, start?: int /* = 0*/, end?: int): _DartString {
+        start = start || 0;
+        end = end || charCodes.length;
+        let l = charCodes.toList().sublist(start, end);
+        return new DartString(String.fromCharCode(...l));
     }
-});
-Object.defineProperty(DartString.prototype, 'length', {
-    get: function (this: DartString) {
-        return this[VALUEOF].length;
+
+    @namedFactory
+    protected static _fromCharCode(charCode: int): _DartString {
+        return new DartString(String.fromCharCode(charCode));
     }
-});
+
+}
+
+// @ts-ignore
+DartString.prototype = _DartString.prototype;
+Object.setPrototypeOf(DartString,_DartString);

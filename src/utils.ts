@@ -1,3 +1,58 @@
+export const OPERATOR_INDEX_ASSIGN = Symbol('[]=');
+export const OPERATOR_INDEX = Symbol('[]');
+export const OPERATOR_PLUS = Symbol('+');
+export const OPERATOR_MINUS = Symbol('-');
+export const OPERATOR_TIMES = Symbol('*');
+export const OPERATOR_DIVIDE = Symbol('/');
+export const OPERATOR_QUOTIENT = Symbol('~/');
+export const EQUALS_OPERATOR = Symbol('==');
+export const OPERATOR_LT = Symbol('<');
+export const OPERATOR_GT = Symbol('>');
+export const OPERATOR_LEQ = Symbol('<=');
+export const OPERATOR_GEQ = Symbol('>=');
+export const OPERATOR_NEG = Symbol('-');
+
+
+export enum Op {
+    PLUS,
+    MINUS,
+    TIMES,
+    DIVIDE,
+    QUOTIENT,
+    EQUALS,
+    INDEX,
+    INDEX_ASSIGN,
+    LT,
+    GT,
+    LEQ,
+    GEQ,
+    NEG
+}
+
+const OpSymbolMap: Map<Op, symbol> = new Map([
+    [Op.INDEX, OPERATOR_INDEX],
+    [Op.INDEX_ASSIGN, OPERATOR_INDEX_ASSIGN],
+    [Op.EQUALS, EQUALS_OPERATOR],
+    [Op.PLUS, OPERATOR_PLUS],
+    [Op.MINUS, OPERATOR_MINUS],
+    [Op.TIMES, OPERATOR_TIMES],
+    [Op.DIVIDE, OPERATOR_DIVIDE],
+    [Op.QUOTIENT, OPERATOR_QUOTIENT],
+    [Op.LT, OPERATOR_LT],
+    [Op.GT, OPERATOR_GT],
+    [Op.LEQ, OPERATOR_LEQ],
+    [Op.GEQ, OPERATOR_GEQ],
+    [Op.NEG, OPERATOR_NEG],
+]);
+
+export type int = number;
+export type long = number;
+export type float = number;
+export type double = number;
+export type num = number;
+export type bool = boolean;
+
+
 export const UNINITIALIZED = Symbol('_uninitialized_');
 
 
@@ -249,4 +304,23 @@ function _isA(ctor, cls): boolean {
 export function isA(obj, cls): boolean {
     let ctor = Object.getPrototypeOf(obj).constructor;
     return _isA(ctor, cls);
+}
+
+
+export function Operator(op: Op): MethodDecorator {
+    return (target, name, descriptor) => {
+        // Add another method that's an alias to this
+
+        Object.defineProperty(target, OpSymbolMap.get(op), {
+            value: function () {
+                return this[name].call(this, ...arguments);
+            }
+        });
+
+    };
+}
+
+export function $with<T>(t: T, ...expressions: ((t: T) => any)[]): T {
+    expressions.forEach((e) => e(t));
+    return t;
 }

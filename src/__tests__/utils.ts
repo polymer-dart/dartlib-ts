@@ -1,4 +1,5 @@
-import {mixin, DartClass, defaultConstructor, namedConstructor, DartConstructor, Abstract, With, AbstractProperty, AbstractMethods, Implements, isA} from "../utils"
+import {mixin, DartClass, defaultConstructor, namedConstructor, DartConstructor, Abstract, With, AbstractProperty, AbstractMethods, Implements, isA, Operator, Op, EQUALS_OPERATOR, OPERATOR_PLUS} from "../utils"
+import _dart from '../_common';
 
 describe("Utils", () => {
     it('mixes classes', () => {
@@ -561,4 +562,44 @@ describe("Utils", () => {
         expect(isA(obj, Interface));
         expect(isA(obj, OtherClass)).not;
     })
+
+    it('works with operator', () => {
+        class ComplexNumber {
+            real: number;
+            imaginary: number;
+
+            constructor(_?: { real?: number, imaginary?: number }) {
+                let {real, imaginary} = Object.assign({real: 0, imaginary: 0}, _);
+                this.real = real;
+                this.imaginary = imaginary;
+            }
+
+            @Operator(Op.PLUS)
+            plus(other: ComplexNumber): ComplexNumber {
+                return new ComplexNumber({real: this.real + other.real, imaginary: this.imaginary + other.imaginary});
+            }
+
+            @Operator(Op.EQUALS)
+            equals(other: ComplexNumber): boolean {
+                return this.real === other.real && this.imaginary === other.imaginary;
+            }
+        }
+
+
+        let A = new ComplexNumber({real: 10, imaginary: 10});
+        let B = new ComplexNumber({real: 5, imaginary: 5});
+
+        expect(A[OPERATOR_PLUS]).not.toBeNull();
+        expect(A[EQUALS_OPERATOR]).not.toBeNull();
+
+        let C = A.plus(B);
+        let D = A[OPERATOR_PLUS](B);
+        expect(_dart.equals(C, D)).toBe(true);
+        expect(C.real).toEqual(15);
+        expect(C.imaginary).toEqual(15);
+        expect(D.imaginary).toEqual(15);
+        expect(D.real).toEqual(15);
+        expect(A[EQUALS_OPERATOR](B)).toBe(false);
+        expect(C[EQUALS_OPERATOR](D)).toBe(true);
+    });
 });

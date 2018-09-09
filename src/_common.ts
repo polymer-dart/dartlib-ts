@@ -1,6 +1,5 @@
-import {isA} from "./utils";
+import {EQUALS_OPERATOR, int, isA} from "./utils";
 
-export const EQUALS_OPERATOR = Symbol('==');
 
 export default {
     /**
@@ -34,5 +33,11 @@ export default {
         }
 
         return isA(a, b);
+    },
+
+    isNot: (a: any, b: any) => !this.is(a, b),
+
+    divide(a: int, b: int): int {
+        return Math.floor(b / a);
     }
 }
