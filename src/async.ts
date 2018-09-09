@@ -36,8 +36,8 @@
 /// As a corollary, `FutureOr<Object>` is equivalent to
 /// `FutureOr<FutureOr<Object>>`, `FutureOr<Future<Object>> is equivalent to
 /// `Future<Object>`.
-import {bool, DartIterable, DartList, DartStackTrace, identical, int, StateError, UnsupportedError} from "./core";
-import {Abstract, AbstractProperty, DartClass, defaultConstructor, defaultFactory, Implements, namedConstructor, namedFactory} from "./utils";
+import {ArgumentError, DartDuration, DartHashMap, DartIterable, DartList, DartMap, DartStackTrace, identical, StateError, UnsupportedError} from "./core";
+import {Abstract, AbstractProperty, bool, DartClass, defaultConstructor, defaultFactory, Implements, int, namedConstructor, namedFactory, Op, Operator, OPERATOR_INDEX_ASSIGN} from "./utils";
 import _dart from './_common';
 /*
 abstract class FutureOr<T> {
@@ -231,7 +231,7 @@ class Future<T> {
             let stackTrace = new DartStackTrace(error);
 
             let future = new _Future<T>();
-            let replacement: AsyncError = DartZone.current.errorCallback(error, stackTrace);
+            let replacement: DartAsyncError = DartZone.current.errorCallback(error, stackTrace);
             if (replacement != null) {
                 future._asyncCompleteError(
                     _nonNullError(replacement.error), replacement.stackTrace);
@@ -270,7 +270,7 @@ class Future<T> {
     protected static _error<T>(error: any, stackTrace?: DartStackTrace): Future<T> {
         error = _nonNullError(error);
         if (!identical(DartZone.current, _ROOT_ZONE)) {
-            let replacement: AsyncError = DartZone.current.errorCallback(error, stackTrace);
+            let replacement: DartAsyncError = DartZone.current.errorCallback(error, stackTrace);
             if (replacement != null) {
                 error = _nonNullError(replacement.error);
                 stackTrace = replacement.stackTrace;
@@ -1150,7 +1150,7 @@ class _Future<T> implements Future<T> {
         this._state = _INCOMPLETE;
     }
 
-    get _error(): AsyncError {
+    get _error(): DartAsyncError {
         //assert(_hasError);
         return this._resultOrListeners;
     }
@@ -1167,14 +1167,14 @@ class _Future<T> implements Future<T> {
         this._resultOrListeners = value;
     }
 
-    _setErrorObject(error: AsyncError): void {
+    _setErrorObject(error: DartAsyncError): void {
         //assert(!_isComplete); // But may have a completion pending.
         this._state = _ERROR;
         this._resultOrListeners = error;
     }
 
     _setError(error: any, stackTrace: DartStackTrace): void {
-        this._setErrorObject(new AsyncError(error, stackTrace));
+        this._setErrorObject(new DartAsyncError(error, stackTrace));
     }
 
     /// Copy the completion result of [source] into this future.
@@ -1478,7 +1478,7 @@ class _Future<T> implements Future<T> {
                         if (hasError && identical(source._error.error, e)) {
                             listenerValueOrError = source._error;
                         } else {
-                            listenerValueOrError = new AsyncError(e, s);
+                            listenerValueOrError = new DartAsyncError(e, s);
                         }
                         listenerHasError = true;
                         return;
@@ -1506,7 +1506,7 @@ class _Future<T> implements Future<T> {
                         listenerValueOrError = listener.handleValue(sourceResult);
                     } catch (e) {
                         let s = new DartStackTrace(e);
-                        listenerValueOrError = new AsyncError(e, s);
+                        listenerValueOrError = new DartAsyncError(e, s);
                         listenerHasError = true;
                     }
                 };
@@ -1524,7 +1524,7 @@ class _Future<T> implements Future<T> {
                         if (identical(source._error.error, e)) {
                             listenerValueOrError = source._error;
                         } else {
-                            listenerValueOrError = new AsyncError(e, s);
+                            listenerValueOrError = new DartAsyncError(e, s);
                         }
                         listenerHasError = true;
                     }
@@ -1588,7 +1588,7 @@ class _Future<T> implements Future<T> {
         if (onTimeout == null) {
             timer = new DartTimer(timeLimit, () => {
                 result._completeError(
-                    new TimeoutException("Future not completed", timeLimit));
+                    new DartTimeoutException("Future not completed", timeLimit));
             });
         } else {
             let zone = DartZone.current;
@@ -1794,22 +1794,23 @@ class _FutureListener<S, T> {
         return this._zone.runUnary<FutureOr<T>, S>(this._onValue, sourceResult);
     }
 
-    matchesErrorTest(asyncError: AsyncError): bool {
+    matchesErrorTest(asyncError: DartAsyncError): bool {
         if (!this.hasErrorTest) return true;
         return this._zone.runUnary<bool, any>(this._errorTest, asyncError.error);
     }
 
-    handleError(asyncError: AsyncError): FutureOr<T> {
+    handleError(asyncError: DartAsyncError): FutureOr<T> {
         //assert(handlesError && hasErrorCallback);
-        if (_dart.is(this.errorCallback, DartZoneBinaryCallback)) {
-            let typedErrorCallback = this.errorCallback as any
-                /*=ZoneBinaryCallback<FutureOr<T>, Object, StackTrace>*/;
-            return this._zone.runBinary(
-                typedErrorCallback, asyncError.error, asyncError.stackTrace);
-        } else {
-            return this._zone.runUnary<FutureOr<T>, any>(
-                this.errorCallback, asyncError.error);
-        }
+        // NOTE(dart2ts): we cannot distinguish, use always binary
+        //if (_dart.is(this.errorCallback, ZoneBinaryCallback)) {
+        let typedErrorCallback = this.errorCallback as any
+            /*=ZoneBinaryCallback<FutureOr<T>, Object, StackTrace>*/;
+        return this._zone.runBinary(
+            typedErrorCallback, asyncError.error, asyncError.stackTrace);
+        //} else {
+        //    return this._zone.runUnary<FutureOr<T>, any>(
+        //        this.errorCallback, asyncError.error);
+        //}
     }
 
     handleWhenComplete(): any {
@@ -1818,10 +1819,6 @@ class _FutureListener<S, T> {
     }
 }
 
-export {
-    Future,
-    DartCompleter
-}
 
 // Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
@@ -1878,6 +1875,7 @@ class DartTimer {
         return DartZone.current.createTimer(
             duration, DartZone.current.bindCallback(callback, {runGuarded: true}));
     }
+
     constructor(duration: DartDuration, callback: () => any) {
 
     }
@@ -1954,4 +1952,2446 @@ class DartTimer {
         throw "external";
 
     }
+}
+
+
+// Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
+//part of dart.async;
+
+type ZoneCallback<R> = () => R;
+type ZoneUnaryCallback<R, T> = (arg: T) => R;
+type ZoneBinaryCallback<R, T1, T2> = (arg1: T1, arg2: T2) => R;
+
+// TODO(floitsch): we are abusing generic typedefs as typedefs for generic
+// functions.
+/*ABUSE*/
+type  HandleUncaughtErrorHandler<R> = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, error: any, stackTrace: DartStackTrace) => R;
+/*ABUSE*/
+type  RunHandler<R> = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: () => R) => R;
+/*ABUSE*/
+type  RunUnaryHandler<R, T> = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: (arg: T) => R, arg: T) => R;
+/*ABUSE*/
+type RunBinaryHandler<R, T1, T2> = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: (arg1: T1, arg2: T2) => R, arg1: T1, arg2: T2) => R;
+/*ABUSE*/
+type  RegisterCallbackHandler<R> = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: () => R) => ZoneCallback<R>;
+/*ABUSE*/
+type  RegisterUnaryCallbackHandler<R, T> = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: (arg: T) => R) => ZoneUnaryCallback<R, T>;
+/*ABUSE*/
+type  RegisterBinaryCallbackHandler<R, T1, T2> = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: (arg1: T1, arg2: T2) => R) => ZoneBinaryCallback<R, T1, T2>;
+type  ErrorCallbackHandler = (self: DartZone, parent: DartZoneDelegate,
+                              zone: DartZone, error: any, stackTrace: DartStackTrace) => DartAsyncError;
+type  ScheduleMicrotaskHandler = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: () => any) => void;
+type  CreateTimerHandler = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, duration: DartDuration, f: () => any) => DartTimer;
+type  CreatePeriodicTimerHandler = (self: DartZone, parent: DartZoneDelegate,
+                                    zone: DartZone, period: DartDuration, f: (timer: DartTimer) => any) => DartTimer;
+type  PrintHandler = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, line: string) => void;
+type  ForkHandler = (self: DartZone, parent: DartZoneDelegate, zone: DartZone,
+                     specification: DartZoneSpecification, zoneValues: DartMap<any, any>) => DartZone;
+
+/** Pair of error and stack trace. Returned by [Zone.errorCallback]. */
+class DartAsyncError extends Error {
+    error: any;
+    stackTrace: DartStackTrace;
+
+    constructor(error: any, stackTrace: DartStackTrace) {
+        super();
+        this.error = error;
+        this.stackTrace = stackTrace;
+    }
+
+    toString(): string {
+        return `${this.error}`;
+    }
+}
+
+class _ZoneFunction<T extends Function> {
+    zone: _Zone;
+    function: T;
+
+    constructor(zone: _Zone, f: T) {
+        this.zone = zone;
+        this.function = f;
+    }
+}
+
+/**
+ * This class provides the specification for a forked zone.
+ *
+ * When forking a new zone (see [Zone.fork]) one can override the default
+ * behavior of the zone by providing callbacks. These callbacks must be
+ * given in an instance of this class.
+ *
+ * Handlers have the same signature as the same-named methods on [Zone] but
+ * receive three additional arguments:
+ *
+ *   1. the zone the handlers are attached to (the "self" zone).
+ *   2. a [ZoneDelegate] to the parent zone.
+ *   3. the zone that first received the request (before the request was
+ *     bubbled up).
+ *
+ * Handlers can either stop propagation the request (by simply not calling the
+ * parent handler), or forward to the parent zone, potentially modifying the
+ * arguments on the way.
+ */
+@DartClass
+class DartZoneSpecification {
+    /**
+     * Creates a specification with the provided handlers.
+     */
+    @defaultFactory
+    protected static _create(
+        _?: {
+            handleUncaughtError?: HandleUncaughtErrorHandler<any>,
+            run?: RunHandler<any>,
+            runUnary?: RunUnaryHandler<any, any>,
+            runBinary?: RunBinaryHandler<any, any, any>,
+            registerCallback?: RegisterCallbackHandler<any>,
+            registerUnaryCallback?: RegisterUnaryCallbackHandler<any, any>,
+            registerBinaryCallback?: RegisterBinaryCallbackHandler<any, any, any>
+            errorCallback?: ErrorCallbackHandler,
+            scheduleMicrotask?: ScheduleMicrotaskHandler,
+            createTimer?: CreateTimerHandler,
+            createPeriodicTimer?: CreatePeriodicTimerHandler,
+            print?: PrintHandler,
+            fork?: ForkHandler
+        }): DartZoneSpecification {
+        return new _ZoneSpecification(_);
+    }
+
+    constructor(_?: {
+        handleUncaughtError?: HandleUncaughtErrorHandler<any>,
+        run?: RunHandler<any>,
+        runUnary?: RunUnaryHandler<any, any>,
+        runBinary?: RunBinaryHandler<any, any, any>,
+        registerCallback?: RegisterCallbackHandler<any>,
+        registerUnaryCallback?: RegisterUnaryCallbackHandler<any, any>,
+        registerBinaryCallback?: RegisterBinaryCallbackHandler<any, any, any>
+        errorCallback?: ErrorCallbackHandler,
+        scheduleMicrotask?: ScheduleMicrotaskHandler,
+        createTimer?: CreateTimerHandler,
+        createPeriodicTimer?: CreatePeriodicTimerHandler,
+        print?: PrintHandler,
+        fork?: ForkHandler
+    }) {
+
+    }
+
+    /**
+     * Creates a specification from [other] with the provided handlers overriding
+     * the ones in [other].
+     */
+    @namedFactory
+    protected static _from(other: DartZoneSpecification,
+                           _?: {
+                               handleUncaughtError?: HandleUncaughtErrorHandler<any>,
+                               run?: RunHandler<any>,
+                               runUnary?: RunUnaryHandler<any, any>,
+                               runBinary?: RunBinaryHandler<any, any, any>,
+                               registerCallback?: RegisterCallbackHandler<any>,
+                               registerUnaryCallback?: RegisterUnaryCallbackHandler<any, any>,
+                               registerBinaryCallback?: RegisterBinaryCallbackHandler<any, any, any>
+                               errorCallback?: ErrorCallbackHandler,
+                               scheduleMicrotask?: ScheduleMicrotaskHandler,
+                               createTimer?: CreateTimerHandler,
+                               createPeriodicTimer?: CreatePeriodicTimerHandler,
+                               print?: PrintHandler,
+                               fork?: ForkHandler
+                           }) {
+
+        return new DartZoneSpecification(Object.assign({
+            handleUncaughtError: other.handleUncaughtError,
+            run: other.run,
+            runUnary: other.runUnary,
+            runBinary: other.runBinary,
+            registerCallback: other.registerCallback,
+            registerUnaryCallback: other.registerUnaryCallback,
+            registerBinaryCallback: other.registerBinaryCallback,
+            errorCallback: other.errorCallback,
+            scheduleMicrotask: other.scheduleMicrotask,
+            createTimer: other.createTimer,
+            createPeriodicTimer: other.createPeriodicTimer,
+            print: other.print,
+            fork: other.fork
+        }, _));
+    }
+
+    static from: new(other: DartZoneSpecification,
+                     _?: {
+                         handleUncaughtError?: HandleUncaughtErrorHandler<any>,
+                         run?: RunHandler<any>,
+                         runUnary?: RunUnaryHandler<any, any>,
+                         runBinary?: RunBinaryHandler<any, any, any>,
+                         registerCallback?: RegisterCallbackHandler<any>,
+                         registerUnaryCallback?: RegisterUnaryCallbackHandler<any, any>,
+                         registerBinaryCallback?: RegisterBinaryCallbackHandler<any, any, any>
+                         errorCallback?: ErrorCallbackHandler,
+                         scheduleMicrotask?: ScheduleMicrotaskHandler,
+                         createTimer?: CreateTimerHandler,
+                         createPeriodicTimer?: CreatePeriodicTimerHandler,
+                         print?: PrintHandler,
+                         fork?: ForkHandler
+                     }) => DartZoneSpecification;
+
+    @AbstractProperty
+    get handleUncaughtError(): HandleUncaughtErrorHandler<any> {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get run(): RunHandler<any> {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get runUnary(): RunUnaryHandler<any, any> {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get runBinary(): RunBinaryHandler<any, any, any> {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get registerCallback(): RegisterCallbackHandler<any> {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get registerUnaryCallback(): RegisterUnaryCallbackHandler<any, any> {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get registerBinaryCallback(): RegisterBinaryCallbackHandler<any, any, any> {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get errorCallback(): ErrorCallbackHandler {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get scheduleMicrotask(): ScheduleMicrotaskHandler {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get createTimer(): CreateTimerHandler {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get createPeriodicTimer(): CreatePeriodicTimerHandler {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get print(): PrintHandler {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get fork(): ForkHandler {
+        throw 'abstract';
+    }
+}
+
+/**
+ * Internal [ZoneSpecification] class.
+ *
+ * The implementation wants to rely on the fact that the getters cannot change
+ * dynamically. We thus require users to go through the redirecting
+ * [ZoneSpecification] constructor which instantiates this class.
+ */
+class _ZoneSpecification implements DartZoneSpecification {
+    constructor(_?: {
+        handleUncaughtError?: HandleUncaughtErrorHandler<any>,
+        run?: RunHandler<any>,
+        runUnary?: RunUnaryHandler<any, any>,
+        runBinary?: RunBinaryHandler<any, any, any>,
+        registerCallback?: RegisterCallbackHandler<any>,
+        registerUnaryCallback?: RegisterUnaryCallbackHandler<any, any>,
+        registerBinaryCallback?: RegisterBinaryCallbackHandler<any, any, any>
+        errorCallback?: ErrorCallbackHandler,
+        scheduleMicrotask?: ScheduleMicrotaskHandler,
+        createTimer?: CreateTimerHandler,
+        createPeriodicTimer?: CreatePeriodicTimerHandler,
+        print?: PrintHandler,
+        fork?: ForkHandler
+    }) {
+        this.handleUncaughtError = _.handleUncaughtError;
+        this.run = _.run;
+        this.runUnary = _.runUnary;
+        this.runBinary = _.runBinary;
+        this.registerCallback = _.registerCallback;
+        this.registerUnaryCallback = _.registerUnaryCallback;
+        this.registerBinaryCallback = _.registerBinaryCallback;
+        this.errorCallback = _.errorCallback;
+        this.scheduleMicrotask = _.scheduleMicrotask;
+        this.createTimer = _.createTimer;
+        this.createPeriodicTimer = _.createPeriodicTimer;
+        this.print = _.print;
+        this.fork = _.fork;
+    }
+
+    handleUncaughtError: HandleUncaughtErrorHandler<any>;
+    run: RunHandler<any>;
+    runUnary: RunUnaryHandler<any, any>;
+    runBinary: RunBinaryHandler<any, any, any>;
+    registerCallback: RegisterCallbackHandler<any>;
+    registerUnaryCallback: RegisterUnaryCallbackHandler<any, any>;
+    registerBinaryCallback: RegisterBinaryCallbackHandler<any, any, any>;
+    errorCallback: ErrorCallbackHandler;
+    scheduleMicrotask: ScheduleMicrotaskHandler;
+    createTimer: CreateTimerHandler;
+    createPeriodicTimer: CreatePeriodicTimerHandler;
+    print: PrintHandler;
+    fork: ForkHandler;
+}
+
+/**
+ * An adapted view of the parent zone.
+ *
+ * This class allows the implementation of a zone method to invoke methods on
+ * the parent zone while retaining knowledge of the originating zone.
+ *
+ * Custom zones (created through [Zone.fork] or [runZoned]) can provide
+ * implementations of most methods of zones. This is similar to overriding
+ * methods on [Zone], except that this mechanism doesn't require subclassing.
+ *
+ * A custom zone function (provided through a [ZoneSpecification]) typically
+ * records or wraps its parameters and then delegates the operation to its
+ * parent zone using the provided [ZoneDelegate].
+ *
+ * While zones have access to their parent zone (through [Zone.parent]) it is
+ * recommended to call the methods on the provided parent delegate for two
+ * reasons:
+ * 1. the delegate methods take an additional `zone` argument which is the
+ *   zone the action has been initiated in.
+ * 2. delegate calls are more efficient, since the implementation knows how
+ *   to skip zones that would just delegate to their parents.
+ */
+
+interface DartZoneDelegate {
+    handleUncaughtError<R>(zone: DartZone, error: any, stackTrace: DartStackTrace): R;
+
+    run<R>(zone: DartZone, f: () => R): R;
+
+    runUnary<R, T>(zone: DartZone, f: (arg: T) => R, arg: T): R;
+
+    runBinary<R, T1, T2>(zone: DartZone, f: (arg1: T1, arg2: T2) => R, arg1: T1, arg2: T2): R;
+
+    registerCallback<R>(zone: DartZone, f: () => R): ZoneCallback<R>;
+
+    registerUnaryCallback<R, T>(zone: DartZone, f: (arg: T) => R): ZoneUnaryCallback<R, T>;
+
+    registerBinaryCallback<R, T1, T2>(zone: DartZone, f: (arg1: T1, arg2: T2) => R): ZoneBinaryCallback<R, T1, T2>;
+
+    errorCallback(zone: DartZone, error: any, stackTrace: DartStackTrace): DartAsyncError;
+
+    scheduleMicrotask(zone: DartZone, f: () => any): void;
+
+    createTimer(zone: DartZone, duration: DartDuration, f: () => any): DartTimer;
+
+    createPeriodicTimer(zone: DartZone, period: DartDuration, f: (timer: DartTimer) => any): DartTimer;
+
+    print(zone: DartZone, line: string): void;
+
+    fork(zone: DartZone, specification: DartZoneSpecification, zoneValues: DartMap<any, any>): DartZone;
+}
+
+@DartClass
+class _AbstractZone {
+    _() {
+    }
+
+    /**
+     * Handles uncaught asynchronous errors.
+     *
+     * There are two kind of asynchronous errors that are handled by this
+     * function:
+     * 1. Uncaught errors that were thrown in asynchronous callbacks, for example,
+     *   a `throw` in the function passed to [Timer.run].
+     * 2. Asynchronous errors that are pushed through [Future] and [Stream]
+     *   chains, but for which no child registered an error handler.
+     *   Most asynchronous classes, like [Future] or [Stream] push errors to their
+     *   listeners. Errors are propagated this way until either a listener handles
+     *   the error (for example with [Future.catchError]), or no listener is
+     *   available anymore. In the latter case, futures and streams invoke the
+     *   zone's [handleUncaughtError].
+     *
+     * By default, when handled by the root zone, uncaught asynchronous errors are
+     * treated like uncaught synchronous exceptions.
+     */
+    @Abstract
+    handleUncaughtError<R>(error: any, stackTrace: DartStackTrace): R {
+        throw 'abstract';
+    }
+
+    /**
+     * The parent zone of the this zone.
+     *
+     * Is `null` if `this` is the [ROOT] zone.
+     *
+     * Zones are created by [fork] on an existing zone, or by [runZoned] which
+     * forks the [current] zone. The new zone's parent zone is the zone it was
+     * forked from.
+     */
+    @AbstractProperty
+    get parent(): DartZone {
+        throw 'abstract';
+    }
+
+    /**
+     * The error zone is the one that is responsible for dealing with uncaught
+     * errors.
+     *
+     * This is the closest parent zone of this zone that provides a
+     * [handleUncaughtError] method.
+     *
+     * Asynchronous errors never cross zone boundaries between zones with
+     * different error handlers.
+     *
+     * Example:
+     * ```
+     * import 'dart:async';
+     *
+     * main() {
+     *   var future;
+     *   runZoned(() {
+     *     // The asynchronous error is caught by the custom zone which prints
+     *     // 'asynchronous error'.
+     *     future = new Future.error("asynchronous error");
+     *   }, onError: (e) { print(e); });  // Creates a zone with an error handler.
+     *   // The following `catchError` handler is never invoked, because the
+     *   // custom zone created by the call to `runZoned` provides an
+     *   // error handler.
+     *   future.catchError((e) { throw "is never reached"; });
+     * }
+     * ```
+     *
+     * Note that errors cannot enter a child zone with a different error handler
+     * either:
+     * ```
+     * import 'dart:async';
+     *
+     * main() {
+     *   runZoned(() {
+     *     // The following asynchronous error is *not* caught by the `catchError`
+     *     // in the nested zone, since errors are not to cross zone boundaries
+     *     // with different error handlers.
+     *     // Instead the error is handled by the current error handler,
+     *     // printing "Caught by outer zone: asynchronous error".
+     *     var future = new Future.error("asynchronous error");
+     *     runZoned(() {
+     *       future.catchError((e) { throw "is never reached"; });
+     *     }, onError: (e) { throw "is never reached"; });
+     *   }, onError: (e) { print("Caught by outer zone: $e"); });
+     * }
+     * ```
+     */
+    @AbstractProperty
+    get errorZone(): DartZone {
+        throw 'abstract';
+    }
+
+    /**
+     * Returns true if `this` and [otherZone] are in the same error zone.
+     *
+     * Two zones are in the same error zone if they have the same [errorZone].
+     */
+    @Abstract
+    inSameErrorZone(otherZone: DartZone): bool {
+        throw 'abstract';
+    }
+
+    /**
+     * Creates a new zone as a child of `this`.
+     *
+     * The new zone uses the closures in the given [specification] to override
+     * the current's zone behavior. All specification entries that are `null`
+     * inherit the behavior from the parent zone (`this`).
+     *
+     * The new zone inherits the stored values (accessed through [[]])
+     * of this zone and updates them with values from [zoneValues], which either
+     * adds new values or overrides existing ones.
+     *
+     * Note that the fork operation is interceptible. A zone can thus change
+     * the zone specification (or zone values), giving the forking zone full
+     * control over the child zone.
+     */
+    @Abstract
+    fork(_?: { specification?: DartZoneSpecification, zoneValues?: DartMap<any, any> }): DartZone {
+        throw 'abstract';
+    }
+
+    /**
+     * Executes [action] in this zone.
+     *
+     * By default (as implemented in the [ROOT] zone), runs [action]
+     * with [current] set to this zone.
+     *
+     * If [action] throws, the synchronous exception is not caught by the zone's
+     * error handler. Use [runGuarded] to achieve that.
+     *
+     * Since the root zone is the only zone that can modify the value of
+     * [current], custom zones intercepting run should always delegate to their
+     * parent zone. They may take actions before and after the call.
+     */
+    @Abstract
+    run<R>(action: () => R): R {
+        throw 'abstract';
+    }
+
+    /**
+     * Executes the given [action] with [argument] in this zone.
+     *
+     * As [run] except that [action] is called with one [argument] instead of
+     * none.
+     */
+    @Abstract
+    runUnary<R, T>(action: (argument: T) => R, argument: T): R {
+        throw 'abstract';
+    }
+
+    /**
+     * Executes the given [action] with [argument1] and [argument2] in this
+     * zone.
+     *
+     * As [run] except that [action] is called with two arguments instead of none.
+     */
+    @Abstract
+    runBinary<R, T1, T2>(action: (argument1: T1, argument2: T2) => R, argument1: T1, argument2: T2): R {
+        throw 'abstract';
+    }
+
+    /**
+     * Executes the given [action] in this zone and catches synchronous
+     * errors.
+     *
+     * This function is equivalent to:
+     * ```
+     * try {
+     *   return this.run(action);
+     * } catch (e, s) {
+     *   return this.handleUncaughtError(e, s);
+     * }
+     * ```
+     *
+     * See [run].
+     */
+    @Abstract
+    runGuarded<R>(action: () => R): R {
+        throw 'abstract';
+    }
+
+    /**
+     * Executes the given [action] with [argument] in this zone and
+     * catches synchronous errors.
+     *
+     * See [runGuarded].
+     */
+    @Abstract
+    runUnaryGuarded<R, T>(action: (argument: T) => R, argument: T): R {
+        throw 'abstract';
+    }
+
+    /**
+     * Executes the given [action] with [argument1] and [argument2] in this
+     * zone and catches synchronous errors.
+     *
+     * See [runGuarded].
+     */
+    @Abstract
+    runBinaryGuarded<R, T1, T2>(action: (argument1: T1, argument2: T2) => R, argument1: T1, argument2: T2): R {
+        throw 'abstract';
+    }
+
+    /**
+     * Registers the given callback in this zone.
+     *
+     * When implementing an asynchronous primitive that uses callbacks, the
+     * callback must be registered using [registerCallback] at the point where the
+     * user provides the callback. This allows zones to record other information
+     * that they need at the same time, perhaps even wrapping the callback, so
+     * that the callback is prepared when it is later run in the same zones
+     * (using [run]). For example, a zone may decide
+     * to store the stack trace (at the time of the registration) with the
+     * callback.
+     *
+     * Returns the callback that should be used in place of the provided
+     * [callback]. Frequently zones simply return the original callback.
+     *
+     * Custom zones may intercept this operation. The default implementation in
+     * [Zone.ROOT] returns the original callback unchanged.
+     */
+    @Abstract
+    registerCallback<R>(callback: () => R): ZoneCallback<R> {
+        throw 'abstract';
+    }
+
+
+    /**
+     * Registers the given callback in this zone.
+     *
+     * Similar to [registerCallback] but with a unary callback.
+     */
+    @Abstract
+    registerUnaryCallback<R, T>(callback: (arg: T) => R): ZoneUnaryCallback<R, T> {
+        throw 'abstract';
+    }
+
+
+    /**
+     * Registers the given callback in this zone.
+     *
+     * Similar to [registerCallback] but with a unary callback.
+     */
+    @Abstract
+    registerBinaryCallback<R, T1, T2>(
+        callback: (arg1: T1, arg2: T2) => R): ZoneBinaryCallback<R, T1, T2> {
+        throw 'abstract';
+    }
+
+
+    /**
+     *  Equivalent to:
+     *
+     *      ZoneCallback registered = this.registerCallback(action);
+     *      if (runGuarded) return () => this.runGuarded(registered);
+     *      return () => this.run(registered);
+     *
+     */
+    @Abstract
+    bindCallback<R>(action: () => R, _?: { runGuarded?: bool }): ZoneCallback<R> {
+        throw 'abstract';
+    }
+
+
+    /**
+     *  Equivalent to:
+     *
+     *      ZoneCallback registered = this.registerUnaryCallback(action);
+     *      if (runGuarded) return (arg) => this.runUnaryGuarded(registered, arg);
+     *      return (arg) => thin.runUnary(registered, arg);
+     */
+    @Abstract
+    bindUnaryCallback<R, T>(action: (argument: T) => R,
+                            _?: { runGuarded?: bool }): ZoneUnaryCallback<R, T> {
+        throw 'abstract';
+    }
+
+    /**
+     *  Equivalent to:
+     *
+     *      ZoneCallback registered = registerBinaryCallback(action);
+     *      if (runGuarded) {
+     *        return (arg1, arg2) => this.runBinaryGuarded(registered, arg);
+     *      }
+     *      return (arg1, arg2) => thin.runBinary(registered, arg1, arg2);
+     */
+    @Abstract
+    bindBinaryCallback<R, T1, T2>(
+        action: (argument1: T1, argument2: T2) => R,
+        _?: { runGuarded?: bool }): ZoneBinaryCallback<R, T1, T2> {
+        throw 'abstract';
+    }
+
+    /**
+     * Intercepts errors when added programatically to a `Future` or `Stream`.
+     *
+     * When calling [Completer.completeError], [StreamController.addError],
+     * or some [Future] constructors, the current zone is allowed to intercept
+     * and replace the error.
+     *
+     * Future constructors invoke this function when the error is received
+     * directly, for example with [Future.error], or when the error is caught
+     * synchronously, for example with [Future.sync].
+     *
+     * There is no guarantee that an error is only sent through [errorCallback]
+     * once. Libraries that use intermediate controllers or completers might
+     * end up invoking [errorCallback] multiple times.
+     *
+     * Returns `null` if no replacement is desired. Otherwise returns an instance
+     * of [AsyncError] holding the new pair of error and stack trace.
+     *
+     * Although not recommended, the returned instance may have its `error` member
+     * ([AsyncError.error]) be equal to `null` in which case the error should be
+     * replaced by a [NullThrownError].
+     *
+     * Custom zones may intercept this operation.
+     *
+     * Implementations of a new asynchronous primitive that converts synchronous
+     * errors to asynchronous errors rarely need to invoke [errorCallback], since
+     * errors are usually reported through future completers or stream
+     * controllers.
+     */
+    @Abstract
+    errorCallback(error: any, stackTrace: DartStackTrace): DartAsyncError {
+        throw 'abstract';
+    }
+
+
+    /**
+     * Runs [action] asynchronously in this zone.
+     *
+     * The global `scheduleMicrotask` delegates to the current zone's
+     * [scheduleMicrotask]. The root zone's implementation interacts with the
+     * underlying system to schedule the given callback as a microtask.
+     *
+     * Custom zones may intercept this operation (for example to wrap the given
+     * callback [action]).
+     */
+    @Abstract
+    scheduleMicrotask(action: () => any): void {
+        throw 'abstract';
+    }
+
+
+    /**
+     * Creates a Timer where the callback is executed in this zone.
+     */
+    @Abstract
+    createTimer(duration: DartDuration, callback: () => any): DartTimer {
+        throw 'abstract';
+    }
+
+    /**
+     * Creates a periodic Timer where the callback is executed in this zone.
+     */
+    @Abstract
+    createPeriodicTimer(period: DartDuration, callback: (timer: DartTimer) => any): DartTimer {
+        throw 'abstract';
+    }
+
+    /**
+     * Prints the given [line].
+     *
+     * The global `print` function delegates to the current zone's [print]
+     * function which makes it possible to intercept printing.
+     *
+     * Example:
+     * ```
+     * import 'dart:async';
+     *
+     * main() {
+     *   runZoned(() {
+     *     // Ends up printing: "Intercepted: in zone".
+     *     print("in zone");
+     *   }, zoneSpecification: new ZoneSpecification(
+     *       print: (Zone self, ZoneDelegate parent, Zone zone, String line) {
+     *     parent.print(zone, "Intercepted: $line");
+     *   }));
+     * }
+     * ```
+     */
+    @Abstract
+    print(line: string): void {
+        throw 'abstract';
+    }
+
+    /**
+     * Retrieves the zone-value associated with [key].
+     *
+     * If this zone does not contain the value looks up the same key in the
+     * parent zone. If the [key] is not found returns `null`.
+     *
+     * Any object can be used as key, as long as it has compatible `operator ==`
+     * and `hashCode` implementations.
+     * By controlling access to the key, a zone can grant or deny access to the
+     * zone value.
+     */
+    @Operator(Op.INDEX)
+    @Abstract
+    get(key: any): any {
+        throw'abstract';
+    }
+}
+
+/**
+ * Base class for Zone implementations.
+ */
+@DartClass
+class _Zone extends _AbstractZone implements DartZone {
+
+    constructor() {
+        super();
+    }
+
+    @AbstractProperty
+    get _run(): _ZoneFunction<RunHandler<any>> {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get _runUnary(): _ZoneFunction<RunUnaryHandler<any, any>> {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get _runBinary(): _ZoneFunction<RunBinaryHandler<any, any, any>> {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get _registerCallback(): _ZoneFunction<RegisterCallbackHandler<any>> {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+
+    get _registerUnaryCallback(): _ZoneFunction<RegisterUnaryCallbackHandler<any, any>> {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get _registerBinaryCallback(): _ZoneFunction<RegisterBinaryCallbackHandler<any, any, any>> {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get _errorCallback(): _ZoneFunction<ErrorCallbackHandler> {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get _scheduleMicrotask(): _ZoneFunction<ScheduleMicrotaskHandler> {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get _createTimer(): _ZoneFunction<CreateTimerHandler> {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get _createPeriodicTimer(): _ZoneFunction<CreatePeriodicTimerHandler> {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get _print(): _ZoneFunction<PrintHandler> {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get _fork(): _ZoneFunction<ForkHandler> {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get _handleUncaughtError(): _ZoneFunction<HandleUncaughtErrorHandler<any>> {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get parent(): DartZone {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get _delegate(): DartZoneDelegate {
+        throw 'abstract';
+    }
+
+    @AbstractProperty
+    get _map(): DartMap<any, any> {
+        throw 'abstract';
+    }
+
+    inSameErrorZone(otherZone: DartZone): bool {
+        return identical(this, otherZone) ||
+            identical(this.errorZone, otherZone.errorZone);
+    }
+
+
+}
+
+@DartClass
+class _RootZone extends _Zone {
+    constructor() {
+        super();
+    }
+
+    get _run(): _ZoneFunction<RunHandler<any>> {
+        return new _ZoneFunction<RunHandler<any>>(_ROOT_ZONE, _rootRun);
+    }
+
+    get _runUnary(): _ZoneFunction<RunUnaryHandler<any, any>> {
+        return new _ZoneFunction<RunUnaryHandler<any, any>>(_ROOT_ZONE, _rootRunUnary);
+    }
+
+    get _runBinary(): _ZoneFunction<RunBinaryHandler<any, any, any>> {
+        return new _ZoneFunction<RunBinaryHandler<any, any, any>>(_ROOT_ZONE, _rootRunBinary);
+    }
+
+    get _registerCallback(): _ZoneFunction<RegisterCallbackHandler<any>> {
+        return new _ZoneFunction<RegisterCallbackHandler<any>>(
+            _ROOT_ZONE, _rootRegisterCallback);
+    }
+
+    get _registerUnaryCallback(): _ZoneFunction<RegisterUnaryCallbackHandler<any, any>> {
+        return new _ZoneFunction<RegisterUnaryCallbackHandler<any, any>>(_ROOT_ZONE, _rootRegisterUnaryCallback);
+    }
+
+    get _registerBinaryCallback(): _ZoneFunction<RegisterBinaryCallbackHandler<any, any, any>> {
+        return new _ZoneFunction<RegisterBinaryCallbackHandler<any, any, any>>(_ROOT_ZONE, _rootRegisterBinaryCallback);
+    }
+
+    get _errorCallback(): _ZoneFunction<ErrorCallbackHandler> {
+        return new _ZoneFunction<ErrorCallbackHandler>(_ROOT_ZONE, _rootErrorCallback);
+    }
+
+    get _scheduleMicrotask(): _ZoneFunction<ScheduleMicrotaskHandler> {
+        return new _ZoneFunction<ScheduleMicrotaskHandler>(_ROOT_ZONE, _rootScheduleMicrotask);
+    }
+
+    get _createTimer(): _ZoneFunction<CreateTimerHandler> {
+        return new _ZoneFunction<CreateTimerHandler>(_ROOT_ZONE, _rootCreateTimer);
+    }
+
+    get _createPeriodicTimer(): _ZoneFunction<CreatePeriodicTimerHandler> {
+        return new _ZoneFunction<CreatePeriodicTimerHandler>(_ROOT_ZONE, _rootCreatePeriodicTimer);
+    }
+
+    get _print(): _ZoneFunction<PrintHandler> {
+        return new _ZoneFunction<PrintHandler>(_ROOT_ZONE, _rootPrint);
+    }
+
+    get _fork(): _ZoneFunction<ForkHandler> {
+        return new _ZoneFunction<ForkHandler>(_ROOT_ZONE, _rootFork);
+    }
+
+    get _handleUncaughtError(): _ZoneFunction<HandleUncaughtErrorHandler<any>> {
+        return new _ZoneFunction<HandleUncaughtErrorHandler<any>>(
+            _ROOT_ZONE, _rootHandleUncaughtError);
+    }
+
+    // The parent zone.
+    get parent(): _Zone {
+        return null;
+    }
+
+    /// The zone's scoped value declaration map.
+    ///
+    /// This is always a [HashMap].
+    get _map(): DartMap<any, any> {
+        return _RootZone._rootMap;
+    }
+
+    static _rootMap: DartMap<any, any> = new DartHashMap<any, any>();
+
+    static _rootDelegate: DartZoneDelegate;
+
+    get _delegate(): DartZoneDelegate {
+        if (_RootZone._rootDelegate != null) return _RootZone._rootDelegate;
+        return _RootZone._rootDelegate = new _ZoneDelegate(this);
+    }
+
+    /**
+     * The closest error-handling zone.
+     *
+     * Returns `this` if `this` has an error-handler. Otherwise returns the
+     * parent's error-zone.
+     */
+    get errorZone(): DartZone {
+        return this;
+    }
+
+    // Zone interface.
+
+    runGuarded<R>(f: () => R): R {
+        try {
+            if (identical(_ROOT_ZONE, DartZone._current)) {
+                return f();
+            }
+            return _rootRun<R>(null, null, this, f);
+        } catch (e) {
+            let s = new DartStackTrace(e);
+            return this.handleUncaughtError<R>(e, s);
+        }
+    }
+
+    runUnaryGuarded<R, T>(f: (arg: T) => R, arg: T): R {
+        try {
+            if (identical(_ROOT_ZONE, DartZone._current)) {
+                return f(arg);
+            }
+            return _rootRunUnary<R, T>(null, null, this, f, arg);
+        } catch (e) {
+            let s = new DartStackTrace(e);
+            return this.handleUncaughtError<R>(e, s);
+        }
+    }
+
+    runBinaryGuarded<R, T1, T2>(f: (arg1: T1, arg2: T2) => R, arg1: T1, arg2: T2): R {
+        try {
+            if (identical(_ROOT_ZONE, DartZone._current)) {
+                return f(arg1, arg2);
+            }
+            return _rootRunBinary<R, T1, T2>(null, null, this, f, arg1, arg2);
+        } catch (e) {
+            let s = new DartStackTrace(e);
+            return this.handleUncaughtError<R>(e, s);
+        }
+    }
+
+    bindCallback<R>(f: () => R, _?: { runGuarded: bool }): ZoneCallback<R> {
+        let {runGuarded} = Object.assign({runGuarded: true}, _);
+        if (runGuarded) {
+            return () => this.runGuarded<R>(f);
+        } else {
+            return () => this.run<R>(f);
+        }
+    }
+
+    bindUnaryCallback<R, T>(f: (arg: T) => R,
+                            _?: { runGuarded?: bool }): ZoneUnaryCallback<R, T> {
+        let {runGuarded} = Object.assign({runGuarded: true}, _);
+        if (runGuarded) {
+            return (arg) => this.runUnaryGuarded<R, T>(f, arg);
+        } else {
+            return (arg) => this.runUnary<R, T>(f, arg);
+        }
+    }
+
+    bindBinaryCallback<R, T1, T2>(
+        f: (arg1: T1, arg2: T2) => R,
+        _?: { runGuarded?: bool }): ZoneBinaryCallback<R, T1, T2> {
+        let {runGuarded} = Object.assign({runGuarded: true}, _);
+        if (runGuarded) {
+            return (arg1, arg2) => this.runBinaryGuarded<R, T1, T2>(f, arg1, arg2);
+        } else {
+            return (arg1, arg2) => this.runBinary<R, T1, T2>(f, arg1, arg2);
+        }
+    }
+
+    @Operator(Op.INDEX)
+    get(key: any) {
+        return null;
+    }
+
+// Methods that can be customized by the zone specification.
+
+    handleUncaughtError<R>(error: any, stackTrace: DartStackTrace): R {
+        return _rootHandleUncaughtError(null, null, this, error, stackTrace);
+    }
+
+    fork(_?: { specification?: DartZoneSpecification, zoneValues?: DartMap<any, any> }): DartZone {
+        let {specification, zoneValues} = Object.assign({}, _);
+        return _rootFork(null, null, this, specification, zoneValues);
+    }
+
+    run<R>(f: () => R): R {
+        if (identical(DartZone._current, _ROOT_ZONE)) return f();
+        return _rootRun(null, null, this, f);
+    }
+
+    runUnary<R, T>(f: (arg: T) => R, arg: T): R {
+        if (identical(DartZone._current, _ROOT_ZONE)) return f(arg);
+        return _rootRunUnary(null, null, this, f, arg);
+    }
+
+    runBinary<R, T1, T2>(f: (arg1: T1, arg2: T2) => R, arg1: T1, arg2: T2): R {
+        if (identical(DartZone._current, _ROOT_ZONE)) return f(arg1, arg2);
+        return _rootRunBinary(null, null, this, f, arg1, arg2);
+    }
+
+    registerCallback<R>(f: () => R): ZoneCallback<R> {
+        return f;
+    }
+
+    registerUnaryCallback<R, T>(f: (arg: T) => R): ZoneUnaryCallback<R, T> {
+        return f;
+    }
+
+    registerBinaryCallback<R, T1, T2>(
+        f: (arg1: T1, arg2: T2) => R): ZoneBinaryCallback<R, T1, T2> {
+        return f;
+    }
+
+
+    errorCallback(error: any, stackTrace: DartStackTrace): DartAsyncError {
+        return null;
+    }
+
+    scheduleMicrotask(f: () => any): void {
+        _rootScheduleMicrotask(null, null, this, f);
+    }
+
+    createTimer(duration: DartDuration, f: () => any): DartTimer {
+        return DartTimer._createTimer(duration, f);
+    }
+
+    createPeriodicTimer(duration: DartDuration, f: (timer: DartTimer) => any): DartTimer {
+        return DartTimer._createPeriodicTimer(duration, f);
+    }
+
+    print(line: string): void {
+        printToConsole(line);
+    }
+}
+
+const _ROOT_ZONE = new _RootZone();
+
+/**
+ * A zone represents an environment that remains stable across asynchronous
+ * calls.
+ *
+ * Code is always executed in the context of a zone, available as
+ * [Zone.current]. The initial `main` function runs in the context of the
+ * default zone ([Zone.ROOT]). Code can be run in a different zone using either
+ * [runZoned], to create a new zone, or [Zone.run] to run code in the context of
+ * an existing zone likely created using [Zone.fork].
+ *
+ * Developers can create a new zone that overrides some of the functionality of
+ * an existing zone. For example, custom zones can replace of modify the
+ * behavior of `print`, timers, microtasks or how uncaught errors are handled.
+ *
+ * The [Zone] class is not subclassable, but users can provide custom zones by
+ * forking an existing zone (usually [Zone.current]) with a [ZoneSpecification].
+ * This is similar to creating a new class that extends the base `Zone` class
+ * and that overrides some methods, except without actually creating a new
+ * class. Instead the overriding methods are provided as functions that
+ * explicitly take the equivalent of their own class, the "super" class and the
+ * `this` object as parameters.
+ *
+ * Asynchronous callbacks always run in the context of the zone where they were
+ * scheduled. This is implemented using two steps:
+ * 1. the callback is first registered using one of [registerCallback],
+ *   [registerUnaryCallback], or [registerBinaryCallback]. This allows the zone
+ *   to record that a callback exists and potentially modify it (by returning a
+ *   different callback). The code doing the registration (e.g., `Future.then`)
+ *   also remembers the current zone so that it can later run the callback in
+ *   that zone.
+ * 2. At a later point the registered callback is run in the remembered zone.
+ *
+ * This is all handled internally by the platform code and most users don't need
+ * to worry about it. However, developers of new asynchronous operations,
+ * provided by the underlying system or through native extensions, must follow
+ * the protocol to be zone compatible.
+ *
+ * For convenience, zones provide [bindCallback] (and the corresponding
+ * [bindUnaryCallback] or [bindBinaryCallback]) to make it easier to respect the
+ * zone contract: these functions first invoke the corresponding `register`
+ * functions and then wrap the returned function so that it runs in the current
+ * zone when it is later asynchronously invoked.
+ */
+@DartClass
+class DartZone {
+    // Private constructor so that it is not possible instantiate a Zone class.
+    @namedConstructor
+    _() {
+
+    }
+
+    protected static _: new() => DartZone;
+
+    /**
+     * The root zone.
+     *
+     * All isolate entry functions (`main` or spawned functions) start running in
+     * the root zone (that is, [Zone.current] is identical to [Zone.ROOT] when the
+     * entry function is called). If no custom zone is created, the rest of the
+     * program always runs in the root zone.
+     *
+     * The root zone implements the default behavior of all zone operations.
+     * Many methods, like [registerCallback] do the bare minimum required of the
+     * function, and are only provided as a hook for custom zones. Others, like
+     * [scheduleMicrotask], interact with the underlying system to implement the
+     * desired behavior.
+     */
+    static ROOT: DartZone = _ROOT_ZONE;
+
+    /** The currently running zone. */
+    static _current: DartZone = _ROOT_ZONE;
+
+    /** The zone that is currently active. */
+    static get current(): DartZone {
+        return this._current;
+    }
+
+    /**
+     * Handles uncaught asynchronous errors.
+     *
+     * There are two kind of asynchronous errors that are handled by this
+     * function:
+     * 1. Uncaught errors that were thrown in asynchronous callbacks, for example,
+     *   a `throw` in the function passed to [Timer.run].
+     * 2. Asynchronous errors that are pushed through [Future] and [Stream]
+     *   chains, but for which no child registered an error handler.
+     *   Most asynchronous classes, like [Future] or [Stream] push errors to their
+     *   listeners. Errors are propagated this way until either a listener handles
+     *   the error (for example with [Future.catchError]), or no listener is
+     *   available anymore. In the latter case, futures and streams invoke the
+     *   zone's [handleUncaughtError].
+     *
+     * By default, when handled by the root zone, uncaught asynchronous errors are
+     * treated like uncaught synchronous exceptions.
+     */
+    @Abstract
+    handleUncaughtError<R>(error: any, stackTrace: DartStackTrace): R {
+        throw 'abstract';
+    }
+
+    /**
+     * The parent zone of the this zone.
+     *
+     * Is `null` if `this` is the [ROOT] zone.
+     *
+     * Zones are created by [fork] on an existing zone, or by [runZoned] which
+     * forks the [current] zone. The new zone's parent zone is the zone it was
+     * forked from.
+     */
+    @AbstractProperty
+    get parent(): DartZone {
+        throw 'abstract';
+    }
+
+    /**
+     * The error zone is the one that is responsible for dealing with uncaught
+     * errors.
+     *
+     * This is the closest parent zone of this zone that provides a
+     * [handleUncaughtError] method.
+     *
+     * Asynchronous errors never cross zone boundaries between zones with
+     * different error handlers.
+     *
+     * Example:
+     * ```
+     * import 'dart:async';
+     *
+     * main() {
+     *   var future;
+     *   runZoned(() {
+     *     // The asynchronous error is caught by the custom zone which prints
+     *     // 'asynchronous error'.
+     *     future = new Future.error("asynchronous error");
+     *   }, onError: (e) { print(e); });  // Creates a zone with an error handler.
+     *   // The following `catchError` handler is never invoked, because the
+     *   // custom zone created by the call to `runZoned` provides an
+     *   // error handler.
+     *   future.catchError((e) { throw "is never reached"; });
+     * }
+     * ```
+     *
+     * Note that errors cannot enter a child zone with a different error handler
+     * either:
+     * ```
+     * import 'dart:async';
+     *
+     * main() {
+     *   runZoned(() {
+     *     // The following asynchronous error is *not* caught by the `catchError`
+     *     // in the nested zone, since errors are not to cross zone boundaries
+     *     // with different error handlers.
+     *     // Instead the error is handled by the current error handler,
+     *     // printing "Caught by outer zone: asynchronous error".
+     *     var future = new Future.error("asynchronous error");
+     *     runZoned(() {
+     *       future.catchError((e) { throw "is never reached"; });
+     *     }, onError: (e) { throw "is never reached"; });
+     *   }, onError: (e) { print("Caught by outer zone: $e"); });
+     * }
+     * ```
+     */
+    @AbstractProperty
+    get errorZone(): DartZone {
+        throw 'abstract';
+    }
+
+    /**
+     * Returns true if `this` and [otherZone] are in the same error zone.
+     *
+     * Two zones are in the same error zone if they have the same [errorZone].
+     */
+    @Abstract
+    inSameErrorZone(otherZone: DartZone): bool {
+        throw 'abstract';
+    }
+
+    /**
+     * Creates a new zone as a child of `this`.
+     *
+     * The new zone uses the closures in the given [specification] to override
+     * the current's zone behavior. All specification entries that are `null`
+     * inherit the behavior from the parent zone (`this`).
+     *
+     * The new zone inherits the stored values (accessed through [[]])
+     * of this zone and updates them with values from [zoneValues], which either
+     * adds new values or overrides existing ones.
+     *
+     * Note that the fork operation is interceptible. A zone can thus change
+     * the zone specification (or zone values), giving the forking zone full
+     * control over the child zone.
+     */
+    @Abstract
+    fork(_?: { specification?: DartZoneSpecification, zoneValues?: DartMap<any, any> }): DartZone {
+        throw 'abstract';
+    }
+
+    /**
+     * Executes [action] in this zone.
+     *
+     * By default (as implemented in the [ROOT] zone), runs [action]
+     * with [current] set to this zone.
+     *
+     * If [action] throws, the synchronous exception is not caught by the zone's
+     * error handler. Use [runGuarded] to achieve that.
+     *
+     * Since the root zone is the only zone that can modify the value of
+     * [current], custom zones intercepting run should always delegate to their
+     * parent zone. They may take actions before and after the call.
+     */
+    @Abstract
+    run<R>(action: () => R): R {
+        throw 'abstract';
+    }
+
+    /**
+     * Executes the given [action] with [argument] in this zone.
+     *
+     * As [run] except that [action] is called with one [argument] instead of
+     * none.
+     */
+    @Abstract
+    runUnary<R, T>(action: (argument: T) => R, argument: T): R {
+        throw 'abstract';
+    }
+
+    /**
+     * Executes the given [action] with [argument1] and [argument2] in this
+     * zone.
+     *
+     * As [run] except that [action] is called with two arguments instead of none.
+     */
+    @Abstract
+    runBinary<R, T1, T2>(action: (argument1: T1, argument2: T2) => R, argument1: T1, argument2: T2): R {
+        throw 'abstract';
+    }
+
+    /**
+     * Executes the given [action] in this zone and catches synchronous
+     * errors.
+     *
+     * This function is equivalent to:
+     * ```
+     * try {
+     *   return this.run(action);
+     * } catch (e, s) {
+     *   return this.handleUncaughtError(e, s);
+     * }
+     * ```
+     *
+     * See [run].
+     */
+    @Abstract
+    runGuarded<R>(action: () => R): R {
+        throw 'abstract';
+    }
+
+    /**
+     * Executes the given [action] with [argument] in this zone and
+     * catches synchronous errors.
+     *
+     * See [runGuarded].
+     */
+    @Abstract
+    runUnaryGuarded<R, T>(action: (argument: T) => R, argument: T): R {
+        throw 'abstract';
+    }
+
+    /**
+     * Executes the given [action] with [argument1] and [argument2] in this
+     * zone and catches synchronous errors.
+     *
+     * See [runGuarded].
+     */
+    @Abstract
+    runBinaryGuarded<R, T1, T2>(action: (argument1: T1, argument2: T2) => R, argument1: T1, argument2: T2): R {
+        throw 'abstract';
+    }
+
+    /**
+     * Registers the given callback in this zone.
+     *
+     * When implementing an asynchronous primitive that uses callbacks, the
+     * callback must be registered using [registerCallback] at the point where the
+     * user provides the callback. This allows zones to record other information
+     * that they need at the same time, perhaps even wrapping the callback, so
+     * that the callback is prepared when it is later run in the same zones
+     * (using [run]). For example, a zone may decide
+     * to store the stack trace (at the time of the registration) with the
+     * callback.
+     *
+     * Returns the callback that should be used in place of the provided
+     * [callback]. Frequently zones simply return the original callback.
+     *
+     * Custom zones may intercept this operation. The default implementation in
+     * [Zone.ROOT] returns the original callback unchanged.
+     */
+    @Abstract
+    registerCallback<R>(callback: () => R): ZoneCallback<R> {
+        throw 'abstract';
+    }
+
+
+    /**
+     * Registers the given callback in this zone.
+     *
+     * Similar to [registerCallback] but with a unary callback.
+     */
+    @Abstract
+    registerUnaryCallback<R, T>(callback: (arg: T) => R): ZoneUnaryCallback<R, T> {
+        throw 'abstract';
+    }
+
+
+    /**
+     * Registers the given callback in this zone.
+     *
+     * Similar to [registerCallback] but with a unary callback.
+     */
+    @Abstract
+    registerBinaryCallback<R, T1, T2>(
+        callback: (arg1: T1, arg2: T2) => R): ZoneBinaryCallback<R, T1, T2> {
+        throw 'abstract';
+    }
+
+
+    /**
+     *  Equivalent to:
+     *
+     *      ZoneCallback registered = this.registerCallback(action);
+     *      if (runGuarded) return () => this.runGuarded(registered);
+     *      return () => this.run(registered);
+     *
+     */
+    @Abstract
+    bindCallback<R>(action: () => R, _?: { runGuarded?: bool }): ZoneCallback<R> {
+        throw 'abstract';
+    }
+
+
+    /**
+     *  Equivalent to:
+     *
+     *      ZoneCallback registered = this.registerUnaryCallback(action);
+     *      if (runGuarded) return (arg) => this.runUnaryGuarded(registered, arg);
+     *      return (arg) => thin.runUnary(registered, arg);
+     */
+    @Abstract
+    bindUnaryCallback<R, T>(action: (argument: T) => R,
+                            _?: { runGuarded?: bool }): ZoneUnaryCallback<R, T> {
+        throw 'abstract';
+    }
+
+    /**
+     *  Equivalent to:
+     *
+     *      ZoneCallback registered = registerBinaryCallback(action);
+     *      if (runGuarded) {
+     *        return (arg1, arg2) => this.runBinaryGuarded(registered, arg);
+     *      }
+     *      return (arg1, arg2) => thin.runBinary(registered, arg1, arg2);
+     */
+    @Abstract
+    bindBinaryCallback<R, T1, T2>(
+        action: (argument1: T1, argument2: T2) => R,
+        _?: { runGuarded?: bool }): ZoneBinaryCallback<R, T1, T2> {
+        throw 'abstract';
+    }
+
+    /**
+     * Intercepts errors when added programatically to a `Future` or `Stream`.
+     *
+     * When calling [Completer.completeError], [StreamController.addError],
+     * or some [Future] constructors, the current zone is allowed to intercept
+     * and replace the error.
+     *
+     * Future constructors invoke this function when the error is received
+     * directly, for example with [Future.error], or when the error is caught
+     * synchronously, for example with [Future.sync].
+     *
+     * There is no guarantee that an error is only sent through [errorCallback]
+     * once. Libraries that use intermediate controllers or completers might
+     * end up invoking [errorCallback] multiple times.
+     *
+     * Returns `null` if no replacement is desired. Otherwise returns an instance
+     * of [AsyncError] holding the new pair of error and stack trace.
+     *
+     * Although not recommended, the returned instance may have its `error` member
+     * ([AsyncError.error]) be equal to `null` in which case the error should be
+     * replaced by a [NullThrownError].
+     *
+     * Custom zones may intercept this operation.
+     *
+     * Implementations of a new asynchronous primitive that converts synchronous
+     * errors to asynchronous errors rarely need to invoke [errorCallback], since
+     * errors are usually reported through future completers or stream
+     * controllers.
+     */
+    @Abstract
+    errorCallback(error: any, stackTrace: DartStackTrace): DartAsyncError {
+        throw 'abstract';
+    }
+
+
+    /**
+     * Runs [action] asynchronously in this zone.
+     *
+     * The global `scheduleMicrotask` delegates to the current zone's
+     * [scheduleMicrotask]. The root zone's implementation interacts with the
+     * underlying system to schedule the given callback as a microtask.
+     *
+     * Custom zones may intercept this operation (for example to wrap the given
+     * callback [action]).
+     */
+    @Abstract
+    scheduleMicrotask(action: () => any): void {
+        throw 'abstract';
+    }
+
+
+    /**
+     * Creates a Timer where the callback is executed in this zone.
+     */
+    @Abstract
+    createTimer(duration: DartDuration, callback: () => any): DartTimer {
+        throw 'abstract';
+    }
+
+    /**
+     * Creates a periodic Timer where the callback is executed in this zone.
+     */
+    @Abstract
+    createPeriodicTimer(period: DartDuration, callback: (timer: DartTimer) => any): DartTimer {
+        throw 'abstract';
+    }
+
+    /**
+     * Prints the given [line].
+     *
+     * The global `print` function delegates to the current zone's [print]
+     * function which makes it possible to intercept printing.
+     *
+     * Example:
+     * ```
+     * import 'dart:async';
+     *
+     * main() {
+     *   runZoned(() {
+     *     // Ends up printing: "Intercepted: in zone".
+     *     print("in zone");
+     *   }, zoneSpecification: new ZoneSpecification(
+     *       print: (Zone self, ZoneDelegate parent, Zone zone, String line) {
+     *     parent.print(zone, "Intercepted: $line");
+     *   }));
+     * }
+     * ```
+     */
+    @Abstract
+    print(line: string): void {
+        throw 'abstract';
+    }
+
+    /**
+     * Call to enter the Zone.
+     *
+     * The previous current zone is returned.
+     */
+    static _enter(zone: DartZone): DartZone {
+        //assert(zone != null);
+        //assert(!identical(zone, _current));
+        let previous = this._current;
+        this._current = zone;
+        return previous;
+    }
+
+    /**
+     * Call to leave the Zone.
+     *
+     * The previous Zone must be provided as `previous`.
+     */
+    static _leave(previous: DartZone): void {
+        //assert(previous != null);
+        DartZone._current = previous;
+    }
+
+    /**
+     * Retrieves the zone-value associated with [key].
+     *
+     * If this zone does not contain the value looks up the same key in the
+     * parent zone. If the [key] is not found returns `null`.
+     *
+     * Any object can be used as key, as long as it has compatible `operator ==`
+     * and `hashCode` implementations.
+     * By controlling access to the key, a zone can grant or deny access to the
+     * zone value.
+     */
+    @Operator(Op.INDEX)
+    @Abstract
+    get(key: any): any {
+        throw'abstract';
+    }
+}
+
+function _parentDelegate(zone: _Zone): DartZoneDelegate {
+    if (zone.parent == null) return null;
+    return (zone.parent as _Zone)._delegate;
+}
+
+class _ZoneDelegate implements DartZoneDelegate {
+    protected _delegationTarget: _Zone;
+
+    constructor(_delegationTarget: _Zone) {
+        this._delegationTarget = _delegationTarget;
+    }
+
+    handleUncaughtError<R>(zone: DartZone, error: any, stackTrace: DartStackTrace): R {
+        let implementation = this._delegationTarget._handleUncaughtError;
+        let implZone = implementation.zone;
+        let handler = implementation.function;
+        // TODO(floitsch): make this a generic method call on '<R>' once it's
+        // supported. Remove the unnecessary cast.
+        return handler(implZone, _parentDelegate(implZone), zone, error, stackTrace)/*=R*/;
+    }
+
+    run<R>(zone: DartZone, f: () => R): R {
+        let implementation = this._delegationTarget._run;
+        let implZone = implementation.zone;
+        let handler = implementation.function;
+        // TODO(floitsch): make this a generic method call on '<R>' once it's
+        // supported. Remove the unnecessary cast.
+        return handler(implZone, _parentDelegate(implZone), zone, f)/*=R*/;
+    }
+
+    runUnary<R, T>(zone: DartZone, f: (arg: T) => R, arg: T): R {
+        let implementation = this._delegationTarget._runUnary;
+        let implZone = implementation.zone;
+        let handler = implementation.function;
+        // TODO(floitsch): make this a generic method call on '<R, T>' once it's
+        // supported. Remove the unnecessary cast.
+        return handler(implZone, _parentDelegate(implZone), zone, f, arg)/*=R*/;
+    }
+
+    runBinary<R, T1, T2>(zone: DartZone, f: (arg1: T1, arg2: T2) => R, arg1: T1, arg2: T2): R {
+        let implementation = this._delegationTarget._runBinary;
+        let implZone = implementation.zone;
+        let handler = implementation.function;
+        // TODO(floitsch): make this a generic method call on '<R, T1, T2>' once
+        // it's supported. Remove the unnecessary cast.
+        return handler(implZone, _parentDelegate(implZone), zone, f, arg1, arg2)/*=R*/;
+    }
+
+    registerCallback<R>(zone: DartZone, f: () => R): ZoneCallback<R> {
+        let implementation = this._delegationTarget._registerCallback;
+        let implZone = implementation.zone;
+        let handler = implementation.function;
+        // TODO(floitsch): make this a generic method call on '<R>' once it's
+        // supported. Remove the unnecessary cast.
+        return handler(implZone, _parentDelegate(implZone), zone, f)/*=ZoneCallback<R>*/;
+    }
+
+    registerUnaryCallback<R, T>(zone: DartZone, f: (arg: T) => R): ZoneUnaryCallback<R, T> {
+        let implementation = this._delegationTarget._registerUnaryCallback;
+        let implZone = implementation.zone;
+        let handler = implementation.function;
+        // TODO(floitsch): make this a generic method call on '<R, T>' once it's
+        // supported. Remove the unnecessary cast.
+        return handler(implZone, _parentDelegate(implZone), zone, f)/*=ZoneUnaryCallback<R, T>*/;
+    }
+
+    registerBinaryCallback<R, T1, T2>(
+        zone: DartZone, f: (arg1: T1, arg2: T2) => R): ZoneBinaryCallback<R, T1, T2> {
+        let implementation = this._delegationTarget._registerBinaryCallback;
+        let implZone = implementation.zone;
+        let handler = implementation.function;
+        // TODO(floitsch): make this a generic method call on '<R, T1, T2>' once
+        // it's supported. Remove the unnecessary cast.
+        return handler(implZone, _parentDelegate(implZone), zone, f)/*=ZoneBinaryCallback<R, T1, T2>*/;
+    }
+
+    errorCallback(zone: DartZone, error: any, stackTrace: DartStackTrace): DartAsyncError {
+        let implementation = this._delegationTarget._errorCallback;
+        let implZone = implementation.zone;
+        if (identical(implZone, _ROOT_ZONE)) return null;
+        let handler = implementation.function;
+        return handler(implZone, _parentDelegate(implZone), zone, error, stackTrace);
+    }
+
+    scheduleMicrotask(zone: DartZone, f: () => any): void {
+        let implementation = this._delegationTarget._scheduleMicrotask;
+        let implZone = implementation.zone;
+        let handler = implementation.function;
+        handler(implZone, _parentDelegate(implZone), zone, f);
+    }
+
+    createTimer(zone: DartZone, duration: DartDuration, f: () => any): DartTimer {
+        let implementation = this._delegationTarget._createTimer;
+        let implZone = implementation.zone;
+        let handler = implementation.function;
+        return handler(implZone, _parentDelegate(implZone), zone, duration, f);
+    }
+
+    createPeriodicTimer(zone: DartZone, period: DartDuration, f: (timer: DartTimer) => any): DartTimer {
+        let implementation = this._delegationTarget._createPeriodicTimer;
+        let implZone = implementation.zone;
+        let handler = implementation.function;
+        return handler(implZone, _parentDelegate(implZone), zone, period, f);
+    }
+
+    print(zone: DartZone, line: string): void {
+        let implementation = this._delegationTarget._print;
+        let implZone = implementation.zone;
+        let handler = implementation.function;
+        handler(implZone, _parentDelegate(implZone), zone, line);
+    }
+
+    fork(zone: DartZone, specification: DartZoneSpecification, zoneValues: DartMap<any, any>): DartZone {
+        let implementation = this._delegationTarget._fork;
+        let implZone = implementation.zone;
+        let handler = implementation.function;
+        return handler(implZone, _parentDelegate(implZone), zone, specification, zoneValues);
+    }
+}
+
+class _CustomZone extends _Zone {
+    // The actual zone and implementation of each of these
+    // inheritable zone functions.
+    _run: _ZoneFunction<RunHandler<any>>;
+    _runUnary: _ZoneFunction<RunUnaryHandler<any, any>>;
+    _runBinary: _ZoneFunction<RunBinaryHandler<any, any, any>>;
+    _registerCallback: _ZoneFunction<RegisterCallbackHandler<any>>;
+    _registerUnaryCallback: _ZoneFunction<RegisterUnaryCallbackHandler<any, any>>;
+    _registerBinaryCallback: _ZoneFunction<RegisterBinaryCallbackHandler<any, any, any>>;
+    _errorCallback: _ZoneFunction<ErrorCallbackHandler>;
+    _scheduleMicrotask: _ZoneFunction<ScheduleMicrotaskHandler>;
+    _createTimer: _ZoneFunction<CreateTimerHandler>;
+    _createPeriodicTimer: _ZoneFunction<CreatePeriodicTimerHandler>;
+    _print: _ZoneFunction<PrintHandler>;
+    _fork: _ZoneFunction<ForkHandler>;
+    _handleUncaughtError: _ZoneFunction<HandleUncaughtErrorHandler<any>>;
+
+    // A cached delegate to this zone.
+    _delegateCache: DartZoneDelegate;
+
+    /// The parent zone.
+    parent: _Zone;
+
+    /// The zone's scoped value declaration map.
+    ///
+    /// This is always a [HashMap].
+    _map: DartMap<any, any>;
+
+    get _delegate(): DartZoneDelegate {
+        if (this._delegateCache != null) return this._delegateCache;
+        this._delegateCache = new _ZoneDelegate(this);
+        return this._delegateCache;
+    }
+
+    constructor(parent: _Zone, specification: DartZoneSpecification, _map: DartMap<any, any>) {
+        super();
+        this.parent = parent;
+        this._map = _map;
+        // The root zone will have implementations of all parts of the
+        // specification, so it will never try to access the (null) parent.
+        // All other zones have a non-null parent.
+        this._run = (specification.run != null)
+            ? new _ZoneFunction<RunHandler<any>>(this, specification.run)
+            : parent._run;
+        this._runUnary = (specification.runUnary != null)
+            ? new _ZoneFunction<RunUnaryHandler<any, any>>(this, specification.runUnary)
+            : parent._runUnary;
+        this._runBinary = (specification.runBinary != null)
+            ? new _ZoneFunction<RunBinaryHandler<any, any, any>>(this, specification.runBinary)
+            : parent._runBinary;
+        this._registerCallback = (specification.registerCallback != null)
+            ? new _ZoneFunction<RegisterCallbackHandler<any>>(
+                this, specification.registerCallback)
+            : parent._registerCallback;
+        this._registerUnaryCallback = (specification.registerUnaryCallback != null)
+            ? new _ZoneFunction<RegisterUnaryCallbackHandler<any, any>>(
+                this, specification.registerUnaryCallback)
+            : parent._registerUnaryCallback;
+        this._registerBinaryCallback = (specification.registerBinaryCallback != null)
+            ? new _ZoneFunction<RegisterBinaryCallbackHandler<any, any, any>>(
+                this, specification.registerBinaryCallback)
+            : parent._registerBinaryCallback;
+        this._errorCallback = (specification.errorCallback != null)
+            ? new _ZoneFunction<ErrorCallbackHandler>(
+                this, specification.errorCallback)
+            : parent._errorCallback;
+        this._scheduleMicrotask = (specification.scheduleMicrotask != null)
+            ? new _ZoneFunction<ScheduleMicrotaskHandler>(
+                this, specification.scheduleMicrotask)
+            : parent._scheduleMicrotask;
+        this._createTimer = (specification.createTimer != null)
+            ? new _ZoneFunction<CreateTimerHandler>(this, specification.createTimer)
+            : parent._createTimer;
+        this._createPeriodicTimer = (specification.createPeriodicTimer != null)
+            ? new _ZoneFunction<CreatePeriodicTimerHandler>(
+                this, specification.createPeriodicTimer)
+            : parent._createPeriodicTimer;
+        this._print = (specification.print != null)
+            ? new _ZoneFunction<PrintHandler>(this, specification.print)
+            : parent._print;
+        this._fork = (specification.fork != null)
+            ? new _ZoneFunction<ForkHandler>(this, specification.fork)
+            : parent._fork;
+        this._handleUncaughtError = (specification.handleUncaughtError != null)
+            ? new _ZoneFunction<HandleUncaughtErrorHandler<any>>(
+                this, specification.handleUncaughtError)
+            : parent._handleUncaughtError;
+    }
+
+    /**
+     * The closest error-handling zone.
+     *
+     * Returns `this` if `this` has an error-handler. Otherwise returns the
+     * parent's error-zone.
+     */
+    get errorZone(): DartZone {
+        return this._handleUncaughtError.zone;
+    }
+
+    runGuarded<R>(f: () => R): R {
+        try {
+            return this.run(f);
+        } catch (e) {
+            let s = new DartStackTrace(e);
+            return this.handleUncaughtError(e, s);
+        }
+    }
+
+    runUnaryGuarded<R, T>(f: (arg: T) => R, arg: T): R {
+        try {
+            return this.runUnary(f, arg);
+        } catch (e) {
+            let s = new DartStackTrace(e);
+            return this.handleUncaughtError(e, s);
+        }
+    }
+
+    runBinaryGuarded<R, T1, T2>(f: (arg1: T1, arg2: T2) => R, arg1: T1, arg2: T2): R {
+        try {
+            return this.runBinary(f, arg1, arg2);
+        } catch (e) {
+            let s = new DartStackTrace(e);
+            return this.handleUncaughtError(e, s);
+        }
+    }
+
+    bindCallback<R>(f: () => R, _?: { runGuarded?: bool }): ZoneCallback<R> {
+        let {runGuarded} = Object.assign({runGuarded: true}, _);
+        let registered = this.registerCallback(f);
+        if (runGuarded) {
+            return () => this.runGuarded(registered);
+        } else {
+            return () => this.run(registered);
+        }
+    }
+
+    bindUnaryCallback<R, T>(f: (arg: T) => R, _?: { runGuarded?: bool }): ZoneUnaryCallback<R, T> {
+        let {runGuarded} = Object.assign({runGuarded: true}, _);
+        let registered = this.registerUnaryCallback(f);
+        if (runGuarded) {
+            return (arg) => this.runUnaryGuarded(registered, arg);
+        } else {
+            return (arg) => this.runUnary(registered, arg);
+        }
+    }
+
+    bindBinaryCallback<R, T1, T2>(
+        f: (arg1: T1, arg2: T2) => R,
+        _?: { runGuarded?: bool }): ZoneBinaryCallback<R, T1, T2> {
+        let {runGuarded} = Object.assign({runGuarded: true}, _);
+        let registered = this.registerBinaryCallback(f);
+        if (runGuarded) {
+            return (arg1, arg2) => this.runBinaryGuarded(registered, arg1, arg2);
+        } else {
+            return (arg1, arg2) => this.runBinary(registered, arg1, arg2);
+        }
+    }
+
+    @Operator(Op.INDEX)
+    get(key: any): any {
+        let result = this._map.get(key);
+        if (result != null || this._map.containsKey(key)) return result;
+        // If we are not the root zone, look up in the parent zone.
+        if (this.parent != null) {
+            // We do not optimize for repeatedly looking up a key which isn't
+            // there. That would require storing the key and keeping it alive.
+            // Copying the key/value from the parent does not keep any new values
+            // alive.
+            let value = this.parent.get(key);
+            if (value != null) {
+                this._map[OPERATOR_INDEX_ASSIGN](key, value);
+            }
+            return value;
+        }
+        //assert(this == _ROOT_ZONE);
+        return null;
+    }
+
+    // Methods that can be customized by the zone specification.
+    handleUncaughtError<R>(error: any, stackTrace: DartStackTrace): R {
+        let implementation = this._handleUncaughtError;
+        //assert(implementation != null);
+        let parentDelegate = _parentDelegate(implementation.zone);
+        let handler = implementation.function;
+        // TODO(floitsch): make this a generic method call on '<R>' once it's
+        // supported. Remove the unnecessary cast.
+        return handler(implementation.zone, parentDelegate, this, error, stackTrace)/*=R*/;
+    }
+
+    fork(_?: { specification?: DartZoneSpecification, zoneValues?: DartMap<any, any> }): DartZone {
+        let {specification, zoneValues} = Object.assign({}, _);
+        let implementation = this._fork;
+        //assert(implementation != null);
+        let parentDelegate = _parentDelegate(implementation.zone);
+        let handler = implementation.function;
+        return handler(
+            implementation.zone, parentDelegate, this, specification, zoneValues);
+    }
+
+    run<R>(f: () => R): R {
+        let implementation = this._run;
+        //assert(implementation != null);
+        let parentDelegate = _parentDelegate(implementation.zone);
+        let handler = implementation.function;
+        // TODO(floitsch): make this a generic method call on '<R>' once it's
+        // supported. Remove the unnecessary cast.
+        return handler(implementation.zone, parentDelegate, this, f)/*=R*/;
+    }
+
+    runUnary<R, T>(f: (arg: T) => R, arg: T): R {
+        let implementation = this._runUnary;
+        //assert(implementation != null);
+        let parentDelegate = _parentDelegate(implementation.zone);
+        let handler = implementation.function;
+        // TODO(floitsch): make this a generic method call on '<R, T>' once it's
+        // supported. Remove the unnecessary cast.
+        return handler(implementation.zone, parentDelegate, this, f, arg)/*=R*/;
+    }
+
+    runBinary<R, T1, T2>(f: (arg1: T1, arg2: T2) => R, arg1: T1, arg2: T2): R {
+        let implementation = this._runBinary;
+        //assert(implementation != null);
+        let parentDelegate = _parentDelegate(implementation.zone);
+        let handler = implementation.function;
+        // TODO(floitsch): make this a generic method call on '<R, T1, T2>' once
+        // it's supported. Remove the unnecessary cast.
+        return handler(implementation.zone, parentDelegate, this, f, arg1, arg2)/*=R*/;
+    }
+
+    registerCallback<R>(callback: () => R): ZoneCallback<R> {
+        let implementation = this._registerCallback;
+        //assert(implementation != null);
+        let parentDelegate = _parentDelegate(implementation.zone);
+        let handler = implementation.function;
+        // TODO(floitsch): make this a generic method call on '<R>' once it's
+        // supported. Remove the unnecessary cast.
+        return handler(implementation.zone, parentDelegate, this, callback)/*=ZoneCallback<R>*/;
+    }
+
+    registerUnaryCallback<R, T>(callback: (arg: T) => R): ZoneUnaryCallback<R, T> {
+        let implementation = this._registerUnaryCallback;
+        //assert(implementation != null);
+        let parentDelegate = _parentDelegate(implementation.zone);
+        let handler = implementation.function;
+        // TODO(floitsch): make this a generic method call on '<R, T>' once it's
+        // supported. Remove the unnecessary cast.
+        return handler(implementation.zone, parentDelegate, this, callback)/*=ZoneUnaryCallback<R, T>*/;
+    }
+
+    registerBinaryCallback<R, T1, T2>(
+        callback: (arg1: T1, arg2: T2) => R): ZoneBinaryCallback<R, T1, T2> {
+        let implementation = this._registerBinaryCallback;
+        //assert(implementation != null);
+        let parentDelegate = _parentDelegate(implementation.zone);
+        let handler = implementation.function;
+        // TODO(floitsch): make this a generic method call on '<R, T1, T2>' once
+        // it's supported. Remove the unnecessary cast.
+        return handler(implementation.zone, parentDelegate, this, callback)/*=ZoneBinaryCallback<R, T1, T2>*/;
+    }
+
+    errorCallback(error: any, stackTrace: DartStackTrace): DartAsyncError {
+        let implementation = this._errorCallback;
+        //assert(implementation != null);
+        let implementationZone = implementation.zone;
+        if (identical(implementationZone, _ROOT_ZONE)) return null;
+        let parentDelegate = _parentDelegate(implementationZone);
+        let handler = implementation.function;
+        return handler(implementationZone, parentDelegate, this, error, stackTrace);
+    }
+
+    scheduleMicrotask(f: () => any): void {
+        let implementation = this._scheduleMicrotask;
+        //assert(implementation != null);
+        let parentDelegate = _parentDelegate(implementation.zone);
+        let handler = implementation.function;
+        return handler(implementation.zone, parentDelegate, this, f);
+    }
+
+    createTimer(duration: DartDuration, f: () => any): DartTimer {
+        let implementation = this._createTimer;
+        //assert(implementation != null);
+        let parentDelegate = _parentDelegate(implementation.zone);
+        let handler = implementation.function;
+        return handler(implementation.zone, parentDelegate, this, duration, f);
+    }
+
+    createPeriodicTimer(duration: DartDuration, f: (timer: DartTimer) => any): DartTimer {
+        let implementation = this._createPeriodicTimer;
+        //assert(implementation != null);
+        let parentDelegate = _parentDelegate(implementation.zone);
+        let handler = implementation.function;
+        return handler(implementation.zone, parentDelegate, this, duration, f);
+    }
+
+    print(line: string): void {
+        let implementation = this._print;
+        //assert(implementation != null);
+        let parentDelegate = _parentDelegate(implementation.zone);
+        let handler = implementation.function;
+        return handler(implementation.zone, parentDelegate, this, line);
+    }
+}
+
+function _rootHandleUncaughtError<R>(self: DartZone, parent: DartZoneDelegate, zone: DartZone, error: any, stackTrace: DartStackTrace): R {
+    _schedulePriorityAsyncCallback(() => {
+        if (error == null) error = new NullThrownError();
+        if (stackTrace == null) throw error;
+        _rethrow(error, stackTrace);
+    });
+    return null;
+}
+
+/*external*/
+function _rethrow(error: any, stackTrace: DartStackTrace): void {
+
+}
+
+function _rootRun<R>(self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: () => R): R {
+    if (DartZone._current === zone) return f();
+
+    let old = DartZone._enter(zone);
+    try {
+        return f();
+    } finally {
+        DartZone._leave(old);
+    }
+}
+
+function _rootRunUnary<R, T>(
+    self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: (arg: T) => R, arg: T): R {
+    if (DartZone._current === zone) return f(arg);
+
+    let old = DartZone._enter(zone);
+    try {
+        return f(arg);
+    } finally {
+        DartZone._leave(old);
+    }
+}
+
+function _rootRunBinary<R, T1, T2>(self: DartZone, parent: DartZoneDelegate, zone: DartZone,
+                                   f: (arg1: T1, arg2: T2) => R, arg1: T1, arg2: T2): R {
+    if (DartZone._current === zone) return f(arg1, arg2);
+
+    let old = DartZone._enter(zone);
+    try {
+        return f(arg1, arg2);
+    } finally {
+        DartZone._leave(old);
+    }
+}
+
+function _rootRegisterCallback<R>(
+    self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: () => R): ZoneCallback<R> {
+    return f;
+}
+
+function _rootRegisterUnaryCallback<R, T>(
+    self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: (arg: T) => R): ZoneUnaryCallback<R, T> {
+    return f;
+}
+
+function _rootRegisterBinaryCallback<R, T1, T2>(
+    self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: (arg1: T1, arg2: T2) => R): ZoneBinaryCallback<R, T1, T2> {
+    return f;
+}
+
+function _rootErrorCallback(self: DartZone, parent: DartZoneDelegate, zone: DartZone,
+                            error: any, stackTrace: DartStackTrace): DartAsyncError {
+    return null;
+}
+
+
+function _rootScheduleMicrotask(self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: () => any): void {
+    if (!identical(_ROOT_ZONE, zone)) {
+        let hasErrorHandler = !_ROOT_ZONE.inSameErrorZone(zone);
+        f = zone.bindCallback(f, {runGuarded: hasErrorHandler});
+        // Use root zone as event zone if the function is already bound.
+        zone = _ROOT_ZONE;
+    }
+    _scheduleAsyncCallback(f);
+}
+
+function _rootCreateTimer(self: DartZone, parent: DartZoneDelegate, zone: DartZone,
+                          duration: DartDuration, callback: () => any): DartTimer {
+    if (!identical(_ROOT_ZONE, zone)) {
+        callback = zone.bindCallback(callback);
+    }
+    return DartTimer._createTimer(duration, callback);
+}
+
+function _rootCreatePeriodicTimer(self: DartZone, parent: DartZoneDelegate, zone: DartZone,
+                                  duration: DartDuration, callback: (timer: DartTimer) => any): DartTimer {
+    if (!identical(_ROOT_ZONE, zone)) {
+        // TODO(floitsch): the return type should be 'void'.
+        callback = zone.bindUnaryCallback<any, DartTimer>(callback);
+    }
+    return DartTimer._createPeriodicTimer(duration, callback);
+}
+
+function _rootPrint(self: DartZone, parent: DartZoneDelegate, zone: DartZone, line: string): void {
+    printToConsole(line);
+}
+
+function _printToZone(line: string): void {
+    DartZone.current.print(line);
+}
+
+function _rootFork(self: DartZone, parent: DartZoneDelegate, zone: DartZone,
+                   specification: DartZoneSpecification, zoneValues: DartMap<any, any>): DartZone {
+    // TODO(floitsch): it would be nice if we could get rid of this hack.
+    // Change the static zoneOrDirectPrint function to go through zones
+    // from now on.
+    printToZone = _printToZone;
+
+    if (specification == null) {
+        specification = new DartZoneSpecification();
+    } else if (_dart.isNot(specification, _ZoneSpecification)) {
+        throw new ArgumentError("ZoneSpecifications must be instantiated" +
+            " with the provided constructor.");
+    }
+    let valueMap: DartMap<any, any>;
+    if (zoneValues == null) {
+        if (_dart.is(zone, _Zone)) {
+            valueMap = (zone as any as _Zone)._map;
+        } else {
+            valueMap = new DartHashMap<any, any>();
+        }
+    } else {
+        valueMap = new DartHashMap.from(zoneValues);
+    }
+    return new _CustomZone(zone as _Zone, specification, valueMap);
+}
+
+
+/**
+ * Runs [body] in its own zone.
+ *
+ * If [onError] is non-null the zone is considered an error zone. All uncaught
+ * errors, synchronous or asynchronous, in the zone are caught and handled
+ * by the callback.
+ *
+ * Errors may never cross error-zone boundaries. This is intuitive for leaving
+ * a zone, but it also applies for errors that would enter an error-zone.
+ * Errors that try to cross error-zone boundaries are considered uncaught.
+ *
+ *     var future = new Future.value(499);
+ *     runZoned(() {
+ *       future = future.then((_) { throw "error in first error-zone"; });
+ *       runZoned(() {
+ *         future = future.catchError((e) { print("Never reached!"); });
+ *       }, onError: (e) { print("unused error handler"); });
+ *     }, onError: (e) { print("catches error of first error-zone."); });
+ *
+ * Example:
+ *
+ *     runZoned(() {
+ *       new Future(() { throw "asynchronous error"; });
+ *     }, onError: print);  // Will print "asynchronous error".
+ */
+function runZoned<R>(body: () => R,
+                     _?: { zoneValues?: DartMap<any, any>, zoneSpecification?: DartZoneSpecification, onError?: Function }): R {
+    let {zoneValues, zoneSpecification, onError} = Object.assign({}, _);
+    let errorHandler: HandleUncaughtErrorHandler<any>;
+    if (onError != null) {
+        errorHandler = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, error: any,
+                        stackTrace: DartStackTrace) => {
+            try {
+                // NOTE(dart2ts): we have no way to distinguish, use binary always
+                // TODO(floitsch): the return type should be 'void'.
+                //if (_dart.is(onError ,ZoneBinaryCallback)) {
+                return self.parent.runBinary(onError as ZoneBinaryCallback<any, any, any>, error, stackTrace);
+                //}
+                //return self.parent.runUnary(onError, error);
+            } catch (e) {
+                let s = new DartStackTrace(e);
+                if (identical(e, error)) {
+                    return parent.handleUncaughtError(zone, error, stackTrace);
+                } else {
+                    return parent.handleUncaughtError(zone, e, s);
+                }
+            }
+        };
+    }
+    if (zoneSpecification == null) {
+        zoneSpecification =
+            new DartZoneSpecification({handleUncaughtError: errorHandler});
+    } else if (errorHandler != null) {
+        zoneSpecification = new DartZoneSpecification.from(zoneSpecification,
+            {handleUncaughtError: errorHandler});
+    }
+    let zone = DartZone.current
+        .fork({specification: zoneSpecification, zoneValues: zoneValues});
+    if (onError != null) {
+        return zone.runGuarded(body);
+    } else {
+        return zone.run(body);
+    }
+}
+
+
+/**
+ * This function is set by the first allocation of a Zone.
+ *
+ * Once the function is set the core `print` function calls this closure instead
+ * of [printToConsole].
+ *
+ * This decouples the core library from the async library.
+ */
+let printToZone: Function = null;
+
+/*external*/
+//function printToConsole(line: string): void
+
+
+//@patch
+function printToConsole(line: string) {
+    printString(`${line}`);
+}
+
+/**
+ * This is the low-level method that is used to implement [print].  It is
+ * possible to override this function from JavaScript by defining a function in
+ * JavaScript called "dartPrint".
+ *
+ * Notice that it is also possible to intercept calls to [print] from within a
+ * Dart program using zones. This means that there is no guarantee that a call
+ * to print ends in this method.
+ */
+// @ts-ignore
+function printString(string: string): void {
+
+    // Inside browser or nodejs.
+    // @ts-ignore
+    if ((typeof console == "object") &&
+        (typeof console.log != "undefined")) {
+        // @ts-ignore
+        console.log(string);
+    }
+
+    // Don't throw inside IE, the console is only defined if dev tools is open.
+    // @ts-ignore
+    if (typeof window == "object") {
+        return;
+    }
+
+    // Running in d8, the V8 developer shell, or in Firefox' js-shell.
+    // @ts-ignore
+    if (typeof print == "function") {
+        // @ts-ignore
+        print(string);
+        return;
+    }
+
+    // This is somewhat nasty, but we don't want to drag in a bunch of
+    // dependencies to handle a situation that cannot happen. So we
+    // avoid using Dart [:throw:] and Dart [toString].
+    throw "Unable to print message: " + string;
+}
+
+// Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
+//part of dart.async;
+
+type  _AsyncCallback = () => void;
+
+class _AsyncCallbackEntry {
+    callback: _AsyncCallback;
+    next: _AsyncCallbackEntry;
+
+    constructor(callback: _AsyncCallback) {
+        this.callback = callback;
+    }
+}
+
+/** Head of single linked list of pending callbacks. */
+let _nextCallback: _AsyncCallbackEntry;
+/** Tail of single linked list of pending callbacks. */
+let _lastCallback: _AsyncCallbackEntry;
+/**
+ * Tail of priority callbacks added by the currently executing callback.
+ *
+ * Priority callbacks are put at the beginning of the
+ * callback queue, so that if one callback schedules more than one
+ * priority callback, they are still enqueued in scheduling order.
+ */
+let _lastPriorityCallback: _AsyncCallbackEntry;
+/**
+ * Whether we are currently inside the callback loop.
+ *
+ * If we are inside the loop, we never need to schedule the loop,
+ * even if adding a first element.
+ */
+let _isInCallbackLoop: bool = false;
+
+function _microtaskLoop(): void {
+    while (_nextCallback != null) {
+        _lastPriorityCallback = null;
+        let entry = _nextCallback;
+        _nextCallback = entry.next;
+        if (_nextCallback == null) _lastCallback = null;
+        (entry.callback)();
+    }
+}
+
+function _startMicrotaskLoop() {
+    _isInCallbackLoop = true;
+    try {
+        // Moved to separate function because try-finally prevents
+        // good optimization.
+        _microtaskLoop();
+    } finally {
+        _lastPriorityCallback = null;
+        _isInCallbackLoop = false;
+        if (_nextCallback != null) {
+            _AsyncRun._scheduleImmediate(_startMicrotaskLoop);
+        }
+    }
+}
+
+/**
+ * Schedules a callback to be called as a microtask.
+ *
+ * The microtask is called after all other currently scheduled
+ * microtasks, but as part of the current system event.
+ */
+function _scheduleAsyncCallback(callback: _AsyncCallback): void {
+    let newEntry = new _AsyncCallbackEntry(callback);
+    if (_nextCallback == null) {
+        _nextCallback = _lastCallback = newEntry;
+        if (!_isInCallbackLoop) {
+            _AsyncRun._scheduleImmediate(_startMicrotaskLoop);
+        }
+    } else {
+        _lastCallback.next = newEntry;
+        _lastCallback = newEntry;
+    }
+}
+
+/**
+ * Schedules a callback to be called before all other currently scheduled ones.
+ *
+ * This callback takes priority over existing scheduled callbacks.
+ * It is only used internally to give higher priority to error reporting.
+ *
+ * Is always run in the root zone.
+ */
+function _schedulePriorityAsyncCallback(callback: _AsyncCallback): void {
+    if (_nextCallback == null) {
+        _scheduleAsyncCallback(callback);
+        _lastPriorityCallback = _lastCallback;
+        return;
+    }
+    let entry = new _AsyncCallbackEntry(callback);
+    if (_lastPriorityCallback == null) {
+        entry.next = _nextCallback;
+        _nextCallback = _lastPriorityCallback = entry;
+    } else {
+        entry.next = _lastPriorityCallback.next;
+        _lastPriorityCallback.next = entry;
+        _lastPriorityCallback = entry;
+        if (entry.next == null) {
+            _lastCallback = entry;
+        }
+    }
+}
+
+/**
+ * Runs a function asynchronously.
+ *
+ * Callbacks registered through this function are always executed in order and
+ * are guaranteed to run before other asynchronous events (like [Timer] events,
+ * or DOM events).
+ *
+ * **Warning:** it is possible to starve the DOM by registering asynchronous
+ * callbacks through this method. For example the following program runs
+ * the callbacks without ever giving the Timer callback a chance to execute:
+ *
+ *     main() {
+ *       Timer.run(() { print("executed"); });  // Will never be executed.
+ *       foo() {
+ *         scheduleMicrotask(foo);  // Schedules [foo] in front of other events.
+ *       }
+ *       foo();
+ *     }
+ *
+ * ## Other resources
+ *
+ * * [The Event Loop and Dart](https://www.dartlang.org/articles/event-loop/):
+ * Learn how Dart handles the event queue and microtask queue, so you can write
+ * better asynchronous code with fewer surprises.
+ */
+function scheduleMicrotask(callback: () => void): void {
+    let currentZone: _Zone = DartZone.current as _Zone;
+    if (identical(_ROOT_ZONE, currentZone)) {
+        // No need to bind the callback. We know that the root's scheduleMicrotask
+        // will be invoked in the root zone.
+        _rootScheduleMicrotask(null, null, _ROOT_ZONE, callback);
+        return;
+    }
+    let implementation = currentZone._scheduleMicrotask;
+    if (identical(_ROOT_ZONE, implementation.zone) &&
+        _ROOT_ZONE.inSameErrorZone(currentZone)) {
+        _rootScheduleMicrotask(
+            null, null, currentZone, currentZone.registerCallback(callback));
+        return;
+    }
+    DartZone.current
+        .scheduleMicrotask(DartZone.current.bindCallback(callback, {runGuarded: true}));
+}
+
+class _AsyncRun {
+    /** Schedule the given callback before any other event in the event-loop. */
+
+    /*external*/
+    static _scheduleImmediate(callback: () => void): void {
+
+    }
+}
+
+
+export {
+    Future,
+    DartCompleter,
+    DartZoneSpecification,
+    DartZone,
+    DartTimer,
+    runZoned,
+    scheduleMicrotask,
+    printToConsole
 }
