@@ -52,9 +52,9 @@ import {
     StateError,
     UnsupportedError,
     RangeError,
-    DartSink
+    DartSink, DartIterator
 } from "./core";
-import {Abstract, AbstractProperty, bool, DartClass, defaultConstructor, defaultFactory, Implements, int, namedConstructor, namedFactory, Op, Operator, OPERATOR_INDEX_ASSIGN, OPERATOR_MINUS} from "./utils";
+import {$with, Abstract, AbstractProperty, bool, DartClass, defaultConstructor, defaultFactory, Implements, int, namedConstructor, namedFactory, Op, Operator, OPERATOR_INDEX_ASSIGN, OPERATOR_MINUS} from "./utils";
 import _dart from './_common';
 /*
 abstract class FutureOr<T> {
@@ -4543,6 +4543,11 @@ type  _TimerCallback = () => void;
 
 @DartClass
 class DartStream<T> implements AsyncIterable<T> {
+    @defaultConstructor
+    protected _init() {
+
+    }
+
     constructor() {
 
     }
@@ -4584,7 +4589,7 @@ class DartStream<T> implements AsyncIterable<T> {
         // Use the controller's buffering to fill in the value even before
         // the stream has a listener. For a single value, it's not worth it
         // to wait for a listener before doing the `then` on the future.
-        let controller = new StreamController<T>({sync: true});
+        let controller = new DartStreamController<T>({sync: true});
         future.then((value) => {
             controller._add(value);
             controller._closeUnchecked();
@@ -4775,12 +4780,12 @@ class DartStream<T> implements AsyncIterable<T> {
      */
     @namedFactory
     protected static _eventTransformed<T>(
-        source: DartStream<any>, mapSink: (sink: EventSink<T>) => EventSink<any>): DartStream<T> {
+        source: DartStream<any>, mapSink: (sink: DartEventSink<T>) => DartEventSink<any>): DartStream<T> {
         return new _BoundSinkStream(source, mapSink);
     }
 
     static eventTransformed: new<T>(
-        source: DartStream<any>, mapSink: (sink: EventSink<T>) => EventSink<any>) => DartStream<T>;
+        source: DartStream<any>, mapSink: (sink: DartEventSink<T>) => DartEventSink<any>) => DartStream<T>;
 
     /**
      * Whether this stream is a broadcast stream.
@@ -4925,7 +4930,7 @@ class DartStream<T> implements AsyncIterable<T> {
                 }
                 if (_dart.is(newValue, Future)) {
                     subscription.pause();
-                    newValue
+                    (newValue as Future<E>)
                         .then(add, {onError: addError})
                         .whenComplete(subscription.resume);
                 } else {
@@ -5525,7 +5530,7 @@ class DartStream<T> implements AsyncIterable<T> {
      */
     get first(): Future<T> {
         let future = new _Future<T>();
-        let subscription: StreamSubscription;
+        let subscription: DartStreamSubscription<any>;
         subscription = this.listen(
             (value: T) => {
                 this._cancelAndValue(subscription, future, value);
@@ -5592,7 +5597,7 @@ class DartStream<T> implements AsyncIterable<T> {
         let future = new _Future<T>();
         let result: T = null;
         let foundResult = false;
-        let subscription: DartStreamSubscription;
+        let subscription: DartStreamSubscription<any>;
         subscription = this.listen(
             (value: T) => {
                 if (foundResult) {
@@ -5650,7 +5655,7 @@ class DartStream<T> implements AsyncIterable<T> {
     firstWhere(test: (element: T) => bool, _?: { defaultValue?: () => T }): Future<T> {
         let {defaultValue} = Object.assign({}, _);
         let future = new _Future<T>();
-        let subscription: StreamSubscription<T>;
+        let subscription: DartStreamSubscription<T>;
         subscription = this.listen(
             (value: T) => {
                 _runUserCode(() => test(value), (isMatch: bool) => {
@@ -5686,6 +5691,7 @@ class DartStream<T> implements AsyncIterable<T> {
      * is done.
      */
     lastWhere(test: (element: T) => bool, _?: { defaultValue?: () => T }): Future<T> {
+        let {defaultValue} = Object.assign({}, _);
         let future = new _Future<T>();
         let result: T = null;
         let foundResult = false;
@@ -5757,7 +5763,7 @@ class DartStream<T> implements AsyncIterable<T> {
                         return;
                     }
                     try {
-                        throw IterableElementError.noElement();
+                        throw DartIterableElementError.noElement();
                     } catch (e) {
 
                         let s = new DartStackTrace(e);
@@ -5830,7 +5836,7 @@ class DartStream<T> implements AsyncIterable<T> {
      * will have its individually timer that starts counting on listen,
      * and the subscriptions' timers can be paused individually.
      */
-    timeout(timeLimit: DartDuration, _?: { onTimeout: (sink: EventSink<T>) => any }): DartStream<T> {
+    timeout(timeLimit: DartDuration, _?: { onTimeout: (sink: DartEventSink<T>) => any }): DartStream<T> {
         let {onTimeout} = Object.assign({}, _);
         let controller: DartStreamController<T>;
         // The following variables are set on listen.
@@ -5857,7 +5863,7 @@ class DartStream<T> implements AsyncIterable<T> {
         let onDone = () => {
             timer.cancel();
             controller.close();
-        }
+        };
 
         let onListen = () => {
             // This is the onListen callback for of controller.
@@ -5874,7 +5880,7 @@ class DartStream<T> implements AsyncIterable<T> {
                 // TODO(floitsch): the return type should be 'void', and the type
                 // should be inferred.
                 let registeredOnTimeout =
-                    zone.registerUnaryCallback<any, EventSink<T>>(onTimeout);
+                    zone.registerUnaryCallback<any, DartEventSink<T>>(onTimeout);
                 let wrapper = new _ControllerEventSinkWrapper<T>(null);
                 timeout = () => {
                     wrapper._sink = controller; // Only valid during call.
@@ -5894,7 +5900,7 @@ class DartStream<T> implements AsyncIterable<T> {
             return result;
         };
 
-        controller = isBroadcast
+        controller = this.isBroadcast
             ? new _SyncBroadcastStreamController<T>(onListen, onCancel)
             : new _SyncStreamController<T>(onListen, () => {
                 // Don't null the timer, onCancel may call cancel again.
@@ -6070,7 +6076,7 @@ class DartStreamView<T> extends DartStream<T> {
     }
 
     @defaultConstructor
-    protected _init(stream: DartStream<T>) {
+    protected _DartStreamView(stream: DartStream<T>) {
         this._stream = stream;
         super._internal();
     }
@@ -6360,8 +6366,7 @@ class DartStreamIterator<T> implements AsyncIterator<T> {
     protected static _create<T>(stream: DartStream<T>): DartStreamIterator<T> {
         // TODO(lrn): use redirecting factory constructor when type
         // arguments are supported.
-        return
-        new _StreamIterator<T>(stream);
+        return new _StreamIterator<T>(stream);
     }
 
     constructor(stream: DartStream<T>) {
@@ -6458,6 +6463,1211 @@ class _ControllerEventSinkWrapper<T> implements DartEventSink<T> {
 }
 
 
+// Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
+//part of dart.async;
+
+/** Abstract and private interface for a place to put events. */
+interface _EventSink<T> {
+    _add(data: T): void;
+
+    _addError(error: any, stackTrace: DartStackTrace): void;
+
+    _close(): void;
+}
+
+/**
+ * Abstract and private interface for a place to send events.
+ *
+ * Used by event buffering to finally dispatch the pending event, where
+ * [_EventSink] is where the event first enters the stream subscription,
+ * and may yet be buffered.
+ */
+interface _EventDispatch<T> {
+    _sendData(data: T): void;
+
+    _sendError(error: any, stackTrace: DartStackTrace): void;
+
+    _sendDone(): void;
+}
+
+/**
+ * Default implementation of stream subscription of buffering events.
+ *
+ * The only public methods are those of [StreamSubscription], so instances of
+ * [_BufferingStreamSubscription] can be returned directly as a
+ * [StreamSubscription] without exposing internal functionality.
+ *
+ * The [StreamController] is a public facing version of [Stream] and this class,
+ * with some methods made public.
+ *
+ * The user interface of [_BufferingStreamSubscription] are the following
+ * methods:
+ *
+ * * [_add]: Add a data event to the stream.
+ * * [_addError]: Add an error event to the stream.
+ * * [_close]: Request to close the stream.
+ * * [_onCancel]: Called when the subscription will provide no more events,
+ *     either due to being actively canceled, or after sending a done event.
+ * * [_onPause]: Called when the subscription wants the event source to pause.
+ * * [_onResume]: Called when allowing new events after a pause.
+ *
+ * The user should not add new events when the subscription requests a paused,
+ * but if it happens anyway, the subscription will enqueue the events just as
+ * when new events arrive while still firing an old event.
+ */
+class _BufferingStreamSubscription<T>
+    implements DartStreamSubscription<T>, _EventSink<T>, _EventDispatch<T> {
+    /** The `cancelOnError` flag from the `listen` call. */
+    static _STATE_CANCEL_ON_ERROR: int = 1;
+    /**
+     * Whether the "done" event has been received.
+     * No further events are accepted after this.
+     */
+    static _STATE_CLOSED: int = 2;
+    /**
+     * Set if the input has been asked not to send events.
+     *
+     * This is not the same as being paused, since the input will remain paused
+     * after a call to [resume] if there are pending events.
+     */
+    static _STATE_INPUT_PAUSED: int = 4;
+    /**
+     * Whether the subscription has been canceled.
+     *
+     * Set by calling [cancel], or by handling a "done" event, or an "error" event
+     * when `cancelOnError` is true.
+     */
+    static _STATE_CANCELED: int = 8;
+    /**
+     * Set when either:
+     *
+     *   * an error is sent, and [cancelOnError] is true, or
+     *   * a done event is sent.
+     *
+     * If the subscription is canceled while _STATE_WAIT_FOR_CANCEL is set, the
+     * state is unset, and no furher events must be delivered.
+     */
+    static _STATE_WAIT_FOR_CANCEL: int = 16;
+    static _STATE_IN_CALLBACK: int = 32;
+    static _STATE_HAS_PENDING: int = 64;
+    static _STATE_PAUSE_COUNT: int = 128;
+
+    /* Event handlers provided in constructor. */
+    _onData: _DataHandler<T>;
+    _onError: Function;
+    _onDone: _DoneHandler;
+    _zone: DartZone = DartZone.current;
+
+    /** Bit vector based on state-constants above. */
+    _state: int;
+
+    // TODO(floitsch): reuse another field
+    /** The future [_onCancel] may return. */
+    _cancelFuture: Future<any>;
+
+    /**
+     * Queue of pending events.
+     *
+     * Is created when necessary, or set in constructor for preconfigured events.
+     */
+    _pending: _PendingEvents<T>;
+
+    constructor(
+        onData: (data: T) => any, onError: Function, onDone: () => any, cancelOnError: bool) {
+        this._state = (cancelOnError ? _BufferingStreamSubscription._STATE_CANCEL_ON_ERROR : 0)
+        this.onData(onData);
+        this.onError(onError);
+        this.onDone(onDone);
+    }
+
+    /**
+     * Sets the subscription's pending events object.
+     *
+     * This can only be done once. The pending events object is used for the
+     * rest of the subscription's life cycle.
+     */
+    _setPendingEvents(pendingEvents: _PendingEvents<T>): void {
+        //assert(_pending == null);
+        if (pendingEvents == null) return;
+        this._pending = pendingEvents;
+        if (!pendingEvents.isEmpty) {
+            this._state |= _BufferingStreamSubscription._STATE_HAS_PENDING;
+            this._pending.schedule(this);
+        }
+    }
+
+    // StreamSubscription interface.
+
+    onData(handleData: (event: T) => any): void {
+        if (handleData == null) handleData = _nullDataHandler;
+        // TODO(floitsch): the return type should be 'void', and the type
+        // should be inferred.
+        this._onData = this._zone.registerUnaryCallback<any, T>(handleData);
+    }
+
+    onError(handleError: Function): void {
+        if (handleError == null) handleError = _nullErrorHandler;
+        // We are not allowed to use 'void' as type argument for the generic type,
+        // so we use 'dynamic' instead.
+        this._onError = _registerErrorHandler<any>(handleError, this._zone);
+    }
+
+    onDone(handleDone: () => any): void {
+        if (handleDone == null) handleDone = _nullDoneHandler;
+        this._onDone = this._zone.registerCallback(handleDone);
+    }
+
+    pause(resumeSignal: Future<any>): void {
+        if (this._isCanceled) return;
+        let wasPaused = this._isPaused;
+        let wasInputPaused = this._isInputPaused;
+        // Increment pause count and mark input paused (if it isn't already).
+        this._state = (this._state + _BufferingStreamSubscription._STATE_PAUSE_COUNT) | _BufferingStreamSubscription._STATE_INPUT_PAUSED;
+        if (resumeSignal != null) resumeSignal.whenComplete(() => this.resume());
+        if (!wasPaused && this._pending != null) this._pending.cancelSchedule();
+        if (!wasInputPaused && !this._inCallback) this._guardCallback(this._onPause.bind(this));
+    }
+
+    resume(): void {
+        if (this._isCanceled) return;
+        if (this._isPaused) {
+            this._decrementPauseCount();
+            if (!this._isPaused) {
+                if (this._hasPending && !this._pending.isEmpty) {
+                    // Input is still paused.
+                    this._pending.schedule(this);
+                } else {
+                    //assert(_mayResumeInput);
+                    this._state &= ~_BufferingStreamSubscription._STATE_INPUT_PAUSED;
+                    if (!this._inCallback) this._guardCallback(this._onResume.bind(this));
+                }
+            }
+        }
+    }
+
+    cancel(): Future<any> {
+        // The user doesn't want to receive any further events. If there is an
+        // error or done event pending (waiting for the cancel to be done) discard
+        // that event.
+        this._state &= ~_BufferingStreamSubscription._STATE_WAIT_FOR_CANCEL;
+        if (!this._isCanceled) {
+            this._cancel();
+        }
+        return this._cancelFuture || Future._nullFuture;
+    }
+
+    asFuture<E>(futureValue?: E): Future<E> {
+        let result = new _Future<E>();
+
+        // Overwrite the onDone and onError handlers.
+        this._onDone = () => {
+            result._complete(futureValue);
+        };
+        this._onError = (error, stackTrace) => {
+            let cancelFuture = this.cancel();
+            if (!identical(cancelFuture, Future._nullFuture)) {
+                cancelFuture.whenComplete(() => {
+                    result._completeError(error, stackTrace);
+                });
+            } else {
+                result._completeError(error, stackTrace);
+            }
+        };
+
+        return result;
+    }
+
+// State management.
+
+    get _isInputPaused(): bool {
+        return (this._state & _BufferingStreamSubscription._STATE_INPUT_PAUSED) != 0;
+    }
+
+    get _isClosed(): bool {
+        return (this._state & _BufferingStreamSubscription._STATE_CLOSED) != 0;
+    }
+
+    get _isCanceled(): bool {
+        return (this._state & _BufferingStreamSubscription._STATE_CANCELED) != 0;
+    }
+
+    get _waitsForCancel(): bool {
+        return (this._state & _BufferingStreamSubscription._STATE_WAIT_FOR_CANCEL) != 0;
+    }
+
+    get _inCallback(): bool {
+        return (this._state & _BufferingStreamSubscription._STATE_IN_CALLBACK) != 0;
+    }
+
+    get _hasPending(): bool {
+        return (this._state & _BufferingStreamSubscription._STATE_HAS_PENDING) != 0;
+    }
+
+    get _isPaused(): bool {
+        return this._state >= _BufferingStreamSubscription._STATE_PAUSE_COUNT;
+    }
+
+    get _canFire(): bool {
+        return this._state < _BufferingStreamSubscription._STATE_IN_CALLBACK;
+    }
+
+    get _mayResumeInput(): bool {
+        return !this._isPaused && (this._pending == null || this._pending.isEmpty);
+    }
+
+    get _cancelOnError(): bool {
+        return (this._state & _BufferingStreamSubscription._STATE_CANCEL_ON_ERROR) != 0;
+    }
+
+    get isPaused(): bool {
+        return this._isPaused;
+    }
+
+    _cancel(): void {
+        this._state |= _BufferingStreamSubscription._STATE_CANCELED;
+        if (this._hasPending) {
+            this._pending.cancelSchedule();
+        }
+        if (!this._inCallback) this._pending = null;
+        this._cancelFuture = this._onCancel();
+    }
+
+    /**
+     * Decrements the pause count.
+     *
+     * Does not automatically unpause the input (call [_onResume]) when
+     * the pause count reaches zero. This is handled elsewhere, and only
+     * if there are no pending events buffered.
+     */
+    _decrementPauseCount(): void {
+        //assert(_isPaused);
+        this._state -= _BufferingStreamSubscription._STATE_PAUSE_COUNT;
+    }
+
+    // _EventSink interface.
+
+    _add(data: T): void {
+        //assert(!_isClosed);
+        if (this._isCanceled) return;
+        if (this._canFire) {
+            this._sendData(data);
+        } else {
+            this._addPending(new _DelayedData<T>(data));
+        }
+    }
+
+    _addError(error: any, stackTrace: DartStackTrace): void {
+        if (this._isCanceled) return;
+        if (this._canFire) {
+            this._sendError(error, stackTrace); // Reports cancel after sending.
+        } else {
+            this._addPending(new _DelayedError(error, stackTrace));
+        }
+    }
+
+    _close(): void {
+        //assert(!_isClosed);
+        if (this._isCanceled) return;
+        this._state |= _BufferingStreamSubscription._STATE_CLOSED;
+        if (this._canFire) {
+            this._sendDone();
+        } else {
+            this._addPending(new _DelayedDone());
+        }
+    }
+
+    // Hooks called when the input is paused, unpaused or canceled.
+    // These must not throw. If overwritten to call user code, include suitable
+    // try/catch wrapping and send any errors to
+    // [_Zone.current.handleUncaughtError].
+    _onPause(): void {
+        //assert(_isInputPaused);
+    }
+
+    _onResume(): void {
+        //assert(!_isInputPaused);
+    }
+
+    _onCancel(): Future<any> {
+        //assert(_isCanceled);
+        return null;
+    }
+
+// Handle pending events.
+
+    /**
+     * Add a pending event.
+     *
+     * If the subscription is not paused, this also schedules a firing
+     * of pending events later (if necessary).
+     */
+    _addPending(event: _DelayedEvent<any>): void {
+        let pending = this._pending;
+        if (this._pending == null) {
+            pending = this._pending = new _StreamImplEvents<T>();
+        }
+        (pending as _StreamImplEvents<T>).add(event);
+        if (!this._hasPending) {
+            this._state |= _BufferingStreamSubscription._STATE_HAS_PENDING;
+            if (!this._isPaused) {
+                this._pending.schedule(this);
+            }
+        }
+    }
+
+    /* _EventDispatch interface. */
+
+    _sendData(data: T): void {
+        //assert(!_isCanceled);
+        //assert(!_isPaused);
+        //assert(!_inCallback);
+        let wasInputPaused = this._isInputPaused;
+        this._state |= _BufferingStreamSubscription._STATE_IN_CALLBACK;
+        this._zone.runUnaryGuarded(this._onData, data);
+        this._state &= ~_BufferingStreamSubscription._STATE_IN_CALLBACK;
+        this._checkState(wasInputPaused);
+    }
+
+    _sendError(error: any, stackTrace: DartStackTrace): void {
+        // assert(!_isCanceled);
+        // assert(!_isPaused);
+        // assert(!_inCallback);
+        let wasInputPaused = this._isInputPaused;
+
+        let sendError = () => {
+            // If the subscription has been canceled while waiting for the cancel
+            // future to finish we must not report the error.
+            if (this._isCanceled && !this._waitsForCancel) return;
+            this._state |= _BufferingStreamSubscription._STATE_IN_CALLBACK;
+            // TODO(floitsch): this dynamic should be 'void'.
+            //if (_dart.is(this._onError is ZoneBinaryCallback<dynamic, Object, StackTrace>) {
+            let errorCallback: ZoneBinaryCallback<any, any, DartStackTrace> = this._onError as any/*=ZoneBinaryCallback<dynamic, Object, StackTrace>*/;
+            this._zone.runBinaryGuarded(errorCallback, error, stackTrace);
+            //} else {
+            //   _zone.runUnaryGuarded<dynamic, Object>(
+            //       _onError as Object/*=ZoneUnaryCallback<dynamic, Object>*/, error);
+            // }
+            this._state &= ~_BufferingStreamSubscription._STATE_IN_CALLBACK;
+        };
+
+        if (this._cancelOnError) {
+            this._state |= _BufferingStreamSubscription._STATE_WAIT_FOR_CANCEL;
+            this._cancel();
+            if (_dart.is(this._cancelFuture, Future) &&
+                !identical(this._cancelFuture, Future._nullFuture)) {
+                this._cancelFuture.whenComplete(sendError);
+            } else {
+                sendError();
+            }
+        } else {
+            sendError();
+            // Only check state if not cancelOnError.
+            this._checkState(wasInputPaused);
+        }
+    }
+
+    _sendDone(): void {
+        //assert(!_isCanceled);
+        // assert(!_isPaused);
+        // assert(!_inCallback);
+
+        let sendDone = () => {
+            // If the subscription has been canceled while waiting for the cancel
+            // future to finish we must not report the done event.
+            if (!this._waitsForCancel) return;
+            this._state |= (_BufferingStreamSubscription._STATE_CANCELED | _BufferingStreamSubscription._STATE_CLOSED | _BufferingStreamSubscription._STATE_IN_CALLBACK);
+            this._zone.runGuarded(this._onDone);
+            this._state &= ~_BufferingStreamSubscription._STATE_IN_CALLBACK;
+        };
+
+        this._cancel();
+        this._state |= _BufferingStreamSubscription._STATE_WAIT_FOR_CANCEL;
+        if (_dart.is(this._cancelFuture, Future) &&
+            !identical(this._cancelFuture, Future._nullFuture)) {
+            this._cancelFuture.whenComplete(sendDone);
+        } else {
+            sendDone();
+        }
+    }
+
+    /**
+     * Call a hook function.
+     *
+     * The call is properly wrapped in code to avoid other callbacks
+     * during the call, and it checks for state changes after the call
+     * that should cause further callbacks.
+     */
+    _guardCallback(callback: () => any): void {
+        //assert(!_inCallback);
+        let wasInputPaused = this._isInputPaused;
+        this._state |= _BufferingStreamSubscription._STATE_IN_CALLBACK;
+        callback();
+        this._state &= ~_BufferingStreamSubscription._STATE_IN_CALLBACK;
+        this._checkState(wasInputPaused);
+    }
+
+    /**
+     * Check if the input needs to be informed of state changes.
+     *
+     * State changes are pausing, resuming and canceling.
+     *
+     * After canceling, no further callbacks will happen.
+     *
+     * The cancel callback is called after a user cancel, or after
+     * the final done event is sent.
+     */
+    _checkState(wasInputPaused: bool): void {
+        //assert(!_inCallback);
+        if (this._hasPending && this._pending.isEmpty) {
+            this._state &= ~_BufferingStreamSubscription._STATE_HAS_PENDING;
+            if (this._isInputPaused && this._mayResumeInput) {
+                this._state &= ~_BufferingStreamSubscription._STATE_INPUT_PAUSED;
+            }
+        }
+        // If the state changes during a callback, we immediately
+        // make a new state-change callback. Loop until the state didn't change.
+        while (true) {
+            if (this._isCanceled) {
+                this._pending = null;
+                return;
+            }
+            let isInputPaused = this._isInputPaused;
+            if (wasInputPaused == isInputPaused) break;
+            this._state ^= _BufferingStreamSubscription._STATE_IN_CALLBACK;
+            if (isInputPaused) {
+                this._onPause();
+            } else {
+                this._onResume();
+            }
+            this._state &= ~_BufferingStreamSubscription._STATE_IN_CALLBACK;
+            wasInputPaused = isInputPaused;
+        }
+        if (this._hasPending && !this._isPaused) {
+            this._pending.schedule(this);
+        }
+    }
+}
+
+// -------------------------------------------------------------------
+// Common base class for single and multi-subscription streams.
+// -------------------------------------------------------------------
+@DartClass
+class _StreamImpl<T> extends DartStream<T> {
+    @defaultConstructor
+    protected _init() {
+        super._init();
+    }
+
+    constructor() {
+        super();
+    }
+
+    // ------------------------------------------------------------------
+    // Stream interface.
+
+    listen(onData: (data: T) => any,
+           _?: { onError?: Function, onDone?: () => any, cancelOnError?: bool }): DartStreamSubscription<T> {
+        let {onError, onDone, cancelOnError} = Object.assign({}, _);
+        cancelOnError = identical(true, cancelOnError);
+        let subscription =
+            this._createSubscription(onData, onError, onDone, cancelOnError);
+        this._onListen(subscription);
+        return subscription;
+    }
+
+// -------------------------------------------------------------------
+    /** Create a subscription object. Called by [subcribe]. */
+    _createSubscription(onData: (data: T) => any,
+                        onError: Function, onDone: () => any, cancelOnError: bool): DartStreamSubscription<T> {
+        return new _BufferingStreamSubscription<T>(onData, onError, onDone, cancelOnError);
+    }
+
+    /** Hook called when the subscription has been created. */
+    _onListen(subscription: DartStreamSubscription<any>): void {
+    }
+}
+
+type  _EventGenerator<T> = () => _PendingEvents<T>;
+
+/** Stream that generates its own events. */
+@DartClass
+class _GeneratedStreamImpl<T> extends _StreamImpl<T> {
+    _pending: _EventGenerator<T>;
+    _isUsed: bool = false;
+
+    /**
+     * Initializes the stream to have only the events provided by a
+     * [_PendingEvents].
+     *
+     * A new [_PendingEvents] must be generated for each listen.
+     */
+    constructor(_peding: _EventGenerator<T>) {
+        super();
+    }
+
+    @defaultConstructor
+    protected _GeneratedStreamImpl(_pending: _EventGenerator<T>) {
+        super._init();
+        this._pending = _pending;
+    }
+
+    _createSubscription(onData: (data: T) => any,
+                        onError: Function, onDone: () => any, cancelOnError: bool): DartStreamSubscription<T> {
+        if (this._isUsed) throw new StateError("Stream has already been listened to.");
+        this._isUsed = true;
+        return $with(new _BufferingStreamSubscription<T>(onData, onError, onDone, cancelOnError),
+            (_) => _._setPendingEvents(this._pending()));
+    }
+}
+
+/** Pending events object that gets its events from an [Iterable]. */
+class _IterablePendingEvents<T> extends _PendingEvents<T> {
+    // The iterator providing data for data events.
+    // Set to null when iteration has completed.
+    _iterator: DartIterator<T>;
+
+    constructor(data: DartIterable<T>) {
+        super();
+        this._iterator = data.iterator;
+    }
+
+    get isEmpty(): bool {
+        return this._iterator == null;
+    }
+
+    handleNext(dispatch: _EventDispatch<T>): void {
+        if (this._iterator == null) {
+            throw new StateError("No events pending.");
+        }
+        // Send one event per call to moveNext.
+        // If moveNext returns true, send the current element as data.
+        // If moveNext returns false, send a done event and clear the _iterator.
+        // If moveNext throws an error, send an error and clear the _iterator.
+        // After an error, no further events will be sent.
+        let isDone: bool;
+        try {
+            isDone = !this._iterator.moveNext();
+        } catch (e) {
+            let s = new DartStackTrace(e);
+            this._iterator = null;
+            dispatch._sendError(e, s);
+            return;
+        }
+        if (!isDone) {
+            dispatch._sendData(this._iterator.current);
+        } else {
+            this._iterator = null;
+            dispatch._sendDone();
+        }
+    }
+
+    clear(): void {
+        if (this.isScheduled) this.cancelSchedule();
+        this._iterator = null;
+    }
+}
+
+// Internal helpers.
+
+// Types of the different handlers on a stream. Types used to type fields.
+type  _DataHandler<T> = (value: T) => any;
+type  _DoneHandler = () => any;
+
+/** Default data handler, does nothing. */
+function _nullDataHandler(value: any) {
+
+}
+
+/** Default error handler, reports the error to the current zone's handler. */
+function _nullErrorHandler(error: any, stackTrace?: DartStackTrace) {
+    DartZone.current.handleUncaughtError(error, stackTrace);
+}
+
+/** Default done handler, does nothing. */
+function _nullDoneHandler() {
+}
+
+/** A delayed event on a buffering stream subscription. */
+@DartClass
+class _DelayedEvent<T> {
+    /** Added as a linked list on the [StreamController]. */
+    next: _DelayedEvent<any>;
+
+    /** Execute the delayed event on the [StreamController]. */
+    @Abstract
+    perform(dispatch: _EventDispatch<T>): void {
+        throw 'abstract';
+    }
+}
+
+/** A delayed data event. */
+class _DelayedData<T> extends _DelayedEvent<T> {
+    value: T;
+
+    constructor(value: T) {
+        super();
+        this.value = value;
+    }
+
+    perform(dispatch: _EventDispatch<T>): void {
+        dispatch._sendData(this.value);
+    }
+}
+
+/** A delayed error event. */
+class _DelayedError extends _DelayedEvent<any> {
+    error: any;
+    stackTrace: DartStackTrace;
+
+    constructor(error: any, stackTrace: DartStackTrace) {
+        super();
+        this.error = error;
+        this.stackTrace = stackTrace;
+    }
+
+    perform(dispatch: _EventDispatch<any>): void {
+        dispatch._sendError(this.error, this.stackTrace);
+    }
+}
+
+/** A delayed done event. */
+class _DelayedDone extends _DelayedEvent<any> {
+    constructor() {
+        super();
+    }
+
+    perform(dispatch: _EventDispatch<any>): void {
+        dispatch._sendDone();
+    }
+
+    get next(): _DelayedEvent<any> {
+        return null;
+    }
+
+    set next(_: _DelayedEvent<any>) {
+        throw new StateError("No events after a done.");
+    }
+}
+
+/** Superclass for provider of pending events. */
+@DartClass
+class _PendingEvents<T> {
+    // No async event has been scheduled.
+    static _STATE_UNSCHEDULED = 0;
+    // An async event has been scheduled to run a function.
+    static _STATE_SCHEDULED = 1;
+    // An async event has been scheduled, but it will do nothing when it runs.
+    // Async events can't be preempted.
+    static _STATE_CANCELED = 3;
+
+    /**
+     * State of being scheduled.
+     *
+     * Set to [_STATE_SCHEDULED] when pending events are scheduled for
+     * async dispatch. Since we can't cancel a [scheduleMicrotask] call, if
+     * scheduling is "canceled", the _state is simply set to [_STATE_CANCELED]
+     * which will make the async code do nothing except resetting [_state].
+     *
+     * If events are scheduled while the state is [_PendingEvents._STATE_CANCELED], it is
+     * merely switched back to [_PendingEvents._STATE_SCHEDULED], but no new call to
+     * [scheduleMicrotask] is performed.
+     */
+    _state = _PendingEvents._STATE_UNSCHEDULED;
+
+    @AbstractProperty
+    get isEmpty(): bool {
+        throw 'abstract';
+    }
+
+    get isScheduled(): bool {
+        return this._state == _PendingEvents._STATE_SCHEDULED;
+    }
+
+    get _eventScheduled(): bool {
+        return this._state >= _PendingEvents._STATE_SCHEDULED;
+    }
+
+    /**
+     * Schedule an event to run later.
+     *
+     * If called more than once, it should be called with the same dispatch as
+     * argument each time. It may reuse an earlier argument in some cases.
+     */
+    schedule(dispatch: _EventDispatch<T>): void {
+        if (this.isScheduled) return;
+        // assert(!isEmpty);
+        if (this._eventScheduled) {
+            //assert(_state == _PendingEvents._STATE_CANCELED);
+            this._state = _PendingEvents._STATE_SCHEDULED;
+            return;
+        }
+        scheduleMicrotask(() => {
+            let oldState = this._state;
+            this._state = _PendingEvents._STATE_UNSCHEDULED;
+            if (oldState == _PendingEvents._STATE_CANCELED) return;
+            this.handleNext(dispatch);
+        });
+        this._state = _PendingEvents._STATE_SCHEDULED;
+    }
+
+    cancelSchedule(): void {
+        if (this.isScheduled) this._state = _PendingEvents._STATE_CANCELED;
+    }
+
+    @Abstract
+    handleNext(dispatch: _EventDispatch<T>): void {
+        throw 'abstract';
+    }
+
+    /** Throw away any pending events and cancel scheduled events. */
+    @Abstract
+    clear(): void {
+        throw 'abstract'
+    }
+}
+
+
+/** Class holding pending events for a [_StreamImpl]. */
+class _StreamImplEvents<T> extends _PendingEvents<T> {
+    /// Single linked list of [_DelayedEvent] objects.
+    firstPendingEvent: _DelayedEvent<any> = null;
+
+    /// Last element in the list of pending events. New events are added after it.
+    lastPendingEvent: _DelayedEvent<any> = null;
+
+    get isEmpty(): bool {
+        return this.lastPendingEvent == null;
+    }
+
+    add(event: _DelayedEvent<any>): void {
+        if (this.lastPendingEvent == null) {
+            this.firstPendingEvent = this.lastPendingEvent = event;
+        } else {
+            this.lastPendingEvent = this.lastPendingEvent.next = event;
+        }
+    }
+
+    handleNext(dispatch: _EventDispatch<T>): void {
+        //assert(!isScheduled);
+        let event = this.firstPendingEvent;
+        this.firstPendingEvent = event.next;
+        if (this.firstPendingEvent == null) {
+            this.lastPendingEvent = null;
+        }
+        event.perform(dispatch);
+    }
+
+    clear(): void {
+        if (this.isScheduled) this.cancelSchedule();
+        this.firstPendingEvent = this.lastPendingEvent = null;
+    }
+}
+
+type  _BroadcastCallback<T> = (subscription: DartStreamSubscription<T>) => any;
+
+/**
+ * Done subscription that will send one done event as soon as possible.
+ */
+class _DoneStreamSubscription<T> implements DartStreamSubscription<T> {
+    static _DONE_SENT = 1;
+    static _SCHEDULED = 2;
+    static _PAUSED = 4;
+
+    _zone: DartZone;
+    _state = 0;
+    _onDone: _DoneHandler;
+
+    constructor(_onDone: _DoneHandler) {
+        this._zone = DartZone.current;
+        this._onDone = _onDone;
+        this._schedule();
+    }
+
+    get _isSent(): bool {
+        return (this._state & _DoneStreamSubscription._DONE_SENT) != 0;
+    }
+
+    get _isScheduled(): bool {
+        return (this._state & _DoneStreamSubscription._SCHEDULED) != 0;
+    }
+
+    get isPaused() {
+        return this._state >= _DoneStreamSubscription._PAUSED;
+    }
+
+    _schedule(): void {
+        if (this._isScheduled) return;
+        this._zone.scheduleMicrotask(() => this._sendDone());
+        this._state |= _DoneStreamSubscription._SCHEDULED;
+    }
+
+    onData(handleData: (data: T) => any): void {
+    }
+
+    onError(handleError: Function): void {
+    }
+
+    onDone(handleDone: () => any): void {
+        this._onDone = handleDone;
+    }
+
+    pause(resumeSignal?: Future<any>): void {
+        this._state += _DoneStreamSubscription._PAUSED;
+        if (resumeSignal != null) resumeSignal.whenComplete(() => this.resume());
+    }
+
+    resume(): void {
+        if (this.isPaused) {
+            this._state -= _DoneStreamSubscription._PAUSED;
+            if (!this.isPaused && !this._isSent) {
+                this._schedule();
+            }
+        }
+    }
+
+    cancel(): Future<any> {
+        return Future._nullFuture;
+    }
+
+    asFuture<E>(futureValue?: E): Future<E> {
+        let result = new _Future<E>();
+        this._onDone = () => {
+            result._completeWithValue(null);
+        };
+        return result;
+    }
+
+    _sendDone(): void {
+        this._state &= ~_DoneStreamSubscription._SCHEDULED;
+        if (this.isPaused) return;
+        this._state |= _DoneStreamSubscription._DONE_SENT;
+        if (this._onDone != null) this._zone.runGuarded(() => this._onDone());
+    }
+}
+
+@DartClass
+class _AsBroadcastStream<T> extends DartStream<T> {
+    _source: DartStream<T>;
+    _onListenHandler: _BroadcastCallback<T>;
+    _onCancelHandler: _BroadcastCallback<T>;
+    _zone: DartZone;
+
+    _controller: _AsBroadcastStreamController<T>;
+    _subscription: DartStreamSubscription<T>;
+
+    @defaultConstructor
+    _AsBroadcastStream(
+        _source: DartStream<T>,
+        onListenHandler: (subscription: DartStreamSubscription<T>) => any,
+        onCancelHandler: (subscription: DartStreamSubscription<T>) => any) {
+        super._init();
+        // TODO(floitsch): the return type should be void and should be
+        // inferred.
+        this._onListenHandler = DartZone.current
+            .registerUnaryCallback<any, DartStreamSubscription<T>>(
+                onListenHandler);
+        this._onCancelHandler = DartZone.current
+            .registerUnaryCallback<any, DartStreamSubscription<T>>(
+                onCancelHandler);
+        this._zone = DartZone.current;
+        this._source = _source;
+        this._controller = new _AsBroadcastStreamController<T>(this._onListen.bind(this), this._onCancel.bind(this));
+    }
+
+    constructor(
+        _source: DartStream<T>,
+        onListenHandler: (subscription: DartStreamSubscription<T>) => any,
+        onCancelHandler: (subscription: DartStreamSubscription<T>) => any) {
+        super();
+    }
+
+    get isBroadcast(): bool {
+        return true;
+    }
+
+    listen(onData: (data: T) => any, _?: { onError?: Function, onDone?: () => any, cancelOnError?: bool }): DartStreamSubscription<T> {
+        let {onError, onDone, cancelOnError} = Object.assign({}, _);
+        if (this._controller == null || this._controller.isClosed) {
+            // Return a dummy subscription backed by nothing, since
+            // it will only ever send one done event.
+            return new _DoneStreamSubscription<T>(onDone);
+        }
+        if (this._subscription == null) {
+            this._subscription = this._source.listen(this._controller.add.bind(this._controller),
+                {onError: this._controller.addError.bind(this._controller), onDone: this._controller.close.bind(this._controller)});
+        }
+        cancelOnError = identical(true, cancelOnError);
+        return this._controller._subscribe(onData, onError, onDone, cancelOnError);
+    }
+
+    _onCancel(): void {
+        let shutdown = (this._controller == null) || this._controller.isClosed;
+        if (this._onCancelHandler != null) {
+            this._zone.runUnary(
+                this._onCancelHandler, new _BroadcastSubscriptionWrapper<T>(this));
+        }
+        if (shutdown) {
+            if (this._subscription != null) {
+                this._subscription.cancel();
+                this._subscription = null;
+            }
+        }
+    }
+
+    _onListen(): void {
+        if (this._onListenHandler != null) {
+            this._zone.runUnary(
+                this._onListenHandler, new _BroadcastSubscriptionWrapper<T>(this));
+        }
+    }
+
+    // Methods called from _BroadcastSubscriptionWrapper.
+    _cancelSubscription(): void {
+        if (this._subscription == null) return;
+        // Called by [_controller] when it has no subscribers left.
+        let subscription = this._subscription;
+        this._subscription = null;
+        this._controller = null; // Marks the stream as no longer listenable.
+        subscription.cancel();
+    }
+
+    _pauseSubscription(resumeSignal: Future<any>): void {
+        if (this._subscription == null) return;
+        this._subscription.pause(resumeSignal);
+    }
+
+    _resumeSubscription(): void {
+        if (this._subscription == null) return;
+        this._subscription.resume();
+    }
+
+    get _isSubscriptionPaused(): bool {
+        if (this._subscription == null) return false;
+        return this._subscription.isPaused;
+    }
+}
+
+/**
+ * Wrapper for subscription that disallows changing handlers.
+ */
+class _BroadcastSubscriptionWrapper<T> implements DartStreamSubscription<T> {
+    _stream: _AsBroadcastStream<any>;
+
+    constructor(_stream: _AsBroadcastStream<any>) {
+        this._stream = _stream;
+    }
+
+    onData(handleData: (data: T) => any): void {
+        throw new UnsupportedError(
+            "Cannot change handlers of asBroadcastStream source subscription.");
+    }
+
+    onError(handleError: Function): void {
+        throw new UnsupportedError(
+            "Cannot change handlers of asBroadcastStream source subscription.");
+    }
+
+    onDone(handleDone: () => any): void {
+        throw new UnsupportedError(
+            "Cannot change handlers of asBroadcastStream source subscription.");
+    }
+
+    pause(resumeSignal?: Future<any>): void {
+        this._stream._pauseSubscription(resumeSignal);
+    }
+
+    resume(): void {
+        this._stream._resumeSubscription();
+    }
+
+    cancel(): Future<any> {
+        this._stream._cancelSubscription();
+        return Future._nullFuture;
+    }
+
+    get isPaused(): bool {
+        return this._stream._isSubscriptionPaused;
+    }
+
+    asFuture<E>(futureValue?: E): Future<E> {
+        throw new UnsupportedError(
+            "Cannot change handlers of asBroadcastStream source subscription.");
+    }
+}
+
+/**
+ * Simple implementation of [StreamIterator].
+ *
+ * Pauses the stream between calls to [moveNext].
+ */
+class _StreamIterator<T> implements DartStreamIterator<T> {
+    // The stream iterator is always in one of four states.
+    // The value of the [_stateData] field depends on the state.
+    //
+    // When `_subscription == null` and `_stateData != null`:
+    // The stream iterator has been created, but [moveNext] has not been called
+    // yet. The [_stateData] field contains the stream to listen to on the first
+    // call to [moveNext] and [current] returns `null`.
+    //
+    // When `_subscription != null` and `!_isPaused`:
+    // The user has called [moveNext] and the iterator is waiting for the next
+    // event. The [_stateData] field contains the [_Future] returned by the
+    // [_moveNext] call and [current] returns `null.`
+    //
+    // When `_subscription != null` and `_isPaused`:
+    // The most recent call to [moveNext] has completed with a `true` value
+    // and [current] provides the value of the data event.
+    // The [_stateData] field contains the [current] value.
+    //
+    // When `_subscription == null` and `_stateData == null`:
+    // The stream has completed or been canceled using [cancel].
+    // The stream completes on either a done event or an error event.
+    // The last call to [moveNext] has completed with `false` and [current]
+    // returns `null`.
+
+    /// Subscription being listened to.
+    ///
+    /// Set to `null` when the stream subscription is done or canceled.
+    _subscription: DartStreamSubscription<T>;
+
+    /// Data value depending on the current state.
+    ///
+    /// Before first call to [moveNext]: The stream to listen to.
+    ///
+    /// After calling [moveNext] but before the returned future completes:
+    /// The returned future.
+    ///
+    /// After calling [moveNext] and the returned future has completed
+    /// with `true`: The value of [current].
+    ///
+    /// After calling [moveNext] and the returned future has completed
+    /// with `false`, or after calling [cancel]: `null`.
+    _stateData: any;
+
+    /// Whether the iterator is between calls to `moveNext`.
+    /// This will usually cause the [_subscription] to be paused, but as an
+    /// optimization, we only pause after the [moveNext] future has been
+    /// completed.
+    _isPaused: bool = false;
+
+    constructor(stream: DartStream<T>) {
+        this._stateData = stream;
+    }
+
+    get current(): T {
+        if (this._subscription != null && this._isPaused) {
+            return this._stateData/*=T*/;
+        }
+        return null;
+    }
+
+    moveNext(): Future<bool> {
+        if (this._subscription != null) {
+            if (this._isPaused) {
+                let future = new _Future<bool>();
+                this._stateData = future;
+                this._isPaused = false;
+                this._subscription.resume();
+                return future;
+            }
+            throw new StateError("Already waiting for next.");
+        }
+        return this._initializeOrDone();
+    }
+
+    /// Called if there is no active subscription when [moveNext] is called.
+    ///
+    /// Either starts listening on the stream if this is the first call to
+    /// [moveNext], or returns a `false` future because the stream has already
+    /// ended.
+    _initializeOrDone(): Future<bool> {
+        //assert(_subscription == null);
+        let stateData = this._stateData;
+        if (stateData != null) {
+            let stream: DartStream<T> = stateData /*=Stream<T>*/;
+            this._subscription = stream.listen(this._onData.bind(this), {
+                onError: this._onError.bind(this), onDone: this._onDone.bind(this), cancelOnError: true
+            });
+            let future = new _Future<bool>();
+            this._stateData = future;
+            return future;
+        }
+        return new _Future.immediate<bool>(false);
+    }
+
+    cancel(): Future<any> {
+        let subscription = this._subscription;
+        let stateData = this._stateData;
+        this._stateData = null;
+        if (subscription != null) {
+            this._subscription = null;
+            if (!this._isPaused) {
+                let future: _Future<bool> = stateData /*=_Future<bool>*/;
+                future._asyncComplete(false);
+            }
+            return subscription.cancel();
+        }
+        return Future._nullFuture;
+    }
+
+    _onData(data: T): void {
+        //assert(_subscription != null && !_isPaused);
+        let moveNextFuture: _Future<bool> = this._stateData /*=_Future<bool>*/;
+        this._stateData = data;
+        this._isPaused = true;
+        moveNextFuture._complete(true);
+        if (this._subscription != null && this._isPaused) this._subscription.pause();
+    }
+
+    _onError(error: any, stackTrace?: DartStackTrace): void {
+        //assert(_subscription != null && !_isPaused);
+        let moveNextFuture: _Future<bool> = this._stateData /*=_Future<bool>*/;
+        this._subscription = null;
+        this._stateData = null;
+        moveNextFuture._completeError(error, stackTrace);
+    }
+
+    _onDone(): void {
+        //assert(_subscription != null && !_isPaused);
+        let moveNextFuture: _Future<bool> = this._stateData /*=_Future<bool>*/;
+        this._subscription = null;
+        this._stateData = null;
+        moveNextFuture._complete(false);
+    }
+
+    async next(value?: any): Promise<IteratorResult<T>> {
+        let hasNext = await this.moveNext();
+        return {
+            done: !hasNext,
+            value: this.current
+        };
+    }
+}
+
+/** An empty broadcast stream, sending a done event as soon as possible. */
+@DartClass
+class _EmptyStream<T> extends DartStream<T> {
+    @defaultConstructor
+    _EmptyStream() {
+        super._internal();
+    }
+
+    constructor() {
+        super();
+    }
+
+    get isBroadcast(): bool {
+        return true;
+    }
+
+    listen(onData: (data: T) => any, _?:
+        { onError?: Function, onDone?: () => any, cancelOnError?: bool }): DartStreamSubscription<T> {
+        return new _DoneStreamSubscription<T>(_.onDone);
+    }
+}
 
 
 export {
