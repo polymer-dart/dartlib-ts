@@ -10780,6 +10780,15 @@ class ConcurrentModificationError extends DartError {
     }
 }
 
+/**
+ * Error thrown when attempting to throw [:null:].
+ */
+@DartClass
+class NullThrownError extends DartError {
+    toString(): string {
+        return "Throw of null.";
+    }
+}
 
 /**
  * Error thrown when a function is passed an unacceptable argument.
@@ -12676,5 +12685,6 @@ export {
     DartObject,
     DartStackTrace,
     DartDuration,
-    DartIntegerDivisionByZeroException
+    DartIntegerDivisionByZeroException,
+    NullThrownError
 }

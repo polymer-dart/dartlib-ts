@@ -36,7 +36,7 @@
 /// As a corollary, `FutureOr<Object>` is equivalent to
 /// `FutureOr<FutureOr<Object>>`, `FutureOr<Future<Object>> is equivalent to
 /// `Future<Object>`.
-import {ArgumentError, DartDuration, DartHashMap, DartIterable, DartList, DartMap, DartStackTrace, identical, StateError, UnsupportedError} from "./core";
+import {ArgumentError, DartDuration, DartHashMap, DartIterable, DartList, DartMap, DartStackTrace, identical, NullThrownError, StateError, UnsupportedError} from "./core";
 import {Abstract, AbstractProperty, bool, DartClass, defaultConstructor, defaultFactory, Implements, int, namedConstructor, namedFactory, Op, Operator, OPERATOR_INDEX_ASSIGN} from "./utils";
 import _dart from './_common';
 /*
@@ -138,7 +138,7 @@ export type FutureOr<T> = Future<T> | T;
  * called.
  */
 @DartClass
-class Future<T> {
+class Future<T> extends Promise<T> {
     // The `_nullFuture` is a completed Future with the value `null`.
     static _nullFuture: _Future<any>;//= new _Future.value<any>(null);
 
@@ -171,6 +171,9 @@ class Future<T> {
     }
 
     constructor(computation: () => FutureOr<T>) {
+        super((resolve, reject) => {
+
+        });
     }
 
     /**
@@ -588,6 +591,8 @@ class Future<T> {
      * has completed with an error then the error is reported as unhandled error.
      * See the description on [Future].
      */
+
+    then(...args: any[]): any
     @Abstract
     then<S>(onValue: (value: T) => FutureOr<S>, _?: { onError?: Function }): Future<S> {
         throw 'abstract';
@@ -660,6 +665,16 @@ class Future<T> {
     @Abstract
     catchError(onError: Function, _?: { test: (error: any) => bool }): Future<T> {
         throw 'abstract';
+    }
+
+
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): Promise<T | TResult> {
+        return this.catchError(onrejected);
     }
 
     /**
@@ -971,7 +986,7 @@ function _asyncCompleteWithErrorCallback(result: _Future<any>, error: any, stack
 
 /** Helper function that converts `null` to a [NullThrownError]. */
 function _nonNullError(error: any): any {
-    return error || new DartNullThrownError();
+    return error || new NullThrownError();
 }
 
 
@@ -998,7 +1013,7 @@ const _ERROR: int = 8;
 
 @DartClass
 @Implements(Future)
-class _Future<T> implements Future<T> {
+class _Future<T> extends Promise<T> implements Future<T> {
 
 
     /** Whether the future is complete, and as what. */
@@ -1030,9 +1045,16 @@ class _Future<T> implements Future<T> {
      */
     _resultOrListeners: any;
 
+    // TODO : this has to be called when completed: have to find when this is going to occur.
+    _resolve: (t: T) => any;
+    _reject: (e: any) => any;
+
     // This constructor is used by async/await.
     constructor() {
-
+        super((resolve, reject) => {
+            this._resolve = resolve;
+            this._reject = reject;
+        });
     }
 
     @defaultConstructor
@@ -1095,6 +1117,7 @@ class _Future<T> implements Future<T> {
         this._resultOrListeners = source;
     }
 
+    then(...args: any[]): any
     then<E>(f: (value: T) => FutureOr<E>, _?: { onError?: Function }): Future<E> {
         let {onError} = Object.assign({}, _);
         let currentZone: DartZone = DartZone.current;
@@ -1104,17 +1127,17 @@ class _Future<T> implements Future<T> {
                 onError = _registerErrorHandler<E>(onError, currentZone);
             }
         }
-        return _thenNoZoneRegistration<E>(f, onError);
+        return this._thenNoZoneRegistration<E>(f, onError);
     }
 
-    /*
+
     // This method is used by async/await.
-    Future<E> _thenNoZoneRegistration<E>(
-        FutureOr<E> f(T value), Function onError) {
-        _Future<E> result = new _Future<E>();
-        _addListener(new _FutureListener<T, E>.then(result, f, onError));
+    _thenNoZoneRegistration<E>(
+        f: (value: T) => FutureOr<E>, onError: Function): Future<E> {
+        let result = new _Future<E>();
+        this._addListener(new _FutureListener.then(result, f, onError));
         return result;
-    }*/
+    }
 
     catchError(onError: Function, _?: { test: (error: any) => bool }): Future<T> {
         let {test} = Object.assign({}, _);
@@ -1126,6 +1149,12 @@ class _Future<T> implements Future<T> {
         this._addListener(new _FutureListener.catchError<T, T>(result, onError, test));
         return result;
     }
+
+    catch<TResult = never>(onrejected?: ((reason: any) => (PromiseLike<TResult> | TResult)) | null | undefined): Promise<T | TResult> {
+        this.catchError(onrejected);
+        return undefined;
+    }
+
 
     whenComplete(action: () => any): Future<T> {
         let result = new _Future<T>();
@@ -4384,6 +4413,32 @@ class _AsyncRun {
     }
 }
 
+// Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
+//part of dart.async;
+
+function _invokeErrorHandler(
+    errorHandler: Function, error: any, stackTrace: DartStackTrace) {
+    // can't distinguish ... use the first form always
+    //if (errorHandler is ZoneBinaryCallback<dynamic, Null, Null>) {
+    return errorHandler(error, stackTrace);
+    //} else {
+    //    ZoneUnaryCallback unaryErrorHandler = errorHandler;
+    //    return unaryErrorHandler(error);
+    // }
+}
+
+function _registerErrorHandler<R>(errorHandler: Function, zone: DartZone): Function {
+    //if (errorHandler is ZoneBinaryCallback<dynamic, Null, Null>) {
+    return zone.registerBinaryCallback<R, Object, DartStackTrace>(
+        errorHandler as any /*=ZoneBinaryCallback<R, Object, StackTrace>*/);
+    //} else {
+    //    return zone.registerUnaryCallback<R, Object>(
+    //        errorHandler as dynamic/*=ZoneUnaryCallback<R, Object>*/);
+    //}
+}
 
 export {
     Future,
