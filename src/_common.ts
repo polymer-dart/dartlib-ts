@@ -39,5 +39,9 @@ export default {
 
     divide(a: int, b: int): int {
         return Math.floor(b / a);
+    },
+
+    assert: (expr) => {
+        if (!expr) throw expr;
     }
 }
