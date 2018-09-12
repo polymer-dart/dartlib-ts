@@ -5056,6 +5056,7 @@ class DartStream<T> implements AsyncIterable<T> {
      * will individually perform the `test` and handle the error.
      */
     handleError(onError: Function, _?: { test: (error: any) => bool }): DartStream<T> {
+        let {test} = Object.assign({}, _);
         return new _HandleErrorStream<T>(this, onError, test);
     }
 
@@ -5120,9 +5121,9 @@ class DartStream<T> implements AsyncIterable<T> {
         subscription = this.listen(
             (element: T) => {
                 if (seenFirst) {
-                    this._runUserCode(() => combine(value, element), (newValue: T) => {
+                    _runUserCode(() => combine(value, element), (newValue: T) => {
                         value = newValue;
-                    }, this._cancelAndErrorClosure(subscription, result));
+                    }, _cancelAndErrorClosure(subscription, result));
                 } else {
                     value = element;
                     seenFirst = true;
@@ -5152,9 +5153,9 @@ class DartStream<T> implements AsyncIterable<T> {
         let value = initialValue;
         let subscription: DartStreamSubscription<any>;
         subscription = this.listen((element: T) => {
-            this._runUserCode(() => combine(value, element), (newValue: S) => {
+            _runUserCode(() => combine(value, element), (newValue: S) => {
                 value = newValue;
-            }, this._cancelAndErrorClosure(subscription, result));
+            }, _cancelAndErrorClosure(subscription, result));
         }, {
             onError: (e, st) => {
                 result._completeError(e, st);
@@ -5190,7 +5191,7 @@ class DartStream<T> implements AsyncIterable<T> {
                 buffer.write(element);
             } catch (e) {
                 let s = new DartStackTrace(e);
-                this._cancelAndErrorWithReplacement(subscription, result, e, s);
+                _cancelAndErrorWithReplacement(subscription, result, e, s);
             }
         }, {
             onError: (e) => {
@@ -5213,11 +5214,11 @@ class DartStream<T> implements AsyncIterable<T> {
         let subscription: DartStreamSubscription<any>;
         subscription = this.listen(
             (element: T) => {
-                this._runUserCode(() => (_dart.equals(element, needle)), (isMatch: bool) => {
+                _runUserCode(() => (_dart.equals(element, needle)), (isMatch: bool) => {
                     if (isMatch) {
-                        this._cancelAndValue(subscription, future, true);
+                        _cancelAndValue(subscription, future, true);
                     }
-                }, this._cancelAndErrorClosure(subscription, future));
+                }, _cancelAndErrorClosure(subscription, future));
             }, {
                 onError: future._completeError,
                 onDone: () => {
@@ -5241,9 +5242,9 @@ class DartStream<T> implements AsyncIterable<T> {
         subscription = this.listen(
             (element: T) => {
                 // TODO(floitsch): the type should be 'void' and inferred.
-                this._runUserCode<any>(() => action(element), (_) => {
+                _runUserCode<any>(() => action(element), (_) => {
                     },
-                    this._cancelAndErrorClosure(subscription, future));
+                    _cancelAndErrorClosure(subscription, future));
             }, {
                 onError: future._completeError,
                 onDone: () => {
@@ -5265,11 +5266,11 @@ class DartStream<T> implements AsyncIterable<T> {
         let subscription: DartStreamSubscription<any>;
         subscription = this.listen(
             (element: T) => {
-                this._runUserCode(() => test(element), (isMatch: bool) => {
+                _runUserCode(() => test(element), (isMatch: bool) => {
                     if (!isMatch) {
-                        this._cancelAndValue(subscription, future, false);
+                        _cancelAndValue(subscription, future, false);
                     }
-                }, this._cancelAndErrorClosure(subscription, future));
+                }, _cancelAndErrorClosure(subscription, future));
             }, {
                 onError: future._completeError,
                 onDone: () => {
@@ -5299,11 +5300,11 @@ class DartStream<T> implements AsyncIterable<T> {
         let subscription: DartStreamSubscription<any>;
         subscription = this.listen(
             (element: T) => {
-                this._runUserCode(() => test(element), (isMatch: bool) => {
+                _runUserCode(() => test(element), (isMatch: bool) => {
                     if (isMatch) {
-                        this._cancelAndValue(subscription, future, true);
+                        _cancelAndValue(subscription, future, true);
                     }
-                }, this._cancelAndErrorClosure(subscription, future));
+                }, _cancelAndErrorClosure(subscription, future));
             }, {
                 onError: future._completeError,
                 onDone: () => {
@@ -5342,7 +5343,7 @@ class DartStream<T> implements AsyncIterable<T> {
      */
     get isEmpty(): Future<bool> {
         let future = new _Future<bool>();
-        let subscription: DartStreamSubscription;
+        let subscription: DartStreamSubscription<any>;
         subscription = this.listen(
             (_) => {
                 _cancelAndValue(subscription, future, false);
@@ -5533,7 +5534,7 @@ class DartStream<T> implements AsyncIterable<T> {
         let subscription: DartStreamSubscription<any>;
         subscription = this.listen(
             (value: T) => {
-                this._cancelAndValue(subscription, future, value);
+                _cancelAndValue(subscription, future, value);
             }, {
                 onError: future._completeError,
                 onDone: () => {
@@ -5671,7 +5672,7 @@ class DartStream<T> implements AsyncIterable<T> {
                         return;
                     }
                     try {
-                        throw IterableElementError.noElement();
+                        throw DartIterableElementError.noElement();
                     } catch (e) {
                         let s = new DartStackTrace(e);
 
@@ -5716,7 +5717,7 @@ class DartStream<T> implements AsyncIterable<T> {
                         return;
                     }
                     try {
-                        throw IterableElementError.noElement();
+                        throw DartIterableElementError.noElement();
                     } catch (e) {
                         let s = new DartStackTrace(e);
                         _completeWithErrorCallback(future, e, s);
@@ -6990,6 +6991,84 @@ class _StreamImpl<T> extends DartStream<T> {
     }
 }
 
+/** Superclass for provider of pending events. */
+@DartClass
+class _PendingEvents<T> {
+    // No async event has been scheduled.
+    static _STATE_UNSCHEDULED = 0;
+    // An async event has been scheduled to run a function.
+    static _STATE_SCHEDULED = 1;
+    // An async event has been scheduled, but it will do nothing when it runs.
+    // Async events can't be preempted.
+    static _STATE_CANCELED = 3;
+
+    /**
+     * State of being scheduled.
+     *
+     * Set to [_STATE_SCHEDULED] when pending events are scheduled for
+     * async dispatch. Since we can't cancel a [scheduleMicrotask] call, if
+     * scheduling is "canceled", the _state is simply set to [_STATE_CANCELED]
+     * which will make the async code do nothing except resetting [_state].
+     *
+     * If events are scheduled while the state is [_PendingEvents._STATE_CANCELED], it is
+     * merely switched back to [_PendingEvents._STATE_SCHEDULED], but no new call to
+     * [scheduleMicrotask] is performed.
+     */
+    _state = _PendingEvents._STATE_UNSCHEDULED;
+
+    @AbstractProperty
+    get isEmpty(): bool {
+        throw 'abstract';
+    }
+
+    get isScheduled(): bool {
+        return this._state == _PendingEvents._STATE_SCHEDULED;
+    }
+
+    get _eventScheduled(): bool {
+        return this._state >= _PendingEvents._STATE_SCHEDULED;
+    }
+
+    /**
+     * Schedule an event to run later.
+     *
+     * If called more than once, it should be called with the same dispatch as
+     * argument each time. It may reuse an earlier argument in some cases.
+     */
+    schedule(dispatch: _EventDispatch<T>): void {
+        if (this.isScheduled) return;
+        // assert(!isEmpty);
+        if (this._eventScheduled) {
+            //assert(_state == _PendingEvents._STATE_CANCELED);
+            this._state = _PendingEvents._STATE_SCHEDULED;
+            return;
+        }
+        scheduleMicrotask(() => {
+            let oldState = this._state;
+            this._state = _PendingEvents._STATE_UNSCHEDULED;
+            if (oldState == _PendingEvents._STATE_CANCELED) return;
+            this.handleNext(dispatch);
+        });
+        this._state = _PendingEvents._STATE_SCHEDULED;
+    }
+
+    cancelSchedule(): void {
+        if (this.isScheduled) this._state = _PendingEvents._STATE_CANCELED;
+    }
+
+    @Abstract
+    handleNext(dispatch: _EventDispatch<T>): void {
+        throw 'abstract';
+    }
+
+    /** Throw away any pending events and cancel scheduled events. */
+    @Abstract
+    clear(): void {
+        throw 'abstract'
+    }
+}
+
+
 type  _EventGenerator<T> = () => _PendingEvents<T>;
 
 /** Stream that generates its own events. */
@@ -7149,83 +7228,6 @@ class _DelayedDone extends _DelayedEvent<any> {
 
     set next(_: _DelayedEvent<any>) {
         throw new StateError("No events after a done.");
-    }
-}
-
-/** Superclass for provider of pending events. */
-@DartClass
-class _PendingEvents<T> {
-    // No async event has been scheduled.
-    static _STATE_UNSCHEDULED = 0;
-    // An async event has been scheduled to run a function.
-    static _STATE_SCHEDULED = 1;
-    // An async event has been scheduled, but it will do nothing when it runs.
-    // Async events can't be preempted.
-    static _STATE_CANCELED = 3;
-
-    /**
-     * State of being scheduled.
-     *
-     * Set to [_STATE_SCHEDULED] when pending events are scheduled for
-     * async dispatch. Since we can't cancel a [scheduleMicrotask] call, if
-     * scheduling is "canceled", the _state is simply set to [_STATE_CANCELED]
-     * which will make the async code do nothing except resetting [_state].
-     *
-     * If events are scheduled while the state is [_PendingEvents._STATE_CANCELED], it is
-     * merely switched back to [_PendingEvents._STATE_SCHEDULED], but no new call to
-     * [scheduleMicrotask] is performed.
-     */
-    _state = _PendingEvents._STATE_UNSCHEDULED;
-
-    @AbstractProperty
-    get isEmpty(): bool {
-        throw 'abstract';
-    }
-
-    get isScheduled(): bool {
-        return this._state == _PendingEvents._STATE_SCHEDULED;
-    }
-
-    get _eventScheduled(): bool {
-        return this._state >= _PendingEvents._STATE_SCHEDULED;
-    }
-
-    /**
-     * Schedule an event to run later.
-     *
-     * If called more than once, it should be called with the same dispatch as
-     * argument each time. It may reuse an earlier argument in some cases.
-     */
-    schedule(dispatch: _EventDispatch<T>): void {
-        if (this.isScheduled) return;
-        // assert(!isEmpty);
-        if (this._eventScheduled) {
-            //assert(_state == _PendingEvents._STATE_CANCELED);
-            this._state = _PendingEvents._STATE_SCHEDULED;
-            return;
-        }
-        scheduleMicrotask(() => {
-            let oldState = this._state;
-            this._state = _PendingEvents._STATE_UNSCHEDULED;
-            if (oldState == _PendingEvents._STATE_CANCELED) return;
-            this.handleNext(dispatch);
-        });
-        this._state = _PendingEvents._STATE_SCHEDULED;
-    }
-
-    cancelSchedule(): void {
-        if (this.isScheduled) this._state = _PendingEvents._STATE_CANCELED;
-    }
-
-    @Abstract
-    handleNext(dispatch: _EventDispatch<T>): void {
-        throw 'abstract';
-    }
-
-    /** Throw away any pending events and cancel scheduled events. */
-    @Abstract
-    clear(): void {
-        throw 'abstract'
     }
 }
 
@@ -7666,6 +7668,549 @@ class _EmptyStream<T> extends DartStream<T> {
     listen(onData: (data: T) => any, _?:
         { onError?: Function, onDone?: () => any, cancelOnError?: bool }): DartStreamSubscription<T> {
         return new _DoneStreamSubscription<T>(_.onDone);
+    }
+}
+
+// Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
+//part of dart.async;
+
+/** Runs user code and takes actions depending on success or failure. */
+function _runUserCode<T>(
+    userCode: () => T, onSuccess: (value: T) => any, onError: (error, stackTrace: DartStackTrace) => any) {
+    try {
+        onSuccess(userCode());
+    } catch (e) {
+        let s = new DartStackTrace(e);
+        let replacement: DartAsyncError = DartZone.current.errorCallback(e, s);
+        if (replacement == null) {
+            onError(e, s);
+        } else {
+            let error = _nonNullError(replacement.error);
+            let stackTrace = replacement.stackTrace;
+            onError(error, stackTrace);
+        }
+    }
+}
+
+/** Helper function to cancel a subscription and wait for the potential future,
+ before completing with an error. */
+function _cancelAndError(subscription: DartStreamSubscription<any>, future: _Future<any>, error: any,
+                         stackTrace: DartStackTrace): void {
+    let cancelFuture = subscription.cancel();
+    if (_dart.is(cancelFuture, Future) && !identical(cancelFuture, Future._nullFuture)) {
+        cancelFuture.whenComplete(() => future._completeError(error, stackTrace));
+    } else {
+        future._completeError(error, stackTrace);
+    }
+}
+
+function _cancelAndErrorWithReplacement(subscription: DartStreamSubscription<any>,
+                                        future: _Future<any>, error: any, stackTrace: DartStackTrace): void {
+    let replacement = DartZone.current.errorCallback(error, stackTrace);
+    if (replacement != null) {
+        error = _nonNullError(replacement.error);
+        stackTrace = replacement.stackTrace;
+    }
+    _cancelAndError(subscription, future, error, stackTrace);
+}
+
+type  _ErrorCallback = (error: any, stackTrace: DartStackTrace) => any;
+
+/** Helper function to make an onError argument to [_runUserCode]. */
+function _cancelAndErrorClosure(
+    subscription: DartStreamSubscription<any>, future: _Future<any>): _ErrorCallback {
+    return (error, stackTrace: DartStackTrace) => {
+        _cancelAndError(subscription, future, error, stackTrace);
+    };
+}
+
+/** Helper function to cancel a subscription and wait for the potential future,
+ before completing with a value. */
+function _cancelAndValue(subscription: DartStreamSubscription<any>, future: _Future<any>, value: any): void {
+    let cancelFuture = subscription.cancel();
+    if (_dart.is(cancelFuture, Future) && !identical(cancelFuture, Future._nullFuture)) {
+        cancelFuture.whenComplete(() => future._complete(value));
+    } else {
+        future._complete(value);
+    }
+}
+
+/**
+ * A [Stream] that forwards subscriptions to another stream.
+ *
+ * This stream implements [Stream], but forwards all subscriptions
+ * to an underlying stream, and wraps the returned subscription to
+ * modify the events on the way.
+ *
+ * This class is intended for internal use only.
+ */
+@DartClass
+class _ForwardingStream<S, T> extends DartStream<T> {
+    _source: DartStream<S>;
+
+    constructor(_source: DartStream<S>) {
+        super();
+        this._source = _source;
+    }
+
+    get isBroadcast(): bool {
+        return this._source.isBroadcast;
+    }
+
+    listen(onData: (value: T) => any,
+           _?: { onError?: Function, onDone?: () => any, cancelOnError?: bool }): DartStreamSubscription<T> {
+        let {onError, onDone, cancelOnError} = Object.assign({}, _);
+        cancelOnError = identical(true, cancelOnError);
+        return this._createSubscription(onData, onError, onDone, cancelOnError);
+    }
+
+    _createSubscription(onData: (data: T) => any,
+                        onError: Function, onDone: () => any, cancelOnError: bool): DartStreamSubscription<T> {
+        return new _ForwardingStreamSubscription<S, T>(this, onData, onError, onDone, cancelOnError);
+    }
+
+// Override the following methods in subclasses to change the behavior.
+
+    _handleData(data: S, sink: _EventSink<T>): void {
+        sink._add(data as any /*=T*/);
+    }
+
+    _handleError(error: any, stackTrace: DartStackTrace, sink: _EventSink<T>): void {
+        sink._addError(error, stackTrace);
+    }
+
+    _handleDone(sink: _EventSink<T>): void {
+        sink._close();
+    }
+}
+
+/**
+ * Abstract superclass for subscriptions that forward to other subscriptions.
+ */
+@DartClass
+class _ForwardingStreamSubscription<S, T>
+    extends _BufferingStreamSubscription<T> {
+    _stream: _ForwardingStream<S, T>;
+
+    _subscription: DartStreamSubscription<S>;
+
+    constructor(_stream: _ForwardingStream<S, T>, onData: (data: T) => any,
+                onError: Function, onDone: () => any, cancelOnError: bool) {
+        super(onData, onError, onDone, cancelOnError);
+        this._stream = _stream;
+        this._subscription = _stream._source
+            .listen(this._handleData.bind(this), {onError: this._handleError.bind(this), onDone: this._handleDone.bind(this)});
+    }
+
+    // _StreamSink interface.
+    // Transformers sending more than one event have no way to know if the stream
+    // is canceled or closed after the first, so we just ignore remaining events.
+
+    _add(data: T): void {
+        if (this._isClosed) return;
+        super._add(data);
+    }
+
+    _addError(error: any, stackTrace: DartStackTrace): void {
+        if (this._isClosed) return;
+        super._addError(error, stackTrace);
+    }
+
+    // StreamSubscription callbacks.
+
+    _onPause(): void {
+        if (this._subscription == null) return;
+        this._subscription.pause();
+    }
+
+    _onResume(): void {
+        if (this._subscription == null) return;
+        this._subscription.resume();
+    }
+
+    _onCancel(): Future<any> {
+        if (this._subscription != null) {
+            let subscription = this._subscription;
+            this._subscription = null;
+            return subscription.cancel();
+        }
+        return null;
+    }
+
+    // Methods used as listener on source subscription.
+
+    _handleData(data: S): void {
+        this._stream._handleData(data, this);
+    }
+
+    _handleError(error: any, stackTrace: DartStackTrace): void {
+        this._stream._handleError(error, stackTrace, this);
+    }
+
+    _handleDone(): void {
+        this._stream._handleDone(this);
+    }
+}
+
+// -------------------------------------------------------------------
+// Stream transformers used by the default Stream implementation.
+// -------------------------------------------------------------------
+
+type _Predicate<T> = (value: T) => bool;
+
+function _addErrorWithReplacement(sink: _EventSink<any>, error: any, stackTrace: DartStackTrace): void {
+    let replacement = DartZone.current.errorCallback(error, stackTrace);
+    if (replacement != null) {
+        error = _nonNullError(replacement.error);
+        stackTrace = replacement.stackTrace;
+    }
+    sink._addError(error, stackTrace);
+}
+
+@DartClass
+class _WhereStream<T> extends _ForwardingStream<T, T> {
+    _test: _Predicate<T>;
+
+    constructor(source: DartStream<T>, test: (value: T) => bool) {
+        super(source);
+        this._test = test;
+    }
+
+    _handleData(inputEvent: T, sink: _EventSink<T>): void {
+        let satisfies: bool;
+        try {
+            satisfies = this._test(inputEvent);
+        } catch (e) {
+            let s = new DartStackTrace(e);
+            _addErrorWithReplacement(sink, e, s);
+            return;
+        }
+        if (satisfies) {
+            sink._add(inputEvent);
+        }
+    }
+}
+
+type  _Transformation<S, T> = (value: S) => T;
+
+/**
+ * A stream pipe that converts data events before passing them on.
+ */
+@DartClass
+class _MapStream<S, T> extends _ForwardingStream<S, T> {
+    _transform: _Transformation<S, T>;
+
+    constructor(source: DartStream<S>, transform: (event: S) => T) {
+        super(source);
+        this._transform = transform;
+    }
+
+    _handleData(inputEvent: S, sink: _EventSink<T>): void {
+        let outputEvent: T;
+        try {
+            outputEvent = this._transform(inputEvent);
+        } catch (e) {
+            let s = new DartStackTrace(e);
+            _addErrorWithReplacement(sink, e, s);
+            return;
+        }
+        sink._add(outputEvent);
+    }
+}
+
+/**
+ * A stream pipe that converts data events before passing them on.
+ */
+@DartClass
+class _ExpandStream<S, T> extends _ForwardingStream<S, T> {
+    _expand: _Transformation<S, DartIterable<T>>;
+
+    constructor(source: DartStream<S>, expand: (event: S) => DartIterable<T>) {
+        super(source);
+        this._expand = expand;
+    }
+
+    _handleData(inputEvent: S, sink: _EventSink<T>): void {
+        try {
+            for (let value of this._expand(inputEvent)) {
+                sink._add(value);
+            }
+        } catch (e) {
+            let s = new DartStackTrace(e);
+            // If either _expand or iterating the generated iterator throws,
+            // we abort the iteration.
+            _addErrorWithReplacement(sink, e, s);
+        }
+    }
+}
+
+type  _ErrorTest = (error: any) => bool;
+
+/**
+ * A stream pipe that converts or disposes error events
+ * before passing them on.
+ */
+@DartClass
+class _HandleErrorStream<T> extends _ForwardingStream<T, T> {
+    _transform: Function;
+    _test: _ErrorTest;
+
+    constructor(source: DartStream<T>, onError: Function, test: (error: any) => bool) {
+        super(source);
+        this._transform = onError;
+        this._test = test;
+    }
+
+    _handleError(error: any, stackTrace: DartStackTrace, sink: _EventSink<T>): void {
+        let matches = true;
+        if (this._test != null) {
+            try {
+                matches = this._test(error);
+            } catch (e) {
+                let s = new DartStackTrace(e);
+                _addErrorWithReplacement(sink, e, s);
+                return;
+            }
+        }
+        if (matches) {
+            try {
+                _invokeErrorHandler(this._transform, error, stackTrace);
+            } catch (e) {
+                let s = new DartStackTrace(e);
+                if (identical(e, error)) {
+                    sink._addError(error, stackTrace);
+                } else {
+                    _addErrorWithReplacement(sink, e, s);
+                }
+                return;
+            }
+        } else {
+            sink._addError(error, stackTrace);
+        }
+    }
+}
+
+class _TakeStream<T> extends _ForwardingStream<T, T> {
+    _count: int;
+
+    constructor(source: DartStream<T>, count: int) {
+        super(source);
+        this._count = count;
+        // This test is done early to avoid handling an async error
+        // in the _handleData method.
+        if (_dart.isNot(count, 'int')) throw new ArgumentError(count);
+    }
+
+    _createSubscription(onData: (data: T) => any,
+                        onError: Function, onDone: () => any, cancelOnError: bool): DartStreamSubscription<T> {
+        if (this._count == 0) {
+            this._source.listen(null).cancel();
+            return new _DoneStreamSubscription<T>(onDone);
+        }
+        return new _StateStreamSubscription<T>(this, onData, onError, onDone, cancelOnError, this._count);
+    }
+
+    _handleData(inputEvent: T, sink: _EventSink<T>): void {
+        let subscription: _StateStreamSubscription<T> = sink as any;
+        let count = subscription._count;
+        if (count > 0) {
+            sink._add(inputEvent);
+            count -= 1;
+            subscription._count = count;
+            if (count == 0) {
+                // Closing also unsubscribes all subscribers, which unsubscribes
+                // this from source.
+                sink._close();
+            }
+        }
+    }
+}
+
+/**
+ * A [_ForwardingStreamSubscription] with one extra state field.
+ *
+ * Use by several different classes, storing an integer, bool or general.
+ */
+@DartClass
+class _StateStreamSubscription<T> extends _ForwardingStreamSubscription<T, T> {
+    // Raw state field. Typed access provided by getters and setters below.
+    _sharedState: any;
+
+    constructor(stream: _ForwardingStream<T, T>, onData: (data: T) => any,
+                onError: Function, onDone: () => any, cancelOnError: bool, _sharedState: any) {
+        super(stream, onData, onError, onDone, cancelOnError);
+        this._sharedState = _sharedState;
+    }
+
+    get _flag(): bool {
+        return this._sharedState;
+    }
+
+    set _flag(flag: bool) {
+        this._sharedState = flag;
+    }
+
+
+    get _count(): int {
+        return this._sharedState;
+    }
+
+    set _count(count: int) {
+        this._sharedState = count;
+    }
+
+    get _value(): any {
+        return this._sharedState;
+    }
+
+    set _value(value: any) {
+        this._sharedState = value;
+    }
+}
+
+@DartClass
+class _TakeWhileStream<T> extends _ForwardingStream<T, T> {
+    _test: _Predicate<T>;
+
+    constructor(source: DartStream<T>, test: (value: T) => bool) {
+        super(source);
+        this._test = test;
+    }
+
+    _handleData(inputEvent: T, sink: _EventSink<T>): void {
+        let satisfies: bool;
+        try {
+            satisfies = this._test(inputEvent);
+        } catch (e) {
+            let s = new DartStackTrace(e);
+            _addErrorWithReplacement(sink, e, s);
+            // The test didn't say true. Didn't say false either, but we stop anyway.
+            sink._close();
+            return;
+        }
+        if (satisfies) {
+            sink._add(inputEvent);
+        } else {
+            sink._close();
+        }
+    }
+}
+
+@DartClass
+class _SkipStream<T> extends _ForwardingStream<T, T> {
+    _count: int;
+
+    constructor(source: DartStream<T>, count: int) {
+        super(source);
+        this._count = count;
+        // This test is done early to avoid handling an async error
+        // in the _handleData method.
+        if (_dart.isNot(count, 'int') || count < 0) throw new ArgumentError(count);
+    }
+
+    _createSubscription(onData: (data: T) => any,
+                        onError: Function, onDone: () => any, cancelOnError: bool): DartStreamSubscription<T> {
+        return new _StateStreamSubscription<T>(this, onData, onError, onDone, cancelOnError, this._count);
+    }
+
+    _handleData(inputEvent: T, sink: _EventSink<T>): void {
+        let subscription: _StateStreamSubscription<T> = sink as any;
+        let count = subscription._count;
+        if (count > 0) {
+            subscription._count = count - 1;
+            return;
+        }
+        sink._add(inputEvent);
+    }
+}
+
+@DartClass
+class _SkipWhileStream<T> extends _ForwardingStream<T, T> {
+    _test: _Predicate<T>;
+
+    constructor(source: DartStream<T>, test: (value: T) => bool) {
+        super(source);
+        this._test = test;
+    }
+
+    _createSubscription(onData: (data: T) => any,
+                        onError: Function, onDone: () => any, cancelOnError: bool): DartStreamSubscription<T> {
+        return new _StateStreamSubscription<T>(
+            this, onData, onError, onDone, cancelOnError, false);
+    }
+
+    _handleData(inputEvent: T, sink: _EventSink<T>): void {
+        let subscription: _StateStreamSubscription<T> = sink as any;
+        let hasFailed = subscription._flag;
+        if (hasFailed) {
+            sink._add(inputEvent);
+            return;
+        }
+        let satisfies: bool;
+        try {
+            satisfies = this._test(inputEvent);
+        } catch (e) {
+            let s = new DartStackTrace(e);
+            _addErrorWithReplacement(sink, e, s);
+            // A failure to return a boolean is considered "not matching".
+            subscription._flag = true;
+            return;
+        }
+        if (!satisfies) {
+            subscription._flag = true;
+            sink._add(inputEvent);
+        }
+    }
+}
+
+type  _Equality<T> = (a: T, b: T) => bool;
+
+@DartClass
+class _DistinctStream<T> extends _ForwardingStream<T, T> {
+    static _SENTINEL: any = {};
+
+    _equals: _Equality<T>;
+
+    constructor(source: DartStream<T>, equals: (a: T, b: T) => bool) {
+        super(source);
+        this._equals = equals;
+    }
+
+    _createSubscription(onData: (data: T) => any,
+                        onError: Function, onDone: () => any, cancelOnError: bool): DartStreamSubscription<T> {
+        return new _StateStreamSubscription<T>(
+            this, onData, onError, onDone, cancelOnError, _DistinctStream._SENTINEL);
+    }
+
+    _handleData(inputEvent: T, sink: _EventSink<T>): void {
+        let subscription: _StateStreamSubscription<T> = sink as any;
+        var previous = subscription._value;
+        if (identical(previous, _DistinctStream._SENTINEL)) {
+            // First event.
+            subscription._value = inputEvent;
+            sink._add(inputEvent);
+        } else {
+            let previousEvent: T = previous;
+            let isEqual: bool;
+            try {
+                if (this._equals == null) {
+                    isEqual = (_dart.equals(previousEvent, inputEvent));
+                } else {
+                    isEqual = this._equals(previousEvent, inputEvent);
+                }
+            } catch (e) {
+                let s = new DartStackTrace(e);
+                _addErrorWithReplacement(sink, e, s);
+                return;
+            }
+            if (!isEqual) {
+                sink._add(inputEvent);
+                subscription._value = inputEvent;
+            }
+        }
     }
 }
 
