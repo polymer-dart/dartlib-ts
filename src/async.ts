@@ -9915,6 +9915,390 @@ class _AsBroadcastStreamController<T> extends _SyncBroadcastStreamController<T>
     }
 }
 
+// Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
+//part of dart.async;
+
+/**
+ * Wraps an [_EventSink] so it exposes only the [EventSink] interface.
+ */
+class _EventSinkWrapper<T> implements DartEventSink<T> {
+    _sink: _EventSink<T>;
+
+    constructor(_sink: _EventSink<T>) {
+        this._sink = _sink;
+    }
+
+    add(data: T): void {
+        this._sink._add(data);
+    }
+
+    addError(error: any, stackTrace?: DartStackTrace): void {
+        this._sink._addError(error, stackTrace);
+    }
+
+    close(): void {
+        this._sink._close();
+    }
+}
+
+/**
+ * A StreamSubscription that pipes data through a sink.
+ *
+ * The constructor of this class takes a [_SinkMapper] which maps from
+ * [EventSink] to [EventSink]. The input to the mapper is the output of
+ * the transformation. The returned sink is the transformation's input.
+ */
+class _SinkTransformerStreamSubscription<S, T>
+    extends _BufferingStreamSubscription<T> {
+    /// The transformer's input sink.
+    _transformerSink: DartEventSink<S>;
+
+    /// The subscription to the input stream.
+    _subscription: DartStreamSubscription<S>;
+
+    constructor(source: DartStream<S>, mapper: _SinkMapper<S, T>,
+                onData: (data: T) => any, onError: Function, onDone: () => any, cancelOnError: bool) {
+        // We set the adapter's target only when the user is allowed to send data.
+        super(onData, onError, onDone, cancelOnError);
+        let eventSink = new _EventSinkWrapper<T>(this);
+        this._transformerSink = mapper(eventSink);
+        this._subscription =
+            source.listen(this._handleData.bind(this), {onError: this._handleError.bind(this), onDone: this._handleDone.bind(this)});
+    }
+
+    /** Whether this subscription is still subscribed to its source. */
+    get _isSubscribed(): bool {
+        return this._subscription != null;
+    }
+
+    // _EventSink interface.
+
+    /**
+     * Adds an event to this subscriptions.
+     *
+     * Contrary to normal [_BufferingStreamSubscription]s we may receive
+     * events when the stream is already closed. Report them as state
+     * error.
+     */
+    _add(data: T): void {
+        if (this._isClosed) {
+            throw new StateError("Stream is already closed");
+        }
+        super._add(data);
+    }
+
+    /**
+     * Adds an error event to this subscriptions.
+     *
+     * Contrary to normal [_BufferingStreamSubscription]s we may receive
+     * events when the stream is already closed. Report them as state
+     * error.
+     */
+    _addError(error: any, stackTrace: DartStackTrace): void {
+        if (this._isClosed) {
+            throw new StateError("Stream is already closed");
+        }
+        super._addError(error, stackTrace);
+    }
+
+    /**
+     * Adds a close event to this subscriptions.
+     *
+     * Contrary to normal [_BufferingStreamSubscription]s we may receive
+     * events when the stream is already closed. Report them as state
+     * error.
+     */
+    _close(): void {
+        if (this._isClosed) {
+            throw new StateError("Stream is already closed");
+        }
+        super._close();
+    }
+
+    // _BufferingStreamSubscription hooks.
+
+    _onPause(): void {
+        if (this._isSubscribed) this._subscription.pause();
+    }
+
+    _onResume(): void {
+        if (this._isSubscribed) this._subscription.resume();
+    }
+
+    _onCancel(): Future<any> {
+        if (this._isSubscribed) {
+            let subscription: DartStreamSubscription<any> = this._subscription;
+            this._subscription = null;
+            return subscription.cancel();
+        }
+        return null;
+    }
+
+    _handleData(data: S): void {
+        try {
+            this._transformerSink.add(data);
+        } catch (e) {
+            let s = new DartStackTrace(e);
+            this._addError(e, s);
+        }
+    }
+
+    _handleError(error: any, stackTrace?: DartStackTrace): void {
+        try {
+            this._transformerSink.addError(error, stackTrace);
+        } catch (e) {
+            let s = new DartStackTrace(e);
+            if (identical(e, error)) {
+                this._addError(error, stackTrace);
+            } else {
+                this._addError(e, s);
+            }
+        }
+    }
+
+    _handleDone(): void {
+        try {
+            this._subscription = null;
+            this._transformerSink.close();
+        } catch (e) {
+            let s = new DartStackTrace(e);
+            this._addError(e, s);
+        }
+    }
+}
+
+type  _SinkMapper<S, T> = (output: DartEventSink<T>) => DartEventSink<S>;
+
+/**
+ * A StreamTransformer for Sink-mappers.
+ *
+ * A Sink-mapper takes an [EventSink] (its output) and returns another
+ * EventSink (its input).
+ *
+ * Note that this class can be `const`.
+ */
+@DartClass
+class _StreamSinkTransformer<S, T> implements DartStreamTransformer<S, T> {
+    _sinkMapper: _SinkMapper<S, T>;
+
+    @defaultConstructor
+    protected _StreamSinkTransformer(_sinkMapper: _SinkMapper<S, T>) {
+        this._sinkMapper = _sinkMapper;
+    }
+
+    constructor(_sinkMapper: _SinkMapper<S, T>) {
+    }
+
+    bind(stream: DartStream<S>): DartStream<T> {
+        return new _BoundSinkStream<S, T>(stream, this._sinkMapper);
+    }
+}
+
+/**
+ * The result of binding a StreamTransformer for Sink-mappers.
+ *
+ * It contains the bound Stream and the sink-mapper. Only when the user starts
+ * listening to this stream is the sink-mapper invoked. The result is used
+ * to create a StreamSubscription that transforms events.
+ */
+class _BoundSinkStream<S, T> extends DartStream<T> {
+    _sinkMapper: _SinkMapper<S, T>;
+    _stream: DartStream<S>;
+
+    get isBroadcast(): bool {
+        return this._stream.isBroadcast;
+    }
+
+    constructor(_stream: DartStream<S>, _sinkMapper: _SinkMapper<S, T>) {
+        super();
+        this._stream = _stream;
+        this._sinkMapper = _sinkMapper
+    }
+
+    listen(onData: (event: T) => any,
+           _?: { onError: Function, onDone: () => any, cancelOnError: bool }): DartStreamSubscription<T> {
+        let {onError, onDone, cancelOnError} = Object.assign({}, _);
+        cancelOnError = identical(true, cancelOnError);
+        let subscription: DartStreamSubscription<T> =
+            new _SinkTransformerStreamSubscription<S, T>(
+                this._stream, this._sinkMapper, onData, onError, onDone, cancelOnError);
+        return subscription;
+    }
+}
+
+/// Data-handler coming from [StreamTransformer.fromHandlers].
+type  _TransformDataHandler<S, T> = (data: S, sink: DartEventSink<T>) => any;
+
+/// Error-handler coming from [StreamTransformer.fromHandlers].
+type  _TransformErrorHandler<T> = (error: any, stackTrace: DartStackTrace, sink: DartEventSink<T>) => any;
+
+/// Done-handler coming from [StreamTransformer.fromHandlers].
+type  _TransformDoneHandler<T> = (sink: DartEventSink<T>) => any;
+
+/**
+ * Wraps handlers (from [StreamTransformer.fromHandlers]) into an `EventSink`.
+ *
+ * This way we can reuse the code from [_StreamSinkTransformer].
+ */
+class _HandlerEventSink<S, T> implements DartEventSink<S> {
+    _handleData: _TransformDataHandler<S, T>;
+    _handleError: _TransformErrorHandler<T>;
+    _handleDone: _TransformDoneHandler<T>;
+
+    /// The output sink where the handlers should send their data into.
+    _sink: DartEventSink<T>;
+
+    constructor(
+        _handleData: _TransformDataHandler<S, T>, _handleError: _TransformErrorHandler<T>, _handleDone: _TransformDoneHandler<T>, _sink: DartEventSink<T>) {
+        this._handleData = _handleData;
+        this._handleError = _handleError;
+        this._handleDone = _handleDone;
+        this._sink = _sink;
+        if (_sink == null) {
+            throw new ArgumentError("The provided sink must not be null.");
+        }
+    }
+
+    get _isClosed(): bool {
+        return this._sink == null;
+    }
+
+    _reportClosedSink() {
+        // TODO(29554): throw a StateError, and don't just report the problem.
+        $with(DartZone.ROOT,
+            (z) => z.print("Sink is closed and adding to it is an error."),
+            (z) => z.print("  See http://dartbug.com/29554."),
+            (z) => z.print(DartStackTrace.current.toString()));
+    }
+
+    add(data: S): void {
+        if (this._isClosed) {
+            this._reportClosedSink();
+        }
+        if (this._handleData != null) {
+            this._handleData(data, this._sink);
+        } else {
+            this._sink.add(data as any);
+        }
+    }
+
+    addError(error: any, stackTrace?: DartStackTrace): void {
+        if (this._isClosed) {
+            this._reportClosedSink();
+        }
+        if (this._handleError != null) {
+            this._handleError(error, stackTrace, this._sink);
+        } else {
+            this._sink.addError(error, stackTrace);
+        }
+    }
+
+    close(): void {
+        if (this._isClosed) return;
+        let sink = this._sink;
+        this._sink = null;
+        if (this._handleDone != null) {
+            this._handleDone(sink);
+        } else {
+            sink.close();
+        }
+    }
+}
+
+/**
+ * A StreamTransformer that transformers events with the given handlers.
+ *
+ * Note that this transformer can only be used once.
+ */
+@DartClass
+class _StreamHandlerTransformer<S, T> extends _StreamSinkTransformer<S, T> {
+    @defaultConstructor
+    _StreamHandlerTransformer(_?:
+                                  {
+                                      handleData?: (data: S, sink: DartEventSink<T>) => any,
+                                      handleError?: (error: any, stackTrace: DartStackTrace, sink: DartEventSink<T>) => any,
+                                      handleDone?: (sink: DartEventSink<T>) => any
+                                  }) {
+        let {handleData, handleError, handleDone} = Object.assign({}, _);
+        super._StreamSinkTransformer((outputSink: DartEventSink<T>) => {
+            return new _HandlerEventSink<S, T>(
+                handleData, handleError, handleDone, outputSink);
+        });
+    }
+
+    constructor(_?:
+                    {
+                        handleData?: (data: S, sink: DartEventSink<T>) => any,
+                        handleError?: (error: any, stackTrace: DartStackTrace, sink: DartEventSink<T>) => any,
+                        handleDone?: (sink: DartEventSink<T>) => any
+                    }) {
+        super(null);
+    }
+
+    bind(stream: DartStream<S>): DartStream<T> {
+        return super.bind(stream);
+    }
+}
+
+/// A closure mapping a stream and cancelOnError to a StreamSubscription.
+type  _SubscriptionTransformer<S, T> = (stream: DartStream<S>, cancelOnError: bool) => DartStreamSubscription<T>;
+
+/**
+ * A [StreamTransformer] that minimizes the number of additional classes.
+ *
+ * Instead of implementing three classes: a [StreamTransformer], a [Stream]
+ * (as the result of a `bind` call) and a [StreamSubscription] (which does the
+ * actual work), this class only requires a function that is invoked when the
+ * last bit (the subscription) of the transformer-workflow is needed.
+ *
+ * The given transformer function maps from Stream and cancelOnError to a
+ * `StreamSubscription`. As such it can also act on `cancel` events, making it
+ * fully general.
+ */
+class _StreamSubscriptionTransformer<S, T> implements DartStreamTransformer<S, T> {
+    _onListen: _SubscriptionTransformer<S, T>;
+
+    constructor(_onListen: _SubscriptionTransformer<S, T>) {
+        this._onListen = _onListen;
+    }
+
+    bind(stream: DartStream<S>): DartStream<T> {
+        return new _BoundSubscriptionStream<S, T>(stream, this._onListen);
+    }
+}
+
+/**
+ * A stream transformed by a [_StreamSubscriptionTransformer].
+ *
+ * When this stream is listened to it invokes the [_onListen] function with
+ * the stored [_stream]. Usually the transformer starts listening at this
+ * moment.
+ */
+class _BoundSubscriptionStream<S, T> extends DartStream<T> {
+    _onListen: _SubscriptionTransformer<S, T>;
+    _stream: DartStream<S>;
+
+    constructor(_stream: DartStream<S>, _onListen: _SubscriptionTransformer<S, T>) {
+        super();
+        this._stream = _stream;
+        this._onListen = _onListen;
+    }
+
+    listen(onData: (event: T) => any, _?:
+        { onError?: Function, onDone?: () => any, cancelOnError?: bool }): DartStreamSubscription<T> {
+        let {onError, onDone, cancelOnError} = Object.assign({}, _);
+        cancelOnError = identical(true, cancelOnError);
+        let result: DartStreamSubscription<T> = this._onListen(this._stream, cancelOnError);
+        result.onData(onData);
+        result.onError(onError);
+        result.onDone(onDone);
+        return result;
+    }
+}
+
 
 export {
     Future,

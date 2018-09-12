@@ -12258,6 +12258,10 @@ class DartStackTrace {
 
     }
 
+    static get current():DartStackTrace {
+        return new DartStackTrace(new Error());
+    }
+
     @namedFactory
     protected static _fromError(e: Error): DartStackTrace {
         return new DartStackTrace._();
