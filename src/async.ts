@@ -9334,6 +9334,587 @@ class _StreamControllerAddStreamState<T> extends _AddStreamState<T> {
     }
 }
 
+// Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
+//part of dart.async;
+
+class _BroadcastStream<T> extends _ControllerStream<T> {
+    constructor(controller: _StreamControllerLifecycle<T>) {
+        super(controller);
+    }
+
+    get isBroadcast(): bool {
+        return true;
+    }
+}
+
+class _BroadcastSubscription<T> extends _ControllerSubscription<T> {
+    static _STATE_EVENT_ID = 1;
+    static _STATE_FIRING = 2;
+    static _STATE_REMOVE_AFTER_FIRING = 4;
+    // TODO(lrn): Use the _state field on _ControllerSubscription to
+    // also store this state. Requires that the subscription implementation
+    // does not assume that it's use of the state integer is the only use.
+    _eventState: int = 0; // Initialized to help dart2js type inference.
+
+    _next: _BroadcastSubscription<T>;
+    _previous: _BroadcastSubscription<T>;
+
+    constructor(controller: _StreamControllerLifecycle<T>,
+                onData: (data: T) => any, onError: Function, onDone: () => any, cancelOnError: bool) {
+        super(controller, onData, onError, onDone, cancelOnError);
+        this._next = this._previous = this;
+    }
+
+    _expectsEvent(eventId: int): bool {
+        return (this._eventState & _BroadcastSubscription._STATE_EVENT_ID) == eventId;
+    }
+
+    _toggleEventId(): void {
+        this._eventState ^= _BroadcastSubscription._STATE_EVENT_ID;
+    }
+
+    get _isFiring(): bool {
+        return (this._eventState & _BroadcastSubscription._STATE_FIRING) != 0;
+    }
+
+    _setRemoveAfterFiring(): void {
+        //assert(_isFiring);
+        this._eventState |= _BroadcastSubscription._STATE_REMOVE_AFTER_FIRING;
+    }
+
+    get _removeAfterFiring(): bool {
+        return (this._eventState & _BroadcastSubscription._STATE_REMOVE_AFTER_FIRING) != 0;
+    }
+
+    // The controller._recordPause doesn't do anything for a broadcast controller,
+    // so we don't bother calling it.
+    _onPause(): void {
+    }
+
+    // The controller._recordResume doesn't do anything for a broadcast
+    // controller, so we don't bother calling it.
+    _onResume(): void {
+    }
+
+    // _onCancel is inherited.
+}
+
+class _BroadcastStreamController<T>
+    extends DartStreamController<T>
+    implements _StreamControllerLifecycle<T>,
+        _EventSink<T>,
+        _EventDispatch<T> {
+    static _STATE_INITIAL = 0;
+    static _STATE_EVENT_ID = 1;
+    static _STATE_FIRING = 2;
+    static _STATE_CLOSED = 4;
+    static _STATE_ADDSTREAM = 8;
+
+    onListen: ControllerCallback;
+    onCancel: ControllerCancelCallback;
+
+    // State of the controller.
+    _state: int;
+
+    // Double-linked list of active listeners.
+    _firstSubscription: _BroadcastSubscription<T>;
+    _lastSubscription: _BroadcastSubscription<T>;
+
+    // Extra state used during an [addStream] call.
+    _addStreamState: _AddStreamState<T>;
+
+    /**
+     * Future returned by [close] and [done].
+     *
+     * The future is completed whenever the done event has been sent to all
+     * relevant listeners.
+     * The relevant listeners are the ones that were listening when [close] was
+     * called. When all of these have been canceled (sending the done event makes
+     * them cancel, but they can also be canceled before sending the event),
+     * this future completes.
+     *
+     * Any attempt to listen after calling [close] will throw, so there won't
+     * be any further listeners.
+     */
+    _doneFuture: _Future<any>;
+
+    constructor(onListen: ControllerCallback, onCancel: ControllerCancelCallback) {
+        super();
+        this.onListen = onListen;
+        this.onCancel = onCancel;
+        this._state = _BroadcastStreamController._STATE_INITIAL;
+    }
+
+    get onPause(): ControllerCallback {
+        throw new UnsupportedError(
+            "Broadcast stream controllers do not support pause callbacks");
+    }
+
+    set onPause(onPauseHandler: ControllerCallback) {
+        throw new UnsupportedError(
+            "Broadcast stream controllers do not support pause callbacks");
+    }
+
+    get onResume(): ControllerCallback {
+        throw new UnsupportedError(
+            "Broadcast stream controllers do not support pause callbacks");
+    }
+
+    set onResume(onResumeHandler: ControllerCallback) {
+        throw new UnsupportedError(
+            "Broadcast stream controllers do not support pause callbacks");
+    }
+
+    // StreamController interface.
+
+    get stream(): DartStream<T> {
+        return new _BroadcastStream<T>(this);
+    }
+
+    get sink(): DartStreamSink<T> {
+        return new _StreamSinkWrapper<T>(this);
+    }
+
+    get isClosed(): bool {
+        return (this._state & _BroadcastStreamController._STATE_CLOSED) != 0;
+    }
+
+    /**
+     * A broadcast controller is never paused.
+     *
+     * Each receiving stream may be paused individually, and they handle their
+     * own buffering.
+     */
+    get isPaused(): bool {
+        return false;
+    }
+
+    /** Whether there are currently one or more subscribers. */
+    get hasListener(): bool {
+        return !this._isEmpty;
+    }
+
+    /**
+     * Test whether the stream has exactly one listener.
+     *
+     * Assumes that the stream has a listener (not [_isEmpty]).
+     */
+    get _hasOneListener(): bool {
+        //assert(!_isEmpty);
+        return identical(this._firstSubscription, this._lastSubscription);
+    }
+
+    /** Whether an event is being fired (sent to some, but not all, listeners). */
+    get _isFiring(): bool {
+        return (this._state & _BroadcastStreamController._STATE_FIRING) != 0;
+    }
+
+    get _isAddingStream(): bool {
+        return (this._state & _BroadcastStreamController._STATE_ADDSTREAM) != 0;
+    }
+
+    get _mayAddEvent(): bool {
+        return (this._state < _BroadcastStreamController._STATE_CLOSED);
+    }
+
+    _ensureDoneFuture(): _Future<any> {
+        if (this._doneFuture != null) return this._doneFuture;
+        return this._doneFuture = new _Future<any>();
+    }
+
+    // Linked list helpers
+    get _isEmpty(): bool {
+        return this._firstSubscription == null;
+    }
+
+    /** Adds subscription to linked list of active listeners. */
+    _addListener(subscription: _BroadcastSubscription<T>): void {
+        //assert(identical(subscription._next, subscription));
+        subscription._eventState = (this._state & _BroadcastStreamController._STATE_EVENT_ID);
+        // Insert in linked list as last subscription.
+        let oldLast = this._lastSubscription;
+        this._lastSubscription = subscription;
+        subscription._next = null;
+        subscription._previous = oldLast;
+        if (oldLast == null) {
+            this._firstSubscription = subscription;
+        } else {
+            oldLast._next = subscription;
+        }
+    }
+
+    _removeListener(subscription: _BroadcastSubscription<T>): void {
+        //assert(identical(subscription._controller, this));
+        //assert(!identical(subscription._next, subscription));
+        let previous: _BroadcastSubscription<T> = subscription._previous;
+        let next: _BroadcastSubscription<T> = subscription._next;
+        if (previous == null) {
+            // This was the first subscription.
+            this._firstSubscription = next;
+        } else {
+            previous._next = next;
+        }
+        if (next == null) {
+            // This was the last subscription.
+            this._lastSubscription = previous;
+        } else {
+            next._previous = previous;
+        }
+
+        subscription._next = subscription._previous = subscription;
+    }
+
+    // _StreamControllerLifecycle interface.
+    _subscribe(onData: (data: T) => any, onError: Function,
+               onDone: () => any, cancelOnError: bool): DartStreamSubscription<T> {
+        if (this.isClosed) {
+            if (onDone == null) onDone = _nullDoneHandler;
+            return new _DoneStreamSubscription<T>(onDone);
+        }
+        let subscription: _BroadcastSubscription<T> = new _BroadcastSubscription<T>(this, onData, onError, onDone, cancelOnError);
+        this._addListener(subscription);
+        if (identical(this._firstSubscription, this._lastSubscription)) {
+            // Only one listener, so it must be the first listener.
+            _runGuarded(this.onListen);
+        }
+        return subscription;
+    }
+
+    _recordCancel(sub: DartStreamSubscription<T>): Future<any> {
+        let subscription: _BroadcastSubscription<T> = sub as any;
+        // If already removed by the stream, don't remove it again.
+        if (identical(subscription._next, subscription)) return null;
+        if (subscription._isFiring) {
+            subscription._setRemoveAfterFiring();
+        } else {
+            this._removeListener(subscription);
+            // If we are currently firing an event, the empty-check is performed at
+            // the end of the listener loop instead of here.
+            if (!this._isFiring && this._isEmpty) {
+                this._callOnCancel();
+            }
+        }
+        return null;
+    }
+
+    _recordPause(subscription: DartStreamSubscription<T>): void {
+    }
+
+    _recordResume(subscription: DartStreamSubscription<T>): void {
+    }
+
+    // EventSink interface.
+    _addEventError(): DartError {
+        if (this.isClosed) {
+            return new StateError("Cannot add new events after calling close");
+        }
+        //assert(_isAddingStream);
+        return new StateError("Cannot add new events while doing an addStream");
+    }
+
+    add(data: T) {
+        if (!this._mayAddEvent) throw this._addEventError();
+        this._sendData(data);
+    }
+
+    addError(error: any, stackTrace?: DartStackTrace): void {
+        error = _nonNullError(error);
+        if (!this._mayAddEvent) throw this._addEventError();
+        let replacement = DartZone.current.errorCallback(error, stackTrace);
+        if (replacement != null) {
+            error = _nonNullError(replacement.error);
+            stackTrace = replacement.stackTrace;
+        }
+        this._sendError(error, stackTrace);
+    }
+
+    close(): Future<any> {
+        if (this.isClosed) {
+            //assert(_doneFuture != null);
+            return this._doneFuture;
+        }
+        if (!this._mayAddEvent) throw this._addEventError();
+        this._state |= _BroadcastStreamController._STATE_CLOSED;
+        let doneFuture: Future<any> = this._ensureDoneFuture();
+        this._sendDone();
+        return doneFuture;
+    }
+
+    get done(): Future<any> {
+        return this._ensureDoneFuture();
+    }
+
+    addStream(stream: DartStream<T>, _?: { cancelOnError: bool /*true*/ }): Future<any> {
+        let {cancelOnError} = Object.assign({cancelOnError: true}, _);
+        if (!this._mayAddEvent) throw this._addEventError();
+        this._state |= _BroadcastStreamController._STATE_ADDSTREAM;
+        this._addStreamState = new _AddStreamState(this, stream, cancelOnError);
+        return this._addStreamState.addStreamFuture;
+    }
+
+    // _EventSink interface, called from AddStreamState.
+    _add(data: T): void {
+        this._sendData(data);
+    }
+
+    _addError(error: any, stackTrace: DartStackTrace): void {
+        this._sendError(error, stackTrace);
+    }
+
+    _close(): void {
+        //assert(_isAddingStream);
+        let addState: _AddStreamState<T> = this._addStreamState;
+        this._addStreamState = null;
+        this._state &= ~_BroadcastStreamController._STATE_ADDSTREAM;
+        addState.complete();
+    }
+
+    // Event handling.
+    _forEachListener(
+        action: (subscription: _BufferingStreamSubscription<T>) => any): void {
+        if (this._isFiring) {
+            throw new StateError(
+                "Cannot fire new event. Controller is already firing an event");
+        }
+        if (this._isEmpty) return;
+
+        // Get event id of this event.
+        let id = (this._state & _BroadcastStreamController._STATE_EVENT_ID);
+        // Start firing (set the _BroadcastStreamController._STATE_FIRING bit). We don't do [onCancel]
+        // callbacks while firing, and we prevent reentrancy of this function.
+        //
+        // Set [_state]'s event id to the next event's id.
+        // Any listeners added while firing this event will expect the next event,
+        // not this one, and won't get notified.
+        this._state ^= _BroadcastStreamController._STATE_EVENT_ID | _BroadcastStreamController._STATE_FIRING;
+        let subscription: _BroadcastSubscription<T> = this._firstSubscription;
+        while (subscription != null) {
+            if (subscription._expectsEvent(id)) {
+                subscription._eventState |= _BroadcastSubscription._STATE_FIRING;
+                action(subscription);
+                subscription._toggleEventId();
+                let next: _BroadcastSubscription<T> = subscription._next;
+                if (subscription._removeAfterFiring) {
+                    this._removeListener(subscription);
+                }
+                subscription._eventState &= ~_BroadcastSubscription._STATE_FIRING;
+                subscription = next;
+            } else {
+                subscription = subscription._next;
+            }
+        }
+        this._state &= ~_BroadcastStreamController._STATE_FIRING;
+
+        if (this._isEmpty) {
+            this._callOnCancel();
+        }
+    }
+
+    _callOnCancel(): void {
+        //assert(_isEmpty);
+        if (this.isClosed && this._doneFuture._mayComplete) {
+            // When closed, _doneFuture is not null.
+            this._doneFuture._asyncComplete(null);
+        }
+        _runGuarded(this.onCancel);
+    }
+
+    @Abstract
+    _sendData(data: T): void {
+        throw 'abstract';
+    }
+
+    @Abstract
+    _sendDone(): void {
+        throw 'abstract';
+    }
+
+    @Abstract
+    _sendError(error: any, stackTrace: DartStackTrace): void {
+        throw 'abstract';
+    }
+
+    @Abstract
+    equals(other): bool {
+        throw 'abstract';
+    }
+
+    @Abstract
+    get hashCode(): int {
+        throw 'abstract';
+    }
+}
+
+class _SyncBroadcastStreamController<T> extends _BroadcastStreamController<T>
+    implements SynchronousStreamController<T> {
+    constructor(onListen: () => any, onCancel: () => any) {
+        super(onListen, onCancel);
+    }
+
+    // EventDispatch interface.
+
+    get _mayAddEvent(): bool {
+        return super._mayAddEvent && !this._isFiring;
+    }
+
+    _addEventError() {
+        if (this._isFiring) {
+            return new StateError("Cannot fire new event. Controller is already firing an event");
+        }
+        return super._addEventError();
+    }
+
+    _sendData(data: T): void {
+        if (this._isEmpty) return;
+        if (this._hasOneListener) {
+            this._state |= _BroadcastStreamController._STATE_FIRING;
+            let subscription: _BroadcastSubscription<T> = this._firstSubscription;
+            subscription._add(data);
+            this._state &= ~_BroadcastStreamController._STATE_FIRING;
+            if (this._isEmpty) {
+                this._callOnCancel();
+            }
+            return;
+        }
+        this._forEachListener((subscription: _BufferingStreamSubscription<T>) => {
+            subscription._add(data);
+        });
+    }
+
+    _sendError(error: any, stackTrace: DartStackTrace): void {
+        if (this._isEmpty) return;
+        this._forEachListener((subscription: _BufferingStreamSubscription<T>) => {
+            subscription._addError(error, stackTrace);
+        });
+    }
+
+    _sendDone(): void {
+        if (!this._isEmpty) {
+            this._forEachListener((subscription: _BufferingStreamSubscription<T>) => {
+                subscription._close();
+            });
+        } else {
+            //assert(_doneFuture != null);
+            // assert(_doneFuture._mayComplete);
+            this._doneFuture._asyncComplete(null);
+        }
+    }
+}
+
+class _AsyncBroadcastStreamController<T> extends _BroadcastStreamController<T> {
+    constructor(onListen: () => any, onCancel: () => any) {
+        super(onListen, onCancel);
+    }
+
+    // EventDispatch interface.
+
+    _sendData(data: T): void {
+        for (let subscription = this._firstSubscription;
+             subscription != null;
+             subscription = subscription._next) {
+            subscription._addPending(new _DelayedData<T>(data));
+        }
+    }
+
+    _sendError(error: any, stackTrace: DartStackTrace): void {
+        for (let subscription = this._firstSubscription;
+             subscription != null;
+             subscription = subscription._next) {
+            subscription._addPending(new _DelayedError(error, stackTrace));
+        }
+    }
+
+    _sendDone(): void {
+        if (!this._isEmpty) {
+            for (let subscription = this._firstSubscription;
+                 subscription != null;
+                 subscription = subscription._next) {
+                subscription._addPending(new _DelayedDone());
+            }
+        } else {
+            //assert(_doneFuture != null);
+            //assert(_doneFuture._mayComplete);
+            this._doneFuture._asyncComplete(null);
+        }
+    }
+}
+
+/**
+ * Stream controller that is used by [Stream.asBroadcastStream].
+ *
+ * This stream controller allows incoming events while it is firing
+ * other events. This is handled by delaying the events until the
+ * current event is done firing, and then fire the pending events.
+ *
+ * This class extends [_SyncBroadcastStreamController]. Events of
+ * an "asBroadcastStream" stream are always initiated by events
+ * on another stream, and it is fine to forward them synchronously.
+ */
+class _AsBroadcastStreamController<T> extends _SyncBroadcastStreamController<T>
+    implements _EventDispatch<T> {
+    _pending: _StreamImplEvents<T>;
+
+    constructor(onListen: () => any, onCancel: () => any) {
+        super(onListen, onCancel);
+    }
+
+    get _hasPending(): bool {
+        return this._pending != null && !this._pending.isEmpty;
+    }
+
+    _addPendingEvent(event: _DelayedEvent<any>): void {
+        if (this._pending == null) {
+            this._pending = new _StreamImplEvents<T>();
+        }
+        this._pending.add(event);
+    }
+
+    add(data: T): void {
+        if (!this.isClosed && this._isFiring) {
+            this._addPendingEvent(new _DelayedData<T>(data));
+            return;
+        }
+        super.add(data);
+        while (this._hasPending) {
+            this._pending.handleNext(this);
+        }
+    }
+
+    addError(error: any, stackTrace?: DartStackTrace): void {
+        if (!this.isClosed && this._isFiring) {
+            this._addPendingEvent(new _DelayedError(error, stackTrace));
+            return;
+        }
+        if (!this._mayAddEvent) throw this._addEventError();
+        this._sendError(error, stackTrace);
+        while (this._hasPending) {
+            this._pending.handleNext(this);
+        }
+    }
+
+    close(): Future<any> {
+        if (!this.isClosed && this._isFiring) {
+            this._addPendingEvent(new _DelayedDone());
+            this._state |= _BroadcastStreamController._STATE_CLOSED;
+            return super.done;
+        }
+        let result: Future<any> = super.close();
+        //assert(!_hasPending);
+        return result;
+    }
+
+    _callOnCancel(): void {
+        if (this._hasPending) {
+            this._pending.clear();
+            this._pending = null;
+        }
+        super._callOnCancel();
+    }
+}
+
 
 export {
     Future,
