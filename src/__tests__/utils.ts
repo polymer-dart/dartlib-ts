@@ -1,4 +1,4 @@
-import {mixin, DartClass, defaultConstructor, namedConstructor, DartConstructor, Abstract, With, AbstractProperty, AbstractMethods, Implements, isA, Operator, Op, EQUALS_OPERATOR, OPERATOR_PLUS} from "../utils"
+import {mixin, DartClass, defaultConstructor, namedConstructor, DartConstructor, Abstract, With, AbstractProperty, AbstractMethods, Implements, isA, Operator, Op, EQUALS_OPERATOR, OPERATOR_PLUS, defaultFactory} from "../utils"
 import _dart from '../_common';
 
 describe("Utils", () => {
@@ -602,4 +602,153 @@ describe("Utils", () => {
         expect(A[EQUALS_OPERATOR](B)).toBe(false);
         expect(C[EQUALS_OPERATOR](D)).toBe(true);
     });
+
+    it('dart class can be extended like normal class', () => {
+        @DartClass
+        class WithDefaultConstructor {
+            s: string;
+
+            constructor(s: string) {
+
+            }
+
+            @defaultConstructor
+            protected _init(s: string) {
+                this.s = s;
+            }
+        }
+
+        class NormalClass extends WithDefaultConstructor {
+            constructor() {
+                super('some');
+            }
+        }
+
+        expect(new NormalClass().s).toEqual('some');
+    });
+
+    it('dart class can be extended like normal class with factory', () => {
+        @DartClass
+        class WithDefaultFactoryConstructor {
+            s: string;
+
+            constructor(s: string) {
+
+            }
+
+            @namedConstructor
+            protected named() {
+            }
+
+            static named: new() => WithDefaultFactoryConstructor;
+
+            @defaultFactory
+            protected static _init(s: string): WithDefaultFactoryConstructor {
+                let res = new WithDefaultFactoryConstructor.named();
+                res.s = s;
+                return res;
+            }
+        }
+
+        class NormalClass extends WithDefaultFactoryConstructor {
+            constructor() {
+                super('some');
+            }
+        }
+
+        expect(new NormalClass().s).toEqual('some');
+    });
+
+    it('dart class can be extended like normal class even with dartclass', () => {
+        @DartClass
+        class WithDefaultConstructor {
+            s: string;
+
+            constructor(s: string) {
+
+            }
+
+            @defaultConstructor
+            protected _init(s: string) {
+                this.s = s;
+            }
+        }
+
+        @DartClass
+        class NormalClass extends WithDefaultConstructor {
+            constructor() {
+                super('some');
+            }
+        }
+
+        expect(new NormalClass().s).toEqual('some');
+    });
+
+    it('dart class can be extended like normal class with factory even with dartclass', () => {
+        @DartClass
+        class WithDefaultFactoryConstructor {
+            s: string;
+
+            constructor(s: string) {
+
+            }
+
+            @namedConstructor
+            protected named() {
+            }
+
+            static named: new() => WithDefaultFactoryConstructor;
+
+            @defaultFactory
+            protected static _init(s: string): WithDefaultFactoryConstructor {
+                let res = new WithDefaultFactoryConstructor.named();
+                res.s = s;
+                return res;
+            }
+        }
+
+        @DartClass
+        class NormalClass extends WithDefaultFactoryConstructor {
+            constructor() {
+                super('some');
+            }
+        }
+
+        expect(new NormalClass().s).toEqual('some');
+    });
+
+    it('promises can be extended ?', async () => {
+        class OneSecPromise implements Promise<string> {
+            res: Promise<string>
+
+            constructor() {
+                this.res = new Promise<string>((resolve, reject) => {
+                    setTimeout(() => {
+                        console.log('fired!');
+                        resolve('hi');
+                    }, 1000);
+                });
+            }
+
+            readonly [Symbol.toStringTag]: "Promise";
+
+            catch<TResult = never>(onrejected?: ((reason: any) => (PromiseLike<TResult> | TResult)) | null | undefined): Promise<string | TResult> {
+                return undefined;
+            }
+
+            then<TResult1 = string, TResult2 = never>(onfulfilled?: ((value: string) => (PromiseLike<TResult1> | TResult1)) | null | undefined, onrejected?: ((reason: any) => (PromiseLike<TResult2> | TResult2)) | null | undefined): Promise<TResult1 | TResult2> {
+                /*if (onfulfilled) {
+                    return onfulfilled(this.res);
+                }*/
+                return this.res.then(onfulfilled);
+                //return this.res as any;
+            }
+
+
+        }
+
+        let res = await new OneSecPromise();
+        console.log(`Return :${res}`);
+        expect(res).toEqual('hi');
+    })
 });

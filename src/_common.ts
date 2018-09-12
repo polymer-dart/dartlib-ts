@@ -1,5 +1,12 @@
 import {EQUALS_OPERATOR, int, isA} from "./utils";
 
+type BaseType<X> = X extends 'string' ? string :
+    X extends 'number' ? number :
+        X extends 'num' ? number :
+            X extends 'float' ? number :
+                X extends 'double' ? number :
+                    X extends 'bool' ? boolean :
+                        X extends 'boolean' ? boolean :  X;
 
 export default {
     /**
@@ -20,16 +27,16 @@ export default {
      * @param a
      * @param b
      */
-    is: (a: any, b: any) => {
+    is: function <X>(a: any, b: X): a is (typeof a & BaseType<X>) {
         if (typeof b === 'string') {
             if (b === 'num' || b === 'int' || b === 'float' || b === 'double') {
-                b = 'number';
+                b = 'number' as any;
                 // TODO : refine with int  checking in case of int
             } else if (b === 'bool') {
-                b = 'boolean';
+                b = 'boolean' as any;
             }
 
-            return typeof a === b;
+            return typeof a === (b as any);
         }
 
         return isA(a, b);
