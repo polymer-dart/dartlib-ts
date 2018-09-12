@@ -6251,6 +6251,17 @@ class DartList<E> implements DartEfficientLengthIterable<E> {
     }
 
     /**
+     * cretes a dart list from a js iterable
+     */
+
+    @namedFactory
+    protected static _literal<T>(it: Iterable<T>): DartList<T> {
+        return new JSArray.literal(it);
+    }
+
+    static literal: new<T>(it: Iterable<T>) => DartList<T>;
+
+    /**
      * Creates a list of the given length.
      *
      * The created list is fixed-length if [length] is provided.

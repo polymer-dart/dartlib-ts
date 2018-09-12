@@ -302,6 +302,9 @@ function _isA(ctor, cls): boolean {
 }
 
 export function isA(obj, cls): boolean {
+    if (obj == null) {
+        return false;
+    }
     let ctor = Object.getPrototypeOf(obj).constructor;
     return _isA(ctor, cls);
 }
