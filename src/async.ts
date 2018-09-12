@@ -6281,7 +6281,7 @@ class DartStreamTransformer<S, T> {
      */
     @defaultFactory
     protected static _create<S, T>(onListen: (stream: DartStream<S>, cancelOnError: bool) => DartStreamSubscription<T>): DartStreamTransformer<S, T> {
-        return new _StreamSubscriptionTransformer<S, T>();
+        return new _StreamSubscriptionTransformer<S, T>(onListen);
     }
 
     constructor(onListen: (stream: DartStream<S>, cancelOnError: bool) => DartStreamSubscription<T>) {
