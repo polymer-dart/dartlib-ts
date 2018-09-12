@@ -7677,7 +7677,7 @@ class DartListMixin<E> implements DartList<E> {
             otherList = iterable as DartList<E>;
             otherStart = skipCount;
         } else {
-            otherList = iterable.skip(skipCount).toList({growable: false});
+            otherList = (iterable as DartIterable<E>).skip(skipCount).toList({growable: false});
             otherStart = 0;
         }
         if (otherStart + length > otherList.length) {
@@ -12187,6 +12187,30 @@ class DartPrimitives {
     static stringConcatUnchecked(_contents: any, str: any) {
         return `${_contents}${str}`;
     }
+
+
+    static dateNow(): num {
+        return Date.now() /* JS('int', r'Date.now()')*/;
+    }
+
+
+    static initTicker(): void {
+        if (this.timerFrequency != null) return;
+        // Start with low-resolution. We overwrite the fields if we find better.
+        this.timerFrequency = 1000;
+        this.timerTicks = this.dateNow;
+        if (typeof window == "undefined") return;
+        let $window = window;
+        if ($window == null) return;
+        let performance = $window.performance;
+        if (performance == null) return;
+        if (typeof performance.now != "function") return;
+        this.timerFrequency = 1000000;
+        this.timerTicks = () => new DartNumber((1000 * performance.now())).floor();
+    }
+
+    static timerFrequency: int;
+    static timerTicks: Function;
 }
 
 /**
@@ -12650,6 +12674,146 @@ class DartIntegerDivisionByZeroException extends DartError {
     }
 }
 
+// Copyright (c) 2011, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
+//part of dart.core;
+
+/**
+ * A simple stopwatch interface to measure elapsed time.
+ */
+class DartStopwatch {
+    /**
+     * Cached frequency of the system. Must be initialized in [_initTicker];
+     */
+    static  _frequency:int;
+
+    // The _start and _stop fields capture the time when [start] and [stop]
+    // are called respectively.
+    // If _stop is null, the stopwatch is running.
+     _start:int = 0;
+     _stop:int = 0;
+
+    /**
+     * Creates a [Stopwatch] in stopped state with a zero elapsed count.
+     *
+     * The following example shows how to start a [Stopwatch]
+     * immediately after allocation.
+     * ```
+     * var stopwatch = new Stopwatch()..start();
+     * ```
+     */
+    constructor() {
+        if (DartStopwatch._frequency == null) DartStopwatch._initTicker();
+    }
+
+    /**
+     * Frequency of the elapsed counter in Hz.
+     */
+    get frequency(): int {
+        return DartStopwatch._frequency;
+    }
+
+    /**
+     * Starts the [Stopwatch].
+     *
+     * The [elapsed] count is increasing monotonically. If the [Stopwatch] has
+     * been stopped, then calling start again restarts it without resetting the
+     * [elapsed] count.
+     *
+     * If the [Stopwatch] is currently running, then calling start does nothing.
+     */
+    start(): void {
+        if (this._stop != null) {
+            // (Re)start this stopwatch.
+            // Don't count the time while the stopwatch has been stopped.
+            this._start += DartStopwatch._now() - this._stop;
+            this._stop = null;
+        }
+    }
+
+    /**
+     * Stops the [Stopwatch].
+     *
+     * The [elapsedTicks] count stops increasing after this call. If the
+     * [Stopwatch] is currently not running, then calling this method has no
+     * effect.
+     */
+    stop(): void {
+        this._stop = this._stop || DartStopwatch._now();
+    }
+
+    /**
+     * Resets the [elapsed] count to zero.
+     *
+     * This method does not stop or start the [Stopwatch].
+     */
+    reset(): void {
+        this._start = this._stop || DartStopwatch._now();
+    }
+
+    /**
+     * The elapsed number of clock ticks since calling [start] while the
+     * [Stopwatch] is running.
+     *
+     * This is the elapsed number of clock ticks between calling [start] and
+     * calling [stop].
+     *
+     * Is 0 if the [Stopwatch] has never been started.
+     *
+     * The elapsed number of clock ticks increases by [frequency] every second.
+     */
+     get elapsedTicks():int {
+        return (this._stop || DartStopwatch._now()) - this._start;
+    }
+
+    /**
+     * The [elapsedTicks] counter converted to a [Duration].
+     */
+    get elapsed(): DartDuration {
+        return new DartDuration({microseconds: this.elapsedMicroseconds});
+    }
+
+    /**
+     * The [elapsedTicks] counter converted to microseconds.
+     */
+    get elapsedMicroseconds(): int {
+        return _dart.divide(this.elapsedTicks * 1000000, this.frequency);
+    }
+
+
+    /**
+     * The [elapsedTicks] counter converted to milliseconds.
+     */
+    get elapsedMilliseconds(): int {
+        return _dart.divide((this.elapsedTicks * 1000), this.frequency);
+    }
+
+    /**
+     * Whether the [Stopwatch] is currently running.
+     */
+    get isRunning(): bool {
+        return this._stop == null;
+    }
+
+    /**
+     * Initializes the time-measuring system. *Must* initialize the [_frequency]
+     * variable.
+     */
+    //@patch
+    static _initTicker(): void {
+        DartPrimitives.initTicker();
+        this._frequency = DartPrimitives.timerFrequency;
+    }
+
+    //@patch
+    static _now(): int {
+        return DartPrimitives.timerTicks();
+    }
+}
+
+
 
 export {
     DartIterable,
@@ -12717,5 +12881,6 @@ export {
     DartDuration,
     DartIntegerDivisionByZeroException,
     NullThrownError,
-    DartSink
+    DartSink,
+    DartStopwatch
 }

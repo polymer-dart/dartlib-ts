@@ -1,12 +1,12 @@
 import {EQUALS_OPERATOR, int, isA} from "./utils";
 
 type BaseType<X> = X extends 'string' ? string :
-    X extends 'number' ? number :
-        X extends 'num' ? number :
-            X extends 'float' ? number :
-                X extends 'double' ? number :
-                    X extends 'bool' ? boolean :
-                        X extends 'boolean' ? boolean :  X;
+    (X extends 'number' ? number :
+        (X extends 'num' ? number :
+            (X extends 'float' ? number :
+                (X extends 'double' ? number :
+                    (X extends 'bool' ? boolean :
+                        (X extends 'boolean' ? boolean : any))))));
 
 export default {
     /**
@@ -27,7 +27,7 @@ export default {
      * @param a
      * @param b
      */
-    is: function <X>(a: any, b: X): a is (typeof a & BaseType<X>) {
+    is: function <X extends ('num' | 'int' | 'float' | 'double' | 'number' | 'bool' | 'boolean' | 'string' | Function)>(a: any, b: X): boolean /* a is (BaseType<X>)*/ {
         if (typeof b === 'string') {
             if (b === 'num' || b === 'int' || b === 'float' || b === 'double') {
                 b = 'number' as any;

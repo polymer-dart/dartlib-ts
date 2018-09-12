@@ -52,7 +52,7 @@ import {
     StateError,
     UnsupportedError,
     RangeError,
-    DartSink, DartIterator, DartError, DartObject
+    DartSink, DartIterator, DartError, DartObject, DartStopwatch
 } from "./core";
 import {$with, Abstract, AbstractProperty, bool, DartClass, defaultConstructor, defaultFactory, Implements, int, namedConstructor, namedFactory, Op, Operator, OPERATOR_INDEX_ASSIGN, OPERATOR_MINUS, With} from "./utils";
 import _dart from './_common';
