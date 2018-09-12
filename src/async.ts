@@ -1987,15 +1987,19 @@ class DartTimer {
         throw 'abstract';
     }
 
-    /*external*/
+
+    //@patch
     static _createTimer(duration: DartDuration, callback: () => any): DartTimer {
-        throw "external";
+        let milliseconds = duration.inMilliseconds;
+        if (milliseconds < 0) milliseconds = 0;
+        return new TimerImpl(milliseconds, callback);
     }
 
-    /*external*/
+    //@patch
     static _createPeriodicTimer(duration: DartDuration, callback: (timer: DartTimer) => any): DartTimer {
-        throw "external";
-
+        let milliseconds = duration.inMilliseconds;
+        if (milliseconds < 0) milliseconds = 0;
+        return new TimerImpl.periodic(milliseconds, callback);
     }
 }
 
@@ -4019,10 +4023,16 @@ function _rootHandleUncaughtError<R>(self: DartZone, parent: DartZoneDelegate, z
     return null;
 }
 
-/*external*/
+// @patch
 function _rethrow(error: any, stackTrace: DartStackTrace): void {
-
+    // TODO:
+    // error = wrapException(error);
+    error.stack = stackTrace.toString();
+    //JS("void", "#.stack = #", error, stackTrace.toString());
+    //JS("void", "throw #", error);
+    throw error;
 }
+
 
 function _rootRun<R>(self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: () => R): R {
     if (DartZone._current === zone) return f();
@@ -4217,9 +4227,6 @@ function runZoned<R>(body: () => R,
  * This decouples the core library from the async library.
  */
 let printToZone: Function = null;
-
-/*external*/
-//function printToConsole(line: string): void
 
 
 //@patch
@@ -4423,11 +4430,89 @@ function scheduleMicrotask(callback: () => void): void {
 class _AsyncRun {
     /** Schedule the given callback before any other event in the event-loop. */
 
-    /*external*/
-    static _scheduleImmediate(callback: () => void): void {
 
+    static _scheduleImmediate(callback: () => void): void {
+        this._scheduleImmediateClosure(callback);
+    }
+
+    // Lazily initialized.
+    static _scheduleImmediateClosure: Function =
+        _AsyncRun._initializeScheduleImmediate();
+
+    static _initializeScheduleImmediate(): Function {
+        requiresPreamble();
+        // @ts-ignore
+        if (self.scheduleImmediate /*JS('', 'self.scheduleImmediate')*/ != null) {
+            return _AsyncRun._scheduleImmediateJsOverride;
+        }
+        // @ts-ignore
+        if (self.MutationObserver /*JS('', 'self.MutationObserver') */ != null &&
+            self.document /*JS('', 'self.document')*/ != null) {
+            // Use mutationObservers.
+            let div = self.document.createElement('div') /*JS('', 'self.document.createElement("div")')*/;
+            let span = self.document.createElement('span') /*JS('', 'self.document.createElement("span")')*/;
+            let storedCallback;
+
+            let internalCallback = (_) => {
+                leaveJsAsync();
+                let f = storedCallback;
+                storedCallback = null;
+                f();
+            };
+
+            // @ts-ignore
+            var observer = new self.MutationObserver(convertDartClosureToJS(internalCallback, 1)) /* JS('', 'new self.MutationObserver(#)',
+            convertDartClosureToJS(internalCallback, 1))*/;
+            //JS('', '#.observe(#, { childList: true })', observer, div);
+            observer.observe(div, {childList: true});
+
+            return (callback: () => any) => {
+                //assert(storedCallback == null);
+                enterJsAsync();
+                storedCallback = callback;
+                // Because of a broken shadow-dom polyfill we have to change the
+                // children instead a cheap property.
+                // See https://github.com/Polymer/ShadowDOM/issues/468
+                //JS('', '#.firstChild ? #.removeChild(#): #.appendChild(#)', div, div,
+                //    span, div, span);
+                div.firstChild ? div.removeChild(span) : div.appendChild(span);
+            };
+        } else if (self.setImmediate /*JS('', 'self.setImmediate')*/ != null) {
+            return _AsyncRun._scheduleImmediateWithSetImmediate;
+        }
+        // TODO(20055): We should use DOM promises when available.
+        return _AsyncRun._scheduleImmediateWithTimer;
+    }
+
+    static _scheduleImmediateJsOverride(callback: () => any): void {
+        let internalCallback = () => {
+            leaveJsAsync();
+            callback();
+        };
+        enterJsAsync();
+
+        //JS('void', 'self.scheduleImmediate(#)',
+        //    convertDartClosureToJS(internalCallback, 0));
+        // @ts-ignore
+        self.scheduleImmediate(convertDartClosureToJS(internalCallback, 0));
+    }
+
+    static _scheduleImmediateWithSetImmediate(callback: () => any): void {
+        let internalCallback = () => {
+            leaveJsAsync();
+            callback();
+        };
+        enterJsAsync();
+        //JS('void', 'self.setImmediate(#)',
+        //    convertDartClosureToJS(internalCallback, 0));
+        self.setImmediate(convertDartClosureToJS(internalCallback, 0));
+    }
+
+    static _scheduleImmediateWithTimer(callback: () => any): void {
+        DartTimer._createTimer(DartDuration.ZERO, callback);
     }
 }
+
 
 // Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
@@ -10299,6 +10384,168 @@ class _BoundSubscriptionStream<S, T> extends DartStream<T> {
     }
 }
 
+
+@DartClass
+class TimerImpl implements DartTimer {
+    _once: bool;
+    _inEventLoop: bool;
+    _handle: int;
+
+    @defaultConstructor
+    protected _TimerImpl(milliseconds: int, callback: () => any) {
+        this._once = true
+        this._inEventLoop = false
+        if (milliseconds == 0 && (!hasTimer() || _globalState.isWorker)) {
+            let internalCallback = () => {
+                this._handle = null;
+                callback();
+            };
+
+            // Setting _handle to something different from null indicates that the
+            // callback has not been run. Hence, the choice of 1 is arbitrary.
+            this._handle = 1;
+
+            // This makes a dependency between the async library and the
+            // event loop of the isolate library. The compiler makes sure
+            // that the event loop is compiled if [Timer] is used.
+            // TODO(7907): In case of web workers, we need to use the event
+            // loop instead of setTimeout, to make sure the futures get executed in
+            // order.
+            _globalState.topEventLoop
+                .enqueue(_globalState.currentContext, internalCallback, 'timer');
+            this._inEventLoop = true;
+        } else if (hasTimer()) {
+            let internalCallback = () => {
+                this._handle = null;
+                leaveJsAsync();
+                callback();
+            };
+
+            enterJsAsync();
+
+            this._handle = self.setTimeout(convertDartClosureToJS(internalCallback, 0), milliseconds) /*JS('int', 'self.setTimeout(#, #)',
+        convertDartClosureToJS(internalCallback, 0), milliseconds)*/;
+        } else {
+            //assert(milliseconds > 0);
+            throw new UnsupportedError("Timer greater than 0.");
+        }
+    }
+
+    constructor(milliseconds: int, callback: () => any) {
+    }
+
+    @namedConstructor
+    periodic(milliseconds: int, callback: (timer: DartTimer) => any) {
+        this._inEventLoop = false;
+        this._once = false;
+        if (hasTimer()) {
+            enterJsAsync();
+            this._handle = self.setInterval(convertDartClosureToJS(() => {
+                callback(this);
+            }), milliseconds) /*JS(
+            'int',
+            'self.setInterval(#, #)',
+            convertDartClosureToJS(() {
+            callback(this);
+        }, 0),
+        milliseconds)*/;
+        } else {
+            throw new UnsupportedError("Periodic timer.");
+        }
+    }
+
+    static periodic: new(milliseconds: int, callback: (timer: DartTimer) => any) => TimerImpl;
+
+    cancel(): void {
+        if (hasTimer()) {
+            if (this._inEventLoop) {
+                throw new UnsupportedError("Timer in event loop cannot be canceled.");
+            }
+            if (this._handle == null) return;
+            leaveJsAsync();
+            if (this._once) {
+                //JS('void', 'self.clearTimeout(#)', _handle);
+                self.clearTimeout(this._handle);
+            } else {
+                //JS('void', 'self.clearInterval(#)', _handle);
+                self.clearInterval(this._handle);
+            }
+            this._handle = null;
+        } else {
+            throw new UnsupportedError("Canceling a timer.");
+        }
+    }
+
+    get isActive(): bool {
+        return this._handle != null;
+    }
+}
+
+// TODO : Is this actually needed (probably yes because we need to attach the zone info ... lets see)
+function convertDartClosureToJS(closure: Function, ...args: any[]) {
+    return closure.bind(null, ...args);
+}
+
+/// No-op method that is called to inform the compiler that preambles might
+/// be needed when executing the resulting JS file in a command-line
+/// JS engine.
+function requiresPreamble() {
+}
+
+function hasTimer(): bool {
+    requiresPreamble();
+    return self.setTimeout != null /* JS('', 'self.setTimeout') != null*/;
+}
+
+
+/// Marks entering a JavaScript async operation to keep the worker alive.
+///
+/// To be called by library code before starting an async operation controlled
+/// by the JavaScript event handler.
+///
+/// Also call [leaveJsAsync] in all callback handlers marking the end of that
+/// async operation (also error handlers) so the worker can be released.
+///
+/// These functions only has to be called for code that can be run from a
+/// worker-isolate (so not for general dom operations).
+function enterJsAsync() {
+    _globalState.topEventLoop._activeJsAsyncCount++;
+}
+
+/// Marks leaving a javascript async operation.
+///
+/// See [enterJsAsync].
+function leaveJsAsync() {
+    _globalState.topEventLoop._activeJsAsyncCount--;
+    //assert(_globalState.topEventLoop._activeJsAsyncCount >= 0);
+}
+
+/**
+ * Big stuff but don't know if we need it
+ */
+class _Manager {
+    topEventLoop: _EventLoop;
+    isWorker: bool;
+    currentContext: any;
+
+    constructor() {
+        this.isWorker = false;
+        this.topEventLoop = new _EventLoop();
+    }
+}
+
+class _EventLoop {
+    _activeJsAsyncCount: int = 0;
+
+
+    enqueue(context: any, callback: Function, ...args: any[]) {
+        setTimeout(() => {
+            callback.apply(null, args);
+        }, 0);
+    }
+}
+
+const _globalState = new _Manager();
 
 export {
     Future,
