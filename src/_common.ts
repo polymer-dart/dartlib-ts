@@ -8,6 +8,21 @@ type BaseType<X> = X extends 'string' ? string :
                     (X extends 'bool' ? boolean :
                         (X extends 'boolean' ? boolean : any))))));
 
+function _is<X extends ('num' | 'int' | 'float' | 'double' | 'number' | 'bool' | 'boolean' | 'string' | Function)>(a: any, b: X): boolean /* a is (BaseType<X>)*/ {
+    if (typeof b === 'string') {
+        if (b === 'num' || b === 'int' || b === 'float' || b === 'double') {
+            b = 'number' as any;
+            // TODO : refine with int  checking in case of int
+        } else if (b === 'bool') {
+            b = 'boolean' as any;
+        }
+
+        return typeof a === (b as any);
+    }
+
+    return isA(a, b);
+}
+
 export default {
     /**
      * @param a
@@ -27,25 +42,12 @@ export default {
      * @param a
      * @param b
      */
-    is: function <X extends ('num' | 'int' | 'float' | 'double' | 'number' | 'bool' | 'boolean' | 'string' | Function)>(a: any, b: X): boolean /* a is (BaseType<X>)*/ {
-        if (typeof b === 'string') {
-            if (b === 'num' || b === 'int' || b === 'float' || b === 'double') {
-                b = 'number' as any;
-                // TODO : refine with int  checking in case of int
-            } else if (b === 'bool') {
-                b = 'boolean' as any;
-            }
+    is: _is,
 
-            return typeof a === (b as any);
-        }
-
-        return isA(a, b);
-    },
-
-    isNot: (a: any, b: any) => !this.is(a, b),
+    isNot: (a: any, b: any) => !_is(a, b),
 
     divide(a: int, b: int): int {
-        return Math.floor(b / a);
+        return Math.floor(a / b);
     },
 
     assert: (expr) => {

@@ -6256,10 +6256,17 @@ class DartList<E> implements DartEfficientLengthIterable<E> {
 
     @namedFactory
     protected static _literal<T>(it: Iterable<T>): DartList<T> {
-        return new JSArray.literal(it);
+        return new JSArray.list(it);
     }
 
     static literal: new<T>(it: Iterable<T>) => DartList<T>;
+
+    @namedFactory
+    protected static _make<T>(...elems: T[]): DartList<T> {
+        return new JSArray.list(elems);
+    }
+
+    static make: new<T>(...elems: T[]) => DartList<T>;
 
     /**
      * Creates a list of the given length.
@@ -9566,11 +9573,11 @@ export abstract class DartListIterable<E> extends DartEfficientLengthIterable<E>
         let result: DartList<E>;
         if (growable) {
             result = new DartList<E>();
-            result.length = length;
+            result.length = this.length;
         } else {
-            result = new DartList<E>(length);
+            result = new DartList<E>(this.length);
         }
-        for (let i = 0; i < length; i++) {
+        for (let i = 0; i < this.length; i++) {
             result[i] = this.elementAt(i);
         }
         return result;
@@ -10650,7 +10657,15 @@ type _Generator<E> = (index: int) => E;
 
 class _GeneratorIterable<E> extends DartListIterable<E> {
     /// The length of the generated iterable.
-    length: int;
+    _length: int;
+
+    get length(): int {
+        return this._length;
+    }
+
+    set length(val: int) {
+        this._length = val;
+    }
 
     /// The function mapping indices to values.
     _generator: _Generator<E>;
@@ -11341,10 +11356,10 @@ class X extends Array {
 @DartClass
 @Implements(DartList)
 class JSArray<E> extends Array implements DartList<E>, JSIndexable<E> {
-    constructor(len?: number) {
-        super();
-        if (len) {
-            this.length = len;
+    constructor(len?: number | Iterable<E>) {
+        super(...((_dart.isNot(len, 'int') && len != undefined ? len : [])as any));
+        if (_dart.is(len, 'int')) {
+            this.length = len as number;
         }
     }
 
@@ -11355,13 +11370,14 @@ class JSArray<E> extends Array implements DartList<E>, JSIndexable<E> {
         /*if (length === undefined) {
             length = _ListConstructorSentinel;
         }*/
-        if (undefined === length) {
-            return new JSArray.emptyGrowable<E>();
+        if (undefined === length || _dart.isNot(length, 'int')) {
+            return new JSArray.emptyGrowable<E>(length);
         }
         return new JSArray.fixed<E>(length);
     }
 
     static list: new<E>(length?: any /*= _ListConstructorSentinel]*/) => JSArray<E>;
+
 
     /**
      * Returns a fresh JavaScript Array, marked as fixed-length.
@@ -11391,11 +11407,11 @@ class JSArray<E> extends Array implements DartList<E>, JSIndexable<E> {
      * Returns a fresh growable JavaScript Array of zero length length.
      */
     @namedFactory
-    protected static _emptyGrowable<E>(): JSArray<E> {
-        return new JSArray.markGrowable<E>(new JSExtendableArray() /*JS('', '[]')*/);
+    protected static _emptyGrowable<E>(values?: Iterable<E>): JSArray<E> {
+        return new JSArray.markGrowable<E>(new JSExtendableArray(values) /*JS('', '[]')*/);
     }
 
-    static emptyGrowable: new<E>() => JSArray<E>;
+    static emptyGrowable: new<E>(values?: Iterable<E>) => JSArray<E>;
 
     /**
      * Returns a fresh growable JavaScript Array with initial length.
@@ -12293,7 +12309,7 @@ class DartStackTrace {
 
     }
 
-    static get current():DartStackTrace {
+    static get current(): DartStackTrace {
         return new DartStackTrace(new Error());
     }
 
@@ -12359,33 +12375,35 @@ class DartStackTrace {
  * See [Stopwatch] to measure time-spans.
  *
  */
+
+
+
+const MICROSECONDS_PER_MILLISECOND: int = 1000;
+const MILLISECONDS_PER_SECOND: int = 1000;
+const SECONDS_PER_MINUTE: int = 60;
+const MINUTES_PER_HOUR: int = 60;
+const HOURS_PER_DAY: int = 24;
+
+const MICROSECONDS_PER_SECOND: int = MICROSECONDS_PER_MILLISECOND * MILLISECONDS_PER_SECOND;
+const MICROSECONDS_PER_MINUTE: int = MICROSECONDS_PER_SECOND * SECONDS_PER_MINUTE;
+const MICROSECONDS_PER_HOUR: int = MICROSECONDS_PER_MINUTE * MINUTES_PER_HOUR;
+const MICROSECONDS_PER_DAY: int = MICROSECONDS_PER_HOUR * HOURS_PER_DAY;
+
+const MILLISECONDS_PER_MINUTE: int = MILLISECONDS_PER_SECOND * SECONDS_PER_MINUTE;
+const MILLISECONDS_PER_HOUR: int = MILLISECONDS_PER_MINUTE * MINUTES_PER_HOUR;
+const MILLISECONDS_PER_DAY: int = MILLISECONDS_PER_HOUR * HOURS_PER_DAY;
+
+
+const SECONDS_PER_HOUR: int = SECONDS_PER_MINUTE * MINUTES_PER_HOUR;
+
+const SECONDS_PER_DAY: int = SECONDS_PER_HOUR * HOURS_PER_DAY;
+
+
+const MINUTES_PER_DAY: int = MINUTES_PER_HOUR * HOURS_PER_DAY;
+
+
 @DartClass
 class DartDuration implements DartComparable<DartDuration> {
-    static MICROSECONDS_PER_MILLISECOND: int = 1000;
-    static MILLISECONDS_PER_SECOND: int = 1000;
-    static SECONDS_PER_MINUTE: int = 60;
-    static MINUTES_PER_HOUR: int = 60;
-    static HOURS_PER_DAY: int = 24;
-
-    static MICROSECONDS_PER_SECOND: int =
-        DartDuration.MICROSECONDS_PER_MILLISECOND * DartDuration.MILLISECONDS_PER_SECOND;
-    static MICROSECONDS_PER_MINUTE: int =
-        DartDuration.MICROSECONDS_PER_SECOND * DartDuration.SECONDS_PER_MINUTE;
-    static MICROSECONDS_PER_HOUR: int =
-        DartDuration.MICROSECONDS_PER_MINUTE * DartDuration.MINUTES_PER_HOUR;
-    static MICROSECONDS_PER_DAY: int = DartDuration.MICROSECONDS_PER_HOUR * DartDuration.HOURS_PER_DAY;
-
-    static MILLISECONDS_PER_MINUTE: int =
-        DartDuration.MILLISECONDS_PER_SECOND * DartDuration.SECONDS_PER_MINUTE;
-    static MILLISECONDS_PER_HOUR: int =
-        DartDuration.MILLISECONDS_PER_MINUTE * DartDuration.MINUTES_PER_HOUR;
-    static MILLISECONDS_PER_DAY
-    int = DartDuration.MILLISECONDS_PER_HOUR * DartDuration.HOURS_PER_DAY;
-
-    static SECONDS_PER_HOUR: int = DartDuration.SECONDS_PER_MINUTE * DartDuration.MINUTES_PER_HOUR;
-    static SECONDS_PER_DAY: int = DartDuration.SECONDS_PER_HOUR * DartDuration.HOURS_PER_DAY;
-
-    static MINUTES_PER_DAY: int = DartDuration.MINUTES_PER_HOUR * DartDuration.HOURS_PER_DAY;
 
     static ZERO: DartDuration = new DartDuration({seconds: 0});
 
@@ -12417,11 +12435,11 @@ class DartDuration implements DartComparable<DartDuration> {
         let {days, hours, minutes, seconds, milliseconds, microseconds} = Object.assign({
             days: 0, hours: 0, minutes: 0, seconds: 0, milliseconds: 0, microseconds: 0
         }, _);
-        this._microseconds(DartDuration.MICROSECONDS_PER_DAY * days +
-            DartDuration.MICROSECONDS_PER_HOUR * hours +
-            DartDuration.MICROSECONDS_PER_MINUTE * minutes +
-            DartDuration.MICROSECONDS_PER_SECOND * seconds +
-            DartDuration.MICROSECONDS_PER_MILLISECOND * milliseconds +
+        this._microseconds(MICROSECONDS_PER_DAY * days +
+            MICROSECONDS_PER_HOUR * hours +
+            MICROSECONDS_PER_MINUTE * minutes +
+            MICROSECONDS_PER_SECOND * seconds +
+            MICROSECONDS_PER_MILLISECOND * milliseconds +
             microseconds);
 
     }
@@ -12531,7 +12549,7 @@ class DartDuration implements DartComparable<DartDuration> {
      * Returns the number of whole days spanned by this Duration.
      */
     get inDays(): int {
-        return _dart.divide(this._duration, DartDuration.MICROSECONDS_PER_DAY);
+        return _dart.divide(this._duration, MICROSECONDS_PER_DAY);
     }
 
     /**
@@ -12540,7 +12558,7 @@ class DartDuration implements DartComparable<DartDuration> {
      * The returned value can be greater than 23.
      */
     get inHours(): int {
-        return _dart.divide(this._duration, DartDuration.MICROSECONDS_PER_HOUR);
+        return _dart.divide(this._duration, MICROSECONDS_PER_HOUR);
     }
 
     /**
@@ -12549,7 +12567,7 @@ class DartDuration implements DartComparable<DartDuration> {
      * The returned value can be greater than 59.
      */
     get inMinutes(): int {
-        return _dart.divide(this._duration, DartDuration.MICROSECONDS_PER_MINUTE);
+        return _dart.divide(this._duration, MICROSECONDS_PER_MINUTE);
     }
 
     /**
@@ -12558,7 +12576,7 @@ class DartDuration implements DartComparable<DartDuration> {
      * The returned value can be greater than 59.
      */
     get inSeconds(): int {
-        return _dart.divide(this._duration, DartDuration.MICROSECONDS_PER_SECOND);
+        return _dart.divide(this._duration, MICROSECONDS_PER_SECOND);
     }
 
     /**
@@ -12567,7 +12585,7 @@ class DartDuration implements DartComparable<DartDuration> {
      * The returned value can be greater than 999.
      */
     get inMilliseconds(): int {
-        return _dart.divide(this._duration, DartDuration.MICROSECONDS_PER_MILLISECOND);
+        return _dart.divide(this._duration, MICROSECONDS_PER_MILLISECOND);
     }
 
     /**
@@ -12632,10 +12650,10 @@ class DartDuration implements DartComparable<DartDuration> {
         if (this.inMicroseconds < 0) {
             return `-${-this}`;
         }
-        let twoDigitMinutes = twoDigits(this.inMinutes % (DartDuration.MINUTES_PER_HOUR));
-        let twoDigitSeconds = twoDigits(this.inSeconds % (DartDuration.SECONDS_PER_MINUTE));
+        let twoDigitMinutes = twoDigits(this.inMinutes % (MINUTES_PER_HOUR));
+        let twoDigitSeconds = twoDigits(this.inSeconds % (SECONDS_PER_MINUTE));
         let sixDigitUs =
-            sixDigits(this.inMicroseconds % (DartDuration.MICROSECONDS_PER_SECOND));
+            sixDigits(this.inMicroseconds % (MICROSECONDS_PER_SECOND));
         return `${this.inHours}:${twoDigitMinutes}:${twoDigitSeconds}.${sixDigitUs}`;
     }
 
@@ -12698,13 +12716,13 @@ class DartStopwatch {
     /**
      * Cached frequency of the system. Must be initialized in [_initTicker];
      */
-    static  _frequency:int;
+    static _frequency: int;
 
     // The _start and _stop fields capture the time when [start] and [stop]
     // are called respectively.
     // If _stop is null, the stopwatch is running.
-     _start:int = 0;
-     _stop:int = 0;
+    _start: int = 0;
+    _stop: int = 0;
 
     /**
      * Creates a [Stopwatch] in stopped state with a zero elapsed count.
@@ -12775,7 +12793,7 @@ class DartStopwatch {
      *
      * The elapsed number of clock ticks increases by [frequency] every second.
      */
-     get elapsedTicks():int {
+    get elapsedTicks(): int {
         return (this._stop || DartStopwatch._now()) - this._start;
     }
 
@@ -12823,7 +12841,6 @@ class DartStopwatch {
         return DartPrimitives.timerTicks();
     }
 }
-
 
 
 export {

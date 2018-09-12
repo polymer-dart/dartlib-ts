@@ -159,6 +159,15 @@ class Future<T> implements Promise<T> {
     // The `_nullFuture` is a completed Future with the value `null`.
     static _nullFuture: _Future<any>;//= new _Future.value<any>(null);
 
+    @namedFactory
+    protected static _fromPromise<T>(p: Promise<T>): Future<T> {
+        let f = new _Future<T>();
+        p.then((r) => f._complete(r), (e) => f._completeError(e, new DartStackTrace(e)));
+        return f;
+    }
+
+    static fromPromise: new<T>(p: Promise<T>) => Future<T>;
+
     /**
      * Creates a future containing the result of calling [computation]
      * asynchronously with [Timer.run].
@@ -771,6 +780,10 @@ class Future<T> implements Promise<T> {
     }
 
     readonly [Symbol.toStringTag]: "Promise";
+}
+
+function dartAsync<T>(asyncFunc: (...args: any[]) => Promise<T>): (...args: any[]) => Future<T> {
+    return (...args: any[]) => new Future.fromPromise(asyncFunc.apply(null, args));
 }
 
 /**
@@ -4446,6 +4459,9 @@ class _AsyncRun {
 
     static _initializeScheduleImmediate(): Function {
         requiresPreamble();
+      //  let self = global || window;
+
+
         // @ts-ignore
         if (self.scheduleImmediate /*JS('', 'self.scheduleImmediate')*/ != null) {
             return _AsyncRun._scheduleImmediateJsOverride;
@@ -10389,6 +10405,7 @@ class _BoundSubscriptionStream<S, T> extends DartStream<T> {
     }
 }
 
+let self=global;
 
 @DartClass
 class TimerImpl implements DartTimer {
@@ -10499,6 +10516,7 @@ function requiresPreamble() {
 
 function hasTimer(): bool {
     requiresPreamble();
+   // let self = global || window;
     return self.setTimeout != null /* JS('', 'self.setTimeout') != null*/;
 }
 
@@ -10565,5 +10583,6 @@ export {
     DartStreamTransformer,
     DartEventSink,
     DartStreamSink,
-    DartStreamController
+    DartStreamController,
+    dartAsync
 }

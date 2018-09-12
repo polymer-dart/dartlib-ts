@@ -1,6 +1,8 @@
-import {DartHashMap, DartList, DartMap, DartObject, DartSet, int, num, OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN} from "../core";
-import {EQUALS_OPERATOR} from "../_common";
+import {DartHashMap, DartList, DartMap, DartObject, DartSet} from "../core";
+import {DartClass, EQUALS_OPERATOR, int, num, Op, Operator, OPERATOR_INDEX} from "../utils";
 
+
+@DartClass
 class MyObj extends DartObject {
     key: int;
 
@@ -9,7 +11,9 @@ class MyObj extends DartObject {
         this.key = key;
     }
 
-    [EQUALS_OPERATOR](other: any) {
+
+    @Operator(Op.EQUALS)
+    eq(other: any) {
         return (other as MyObj).key == this.key;
     }
 
@@ -133,11 +137,31 @@ describe('DartList', () => {
 
     });
 
-    it('join works',()=>{
-        let list = new DartList.generate(10,(i)=>`${i}`);
+    it('join works', () => {
+        let list = new DartList.generate(10, (i) => `${i}`);
         let str = list.join(' , ');
         expect(str).toEqual("0 , 1 , 2 , 3 , 4 , 5 , 6 , 7 , 8 , 9");
 
+    });
+
+    it('literal constructor works', () => {
+        let l = new DartList.literal(['a', 'b', 'c']);
+        expect(l.length).toEqual(3);
+        expect(l[0]).toEqual('a');
+        expect(l[OPERATOR_INDEX](1)).toEqual('b');
+    });
+
+    it('maps works', () => {
+        let l = new DartList.literal([1, 2, 3]).map((x) => x * 100).toList();
+
+        expect(l.length).toEqual(3);
+        expect(l[1]).toEqual(200);
+    });
+
+    it('expand works', () => {
+        let x = new DartList.make(1, 2, 3).expand((n) => new DartList.make(`${n}a`, `${n}b`)).toList();
+        expect(x.length).toEqual(6);
+        expect(x.join(',')).toEqual('1a,1b,2a,2b,3a,3b');
     });
 
 });
@@ -285,7 +309,7 @@ describe('DartMap', () => {
 
     it('works with custom dart objects also list (badhash)', () => {
 
-        let map: DartMap<MyObj, int> = new DartHashMap.fromIterable(new DartList.generate(10, (i) => i), {
+        let map: DartMap<MyObjBadHash, int> = new DartHashMap.fromIterable(new DartList.generate(10, (i) => i), {
             key: (i) => new MyObjBadHash(i)
         });
 
