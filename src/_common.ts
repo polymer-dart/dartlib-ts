@@ -1,4 +1,4 @@
-import {EQUALS_OPERATOR, int, isA} from "./utils";
+import { EQUALS_OPERATOR, int, isA } from "./utils";
 
 type BaseType<X> = X extends 'string' ? string :
     (X extends 'number' ? number :
@@ -46,6 +46,8 @@ const _assert = (expr) => {
 
 const _isNot = (a: any, b: any) => !_is(a, b);
 
+const _nullOr = <X>(a: X, def: X): X => a === null || a === undefined ? def : a;
+
 export default {
 
     equals: _equals,
@@ -57,6 +59,8 @@ export default {
     divide: _divide,
 
     assert: _assert,
+
+    nullOr: _nullOr
 }
 
 export {
@@ -64,5 +68,6 @@ export {
     _equals as equals,
     _isNot as isNot,
     _divide as divide,
-    _assert as assert
+    _assert as assert,
+    _nullOr as nullOr,
 }

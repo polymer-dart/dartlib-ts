@@ -5,7 +5,7 @@
 // Patch file for dart:collection classes.
 
 import {Abstract, AbstractMethods, bool, int, float, double, DartClass, defaultConstructor, defaultFactory, Implements, namedConstructor, namedFactory, Op, Operator, safeCallOriginal, With, num, EQUALS_OPERATOR, AbstractProperty} from "./utils";
-import _dart, { divide, isNot, is, nullOr, nullOr } from './_common';
+import _dart, { divide, isNot, is,  nullOr } from './_common';
 import {DartString} from "./string";
 import {OPERATOR_DIVIDE, OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN, OPERATOR_MINUS, OPERATOR_PLUS, OPERATOR_TIMES} from "./utils";
 import {DartInt, DartNumber} from "./number";
@@ -14247,7 +14247,7 @@ const regExpCaptureCount = (regexp: JSSyntaxRegExp): int => {
 }
 
 @DartClass
-class JSSyntaxRegExp implements RegExp {
+class JSSyntaxRegExp implements DartRegExp {
     pattern: string;
     _nativeRegExp: RegExp;
     _nativeGlobalRegExp: RegExp;
@@ -14422,49 +14422,67 @@ class _MatchImplementation implements DartMatch {
     }
 }
 
-class _AllMatchesIterable extends IterableBase<Match> {
-  final JSSyntaxRegExp _re;
-  final String _string;
-  final int _start;
+class _AllMatchesIterable extends DartIterableBase<DartMatch> {
+    _re: JSSyntaxRegExp;
+    _string: string;
+    _start: int;
 
-  _AllMatchesIterable(this._re, this._string, this._start);
+    constructor(_re: JSSyntaxRegExp, _string: string, _start: int) {
+        super();
+        this._re = _re;
+        this._string = _string;
+        this._start = _start;
+    }
 
-  Iterator<Match> get iterator => new _AllMatchesIterator(_re, _string, _start);
+    get iterator(): DartIterator<DartMatch> {
+        return new _AllMatchesIterator(this._re, this._string, this._start);
+    }
 }
 
-class _AllMatchesIterator implements Iterator<Match> {
-  final JSSyntaxRegExp _regExp;
-  String _string;
-  int _nextIndex;
-  Match _current;
-
-  _AllMatchesIterator(this._regExp, this._string, this._nextIndex);
-
-  Match get current => _current;
-
-  bool moveNext() {
-    if (_string == null) return false;
-    if (_nextIndex <= _string.length) {
-      var match = _regExp._execGlobal(_string, _nextIndex);
-      if (match != null) {
-        _current = match;
-        int nextIndex = match.end;
-        if (match.start == nextIndex) {
-          nextIndex++;
+class _AllMatchesIterator implements DartIterator<DartMatch> {
+    next(value?: any): IteratorResult<DartMatch> {
+        return {
+            done:this.moveNext(),
+            value:this.current
         }
-        _nextIndex = nextIndex;
-        return true;
-      }
     }
-    _current = null;
-    _string = null; // Marks iteration as ended.
-    return false;
-  }
+   
+    _regExp: JSSyntaxRegExp;
+    _string: string;
+    _nextIndex: int;
+    _current: DartMatch;
+
+    constructor(_regExp: JSSyntaxRegExp, _string: string, _nextIndex: int) {
+        this._regExp = _regExp;
+        this._string = _string;
+        this._nextIndex = _nextIndex;
+    }
+
+    get current(): DartMatch { return this._current; }
+
+    moveNext(): bool {
+        if (this._string == null) return false;
+        if (this._nextIndex <= this._string.length) {
+            let match = this._regExp._execGlobal(this._string, this._nextIndex);
+            if (match != null) {
+                this._current = match;
+                let nextIndex = match.end;
+                if (match.start == nextIndex) {
+                    nextIndex++;
+                }
+                this._nextIndex = nextIndex;
+                return true;
+            }
+        }
+        this._current = null;
+        this._string = null; // Marks iteration as ended.
+        return false;
+    }
 }
 
 /** Find the first match of [regExp] in [string] at or after [start]. */
-Match firstMatchAfter(JSSyntaxRegExp regExp, String string, int start) {
-  return regExp._execGlobal(string, start);
+const firstMatchAfter = (regExp: JSSyntaxRegExp, string: string, start: int): DartMatch => {
+    return regExp._execGlobal(string, start);
 }
 
 
