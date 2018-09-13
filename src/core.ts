@@ -5,7 +5,7 @@
 // Patch file for dart:collection classes.
 
 import {Abstract, AbstractMethods, bool, int, float, double, DartClass, defaultConstructor, defaultFactory, Implements, namedConstructor, namedFactory, Op, Operator, safeCallOriginal, With, num, EQUALS_OPERATOR, AbstractProperty} from "./utils";
-import _dart, { divide, isNot, is } from './_common';
+import _dart, { divide, isNot, is, nullOr, nullOr } from './_common';
 import {DartString} from "./string";
 import {OPERATOR_DIVIDE, OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN, OPERATOR_MINUS, OPERATOR_PLUS, OPERATOR_TIMES} from "./utils";
 import {DartInt, DartNumber} from "./number";
@@ -14127,7 +14127,7 @@ class DartRegExp implements DartPattern {
     @defaultFactory
     protected static _create(source: string,
         _?: { multiLine?: bool /*false*/, caseSensitive?: bool /*true*/ }): DartRegExp {
-        throw 'external';
+        return new JSSyntaxRegExp(source, _);
     }
 
     constructor(source: string,
@@ -14202,6 +14202,271 @@ class DartRegExp implements DartPattern {
         throw 'abstract';
     }
 }
+
+// Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
+//part of _js_helper;
+
+// Helper method used by internal libraries.
+const regExpGetNative = (regexp: JSSyntaxRegExp):RegExp => regexp._nativeRegExp;
+
+/**
+ * Returns a native version of the RegExp with the global flag set.
+ *
+ * The RegExp's `lastIndex` property is zero when it is returned.
+ *
+ * The returned regexp is shared, and its `lastIndex` property may be
+ * modified by other uses, so the returned regexp must be used immediately
+ * when it's returned, with no user-provided code run in between.
+ */
+const regExpGetGlobalNative = (regexp: JSSyntaxRegExp):RegExp => {
+    let nativeRegexp: RegExp = regexp._nativeGlobalVersion;
+    // JS('void', '#.lastIndex = 0', nativeRegexp);
+    nativeRegexp.lastIndex = 0;
+    return nativeRegexp;
+}
+
+/**
+ * Computes the number of captures in a regexp.
+ *
+ * This currently involves creating a new RegExp object with a different
+ * source and running it against the empty string (the last part is usually
+ * fast).
+ *
+ * The JSSyntaxRegExp could cache the result, and set the cache any time
+ * it finds a match.
+ */
+const regExpCaptureCount = (regexp: JSSyntaxRegExp): int => {
+    let nativeAnchoredRegExp: RegExp = regexp._nativeAnchoredVersion;
+    let match = new DartList.literal(nativeAnchoredRegExp.exec("")) /*JS('JSExtendableArray', '#.exec("")', nativeAnchoredRegExp)*/;
+    // The native-anchored regexp always have one capture more than the original,
+    // and always matches the empty string.
+    return match.length - 2;
+}
+
+@DartClass
+class JSSyntaxRegExp implements RegExp {
+    pattern: string;
+    _nativeRegExp: RegExp;
+    _nativeGlobalRegExp: RegExp;
+    _nativeAnchoredRegExp: RegExp;
+
+    toString(): string { return `RegExp/${this.pattern}/`; }
+
+    constructor(source: string,
+        _?: { multiLine?: bool /* false*/, caseSensitive?: bool /* true*/ }) {
+        let { multiLine, caseSensitive } = Object.assign({ multiLine: false, caseSensitive: true }, _);
+        this.pattern = source;
+        this._nativeRegExp =
+        JSSyntaxRegExp.makeNative(source, multiLine, caseSensitive, false);
+    }
+
+    get _nativeGlobalVersion(): RegExp {
+        if (this._nativeGlobalRegExp != null) return this._nativeGlobalRegExp;
+        return this._nativeGlobalRegExp =
+        JSSyntaxRegExp.makeNative(this.pattern, this._isMultiLine, this._isCaseSensitive, true);
+    }
+
+    get _nativeAnchoredVersion(): RegExp {
+        if (this._nativeAnchoredRegExp != null) return this._nativeAnchoredRegExp;
+        // An "anchored version" of a regexp is created by adding "|()" to the
+        // source. This means that the regexp always matches at the first position
+        // that it tries, and you can see if the original regexp matched, or it
+        // was the added zero-width match that matched, by looking at the last
+        // capture. If it is a String, the match participated, otherwise it didn't.
+        return this._nativeAnchoredRegExp =
+        JSSyntaxRegExp.makeNative(`${this.pattern}|()`, this._isMultiLine, this._isCaseSensitive, true);
+    }
+
+    get _isMultiLine(): bool { return this._nativeRegExp.multiline /* JS('bool', '#.multiline', _nativeRegExp)*/; }
+    get _isCaseSensitive(): bool { return this._nativeRegExp.ignoreCase /*JS('bool', '!#.ignoreCase', _nativeRegExp)*/; }
+
+    static makeNative(
+        source: string, multiLine: bool, caseSensitive: bool, global: bool): RegExp {
+        checkString(source);
+        let m = multiLine == true ? 'm' : '';
+        let i = caseSensitive == true ? '' : 'i';
+        let g = global ? 'g' : '';
+        // We're using the JavaScript's try catch instead of the Dart one to avoid
+        // dragging in Dart runtime support just because of using RegExp.
+        try {
+            return new RegExp(source, `${m}${i}${g}`) /* JS(
+        '',
+        r'''
+          (function(source, modifiers) {
+            try {
+              return new RegExp(source, modifiers);
+            } catch (e) {
+              return e;
+            }
+          })(#, # + # + #)''',
+        source,
+        m,
+        i,
+        g);*/
+        } catch (errorMessage) {
+            // The returned value is the JavaScript exception. Turn it into a
+            // Dart exception.
+            //let errorMessage = JS('String', r'String(#)', regexp);
+            throw new FormatException(`Illegal RegExp pattern (${errorMessage})`, source);
+        }
+    }
+
+    firstMatch(string: string): DartMatch {
+        let m: RegExpExecArray = this._nativeRegExp.exec(checkString(string)) /*JS('JSExtendableArray|Null', r'#.exec(#)', _nativeRegExp,
+        checkString(string));*/;
+        if (m == null) return null;
+        return new _MatchImplementation(this, m);
+    }
+
+    hasMatch(string: string): bool {
+        return this._nativeRegExp.test(checkString(string)); /*JS('bool', r'#.test(#)', _nativeRegExp, checkString(string));*/
+    }
+
+    stringMatch(string: string): string {
+        let match = this.firstMatch(string);
+        if (match != null) return match.group(0);
+        return null;
+    }
+
+    allMatches(string: string, start?: int): DartIterable<DartMatch> {
+        start = nullOr(start, 0);
+        checkString(string);
+        checkInt(start);
+        if (start < 0 || start > string.length) {
+            throw new RangeError.range(start, 0, string.length);
+        }
+        return new _AllMatchesIterable(this, string, start);
+    }
+
+    _execGlobal(string: string, start: int): DartMatch {
+        let regexp = this._nativeGlobalVersion;
+        //JS('void', '#.lastIndex = #', regexp, start);
+        regexp.lastIndex = start;
+        let match = regexp.exec(string) /*JS('JSExtendableArray|Null', '#.exec(#)', regexp, string)*/;
+        if (match == null) return null;
+        return new _MatchImplementation(this, match);
+    }
+
+    _execAnchored(string: string, start: int): DartMatch {
+        let regexp = this._nativeAnchoredVersion;
+        //JS('void', '#.lastIndex = #', regexp, start);
+        regexp.lastIndex = start;
+        let match = regexp.exec(string)/* JS('JSExtendableArray|Null', '#.exec(#)', regexp, string)*/;
+        if (match == null) return null;
+        // If the last capture group participated, the original regexp did not
+        // match at the start position.
+        if (match.pop() != null) return null;
+        return new _MatchImplementation(this, match);
+    }
+
+    matchAsPrefix(string: string, start: int): DartMatch {
+        start = nullOr(start, 0);
+        if (start < 0 || start > string.length) {
+            throw new RangeError.range(start, 0, string.length);
+        }
+        return this._execAnchored(string, start);
+    }
+
+    get isMultiLine(): bool { return this._isMultiLine; }
+    get isCaseSensitive(): bool { return this._isCaseSensitive; }
+}
+
+class _MatchImplementation implements DartMatch {
+    pattern: DartPattern;
+    // Contains a JS RegExp match object.
+    // It is an Array of String values with extra 'index' and 'input' properties.
+    _match: RegExpMatchArray;
+
+    constructor(pattern:DartPattern, _match:RegExpMatchArray) {
+        this.pattern = pattern;
+        this._match = _match;
+        //assert(JS('var', '#.input', _match) is String);
+        //assert(JS('var', '#.index', _match) is int);
+    }
+
+    get input(): string {
+        return this._match.input /* JS('String', '#.input', _match)*/;
+    }
+
+    get start(): int {
+        return this._match.index;  //JS('returns:int;depends:none;effects:none;gvn:true', '#.index', _match);
+    }
+
+    get end(): int {
+        return this.start + this._match[0].length;
+        /*
+       start +
+       JS('returns:int;depends:none;effects:none;gvn:true', '#[0].length',
+           _match);*/
+
+    }
+
+    @Operator(Op.INDEX)
+    group(index: int): string {
+        return this._match[index];
+    }
+    //String operator [](int index) => group(index);
+    get groupCount(): int {
+        return this._match.length - 1;
+    }
+
+    groups(groups: DartList<int>): DartList<string> {
+        let out = new DartList<string>();
+        for (let i of groups) {
+            out.add(this.group(i));
+        }
+        return out;
+    }
+}
+
+class _AllMatchesIterable extends IterableBase<Match> {
+  final JSSyntaxRegExp _re;
+  final String _string;
+  final int _start;
+
+  _AllMatchesIterable(this._re, this._string, this._start);
+
+  Iterator<Match> get iterator => new _AllMatchesIterator(_re, _string, _start);
+}
+
+class _AllMatchesIterator implements Iterator<Match> {
+  final JSSyntaxRegExp _regExp;
+  String _string;
+  int _nextIndex;
+  Match _current;
+
+  _AllMatchesIterator(this._regExp, this._string, this._nextIndex);
+
+  Match get current => _current;
+
+  bool moveNext() {
+    if (_string == null) return false;
+    if (_nextIndex <= _string.length) {
+      var match = _regExp._execGlobal(_string, _nextIndex);
+      if (match != null) {
+        _current = match;
+        int nextIndex = match.end;
+        if (match.start == nextIndex) {
+          nextIndex++;
+        }
+        _nextIndex = nextIndex;
+        return true;
+      }
+    }
+    _current = null;
+    _string = null; // Marks iteration as ended.
+    return false;
+  }
+}
+
+/** Find the first match of [regExp] in [string] at or after [start]. */
+Match firstMatchAfter(JSSyntaxRegExp regExp, String string, int start) {
+  return regExp._execGlobal(string, start);
+}
+
 
 
 
