@@ -4,8 +4,28 @@
 
 // Patch file for dart:collection classes.
 
-import {Abstract, AbstractMethods, bool, int, float, double, DartClass, defaultConstructor, defaultFactory, Implements, namedConstructor, namedFactory, Op, Operator, safeCallOriginal, With, num, EQUALS_OPERATOR, AbstractProperty} from "./utils";
-import _dart, { divide, isNot, is,  nullOr } from './_common';
+import {
+    Abstract,
+    AbstractMethods,
+    bool,
+    int,
+    float,
+    double,
+    DartClass,
+    defaultConstructor,
+    defaultFactory,
+    Implements,
+    namedConstructor,
+    namedFactory,
+    Op,
+    Operator,
+    safeCallOriginal,
+    With,
+    num,
+    EQUALS_OPERATOR,
+    AbstractProperty
+} from "./utils";
+import _dart, {divide, isNot, is, nullOr} from './_common';
 import {DartString} from "./string";
 import {OPERATOR_DIVIDE, OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN, OPERATOR_MINUS, OPERATOR_PLUS, OPERATOR_TIMES} from "./utils";
 import {DartInt, DartNumber} from "./number";
@@ -10844,7 +10864,7 @@ class NullThrownError extends DartError {
 
 // TODO : needs to be ported if we wont the same error messages here
 class FormatException extends DartError {
-    constructor(message:string,formatString:string) {
+    constructor(message: string, formatString: string) {
         super(message);
     }
 }
@@ -12281,7 +12301,7 @@ class DartPrimitives {
         }
         return value /* JS('int', '#', value)*/;
     }
-  
+
     // Lazily keep a JS Date stored in the JS object.
 
     static lazyAsJsDate(receiver: DartDateTime) {
@@ -13190,24 +13210,24 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
      */
     @defaultConstructor
     protected DartDateTime(year: int,
-        month?: int /* = 1*/,
-        day?: int /*= 1*/,
-        hour?: int /*= 0*/,
-        minute?: int /* = 0*/,
-        second?: int /* = 0*/,
-        millisecond?: int /* = 0*/,
-        microsecond?: int /* = 0*/) {
+                           month?: int /* = 1*/,
+                           day?: int /*= 1*/,
+                           hour?: int /*= 0*/,
+                           minute?: int /* = 0*/,
+                           second?: int /* = 0*/,
+                           millisecond?: int /* = 0*/,
+                           microsecond?: int /* = 0*/) {
         this._internal(year, month, day, hour, minute, second, millisecond, microsecond, false);
     }
 
     constructor(year: int,
-        month?: int /* = 1*/,
-        day?: int /*= 1*/,
-        hour?: int /*= 0*/,
-        minute?: int /* = 0*/,
-        second?: int /* = 0*/,
-        millisecond?: int /* = 0*/,
-        microsecond?: int /* = 0*/) {
+                month?: int /* = 1*/,
+                day?: int /*= 1*/,
+                hour?: int /*= 0*/,
+                minute?: int /* = 0*/,
+                second?: int /* = 0*/,
+                millisecond?: int /* = 0*/,
+                microsecond?: int /* = 0*/) {
         super();
     }
 
@@ -13218,24 +13238,24 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
      */
     @namedConstructor
     protected utc(year: int,
-        month?: int /* = 1*/,
-        day?: int /*= 1*/,
-        hour?: int /*= 0*/,
-        minute?: int /* = 0*/,
-        second?: int /* = 0*/,
-        millisecond?: int /* = 0*/,
-        microsecond?: int /* = 0*/) {
+                  month?: int /* = 1*/,
+                  day?: int /*= 1*/,
+                  hour?: int /*= 0*/,
+                  minute?: int /* = 0*/,
+                  second?: int /* = 0*/,
+                  millisecond?: int /* = 0*/,
+                  microsecond?: int /* = 0*/) {
         this._internal(year, month, day, hour, minute, second, millisecond, microsecond, true);
     }
 
     static utc: new (year: int,
-        month?: int /* = 1*/,
-        day?: int /*= 1*/,
-        hour?: int /*= 0*/,
-        minute?: int /* = 0*/,
-        second?: int /* = 0*/,
-        millisecond?: int /* = 0*/,
-        microsecond?: int /* = 0*/) => DartDateTime;
+                     month?: int /* = 1*/,
+                     day?: int /*= 1*/,
+                     hour?: int /*= 0*/,
+                     minute?: int /* = 0*/,
+                     second?: int /* = 0*/,
+                     millisecond?: int /* = 0*/,
+                     microsecond?: int /* = 0*/) => DartDateTime;
 
     /**
      * Constructs a [DateTime] instance with current date and time in the
@@ -13399,16 +13419,17 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
      * 1970-01-01T00:00:00Z + [millisecondsSinceEpoch] ms in the given
      * time zone (local or UTC).
      */
+
     /* external */
     @namedConstructor
     protected fromMillisecondsSinceEpoch(millisecondsSinceEpoch: int,
-        _?: { isUtc?: bool /*false*/ }) {
-        let { isUtc } = Object.assign({ isUtc: false }, _);
-        this._withValue(0 + millisecondsSinceEpoch, { isUtc: isUtc });
+                                         _?: { isUtc?: bool /*false*/ }) {
+        let {isUtc} = Object.assign({isUtc: false}, _);
+        this._withValue(0 + millisecondsSinceEpoch, {isUtc: isUtc});
     }
 
     static fromMillisecondsSinceEpoch: new (millisecondsSinceEpoch: int,
-        _?: { isUtc?: bool /*false*/ }) => DartDateTime;
+                                            _?: { isUtc?: bool /*false*/ }) => DartDateTime;
 
     /**
      * Constructs a new [DateTime] instance
@@ -13420,20 +13441,20 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
      * 1970-01-01T00:00:00Z + [microsecondsSinceEpoch] us in the given
      * time zone (local or UTC).
      */
+
     /* external */
     @namedConstructor
     protected fromMicrosecondsSinceEpoch(microsecondsSinceEpoch: int,
-        _?: { isUtc?: bool /* false*/ }) {
-        let { isUtc } = Object.assign({ isUtc: false }, _);
+                                         _?: { isUtc?: bool /* false*/ }) {
+        let {isUtc} = Object.assign({isUtc: false}, _);
         this._withValue(
             DartDateTime._microsecondInRoundedMilliseconds(microsecondsSinceEpoch),
-            { isUtc: isUtc });
+            {isUtc: isUtc});
     }
 
 
-
     static fromMicrosecondsSinceEpoch: new (microsecondsSinceEpoch: int,
-        _?: { isUtc?: bool /* false*/ }) => DartDateTime;
+                                            _?: { isUtc?: bool /* false*/ }) => DartDateTime;
 
     /**
      * Constructs a new [DateTime] instance with the given value.
@@ -13442,7 +13463,7 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
      */
     @namedConstructor
     protected _withValue(_value: int, _?: { isUtc: bool }) {
-        let { isUtc } = Object.assign({}, _);
+        let {isUtc} = Object.assign({}, _);
         this._value = _value;
         this.isUtc = isUtc;
         if (new DartNumber(this.millisecondsSinceEpoch).abs() > DartDateTime._MAX_MILLISECONDS_SINCE_EPOCH ||
@@ -13452,7 +13473,9 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
         }
         if (isUtc == null) throw new ArgumentError(isUtc);
     }
+
     static _withValue: new (_value: int, _?: { isUtc: bool }) => DartDateTime;
+
     /**
      * Returns true if [other] is a [DateTime] at the same moment and in the
      * same time zone (UTC or local).
@@ -13525,9 +13548,13 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
      * if this DateTime is smaller (earlier) than [other],
      * or a positive integer if it is greater (later).
      */
-    compareTo(other: DartDateTime): int { return new DartInt(this._value).compareTo(other._value); }
+    compareTo(other: DartDateTime): int {
+        return new DartInt(this._value).compareTo(other._value);
+    }
 
-    get hashCode(): int { return (this._value ^ (this._value >> 30)) & 0x3FFFFFFF; }
+    get hashCode(): int {
+        return (this._value ^ (this._value >> 30)) & 0x3FFFFFFF;
+    }
 
     /**
      * Returns this DateTime value in the local time zone.
@@ -13540,7 +13567,7 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
      */
     toLocal(): DartDateTime {
         if (this.isUtc) {
-            return new DartDateTime._withValue(this._value, { isUtc: false });
+            return new DartDateTime._withValue(this._value, {isUtc: false});
         }
         return this;
     }
@@ -13556,7 +13583,7 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
      */
     toUtc(): DartDateTime {
         if (this.isUtc) return this;
-        return new DartDateTime._withValue(this._value, { isUtc: true });
+        return new DartDateTime._withValue(this._value, {isUtc: true});
     }
 
     static _fourDigits(n: int): string {
@@ -13665,10 +13692,11 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
      *
      * Be careful when working with dates in local time.
      */
+
     /*external*/
     add(duration: DartDuration): DartDateTime {
         return new DartDateTime._withValue(this._value + duration.inMilliseconds,
-            { isUtc: this.isUtc });
+            {isUtc: this.isUtc});
     }
 
     /**
@@ -13684,10 +13712,11 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
      *
      * Be careful when working with dates in local time.
      */
+
     /*external*/
     subtract(duration: DartDuration): DartDateTime {
         return new DartDateTime._withValue(this._value - duration.inMilliseconds,
-            { isUtc: this.isUtc });
+            {isUtc: this.isUtc});
     }
 
     /**
@@ -13716,18 +13745,21 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
      * will fail because the difference is actually 16591 days and 23 hours, and
      * [Duration.inDays] only returns the number of whole days.
      */
+
     /*external*/
     difference(other: DartDateTime): DartDuration {
-        return new DartDuration({ milliseconds: this._value - other._value });
+        return new DartDuration({milliseconds: this._value - other._value});
     }
 
     /* external */
     @namedConstructor
     protected _internal(year: int, month: int, day: int, hour: int,
-        minute: int, second: int, millisecond: int, microsecond: int, isUtc: bool) {
+                        minute: int, second: int, millisecond: int, microsecond: int, isUtc: bool) {
         this.isUtc = is(isUtc, 'bool')
             ? isUtc
-            : (() => { throw new ArgumentError.value(isUtc, 'isUtc'); })();
+            : (() => {
+                throw new ArgumentError.value(isUtc, 'isUtc');
+            })();
         this._value = checkInt(DartPrimitives.valueFromDecomposedDate(
             year,
             month,
@@ -13740,7 +13772,7 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
     }
 
     static _internal: new (year: int, month: int, day: int, hour: int,
-        minute: int, second: int, millisecond: int, microsecond: int, isUtc: bool) => DartDateTime;
+                           minute: int, second: int, millisecond: int, microsecond: int, isUtc: bool) => DartDateTime;
 
     /*external*/
     @namedConstructor
@@ -13755,7 +13787,7 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
     /// null if the values are out of range.
 
     static _brokenDownDateToValue(year: int, month: int, day: int, hour: int,
-        minute: int, second: int, millisecond: int, microsecond: int, isUtc: bool): int {
+                                  minute: int, second: int, millisecond: int, microsecond: int, isUtc: bool): int {
         return DartPrimitives.valueFromDecomposedDate(
             year,
             month,
@@ -13777,6 +13809,7 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
      * 8,640,000,000,000,000ms (100,000,000 days) from the Unix epoch.
      * In other words: `millisecondsSinceEpoch.abs() <= 8640000000000000`.
      */
+
     /*external*/
     get millisecondsSinceEpoch(): int {
         return this._value;
@@ -13795,6 +13828,7 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
      * Note that this value does not fit into 53 bits (the size of a IEEE double).
      * A JavaScript number is not able to hold this value.
      */
+
     /*external*/
     get microsecondsSinceEpoch(): int {
         return 1000 * this._value;
@@ -13810,6 +13844,7 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
      * such as "CET" or "CEST". On Windows returns the full name, for example
      * "Pacific Standard Time".
      */
+
     /*external*/
     get timeZoneName(): string {
         if (this.isUtc) return "UTC";
@@ -13826,10 +13861,11 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
      * local time. Java, C# and Ruby return the difference between local time and
      * UTC.
      */
+
     /*external*/
     get timeZoneOffset(): DartDuration {
         if (this.isUtc) return new DartDuration();
-        return new DartDuration({ minutes: DartPrimitives.getTimeZoneOffsetInMinutes(this) });
+        return new DartDuration({minutes: DartPrimitives.getTimeZoneOffsetInMinutes(this)});
 
     }
 
@@ -13839,6 +13875,7 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
      *     DateTime moonLanding = DateTime.parse("1969-07-20 20:18:00"){         throw 'external';     }
      *     assert(moonLanding.year == 1969){         throw 'external';     }
      */
+
     /*external*/
     get year(): int {
         return DartPrimitives.getYear(this);
@@ -13851,8 +13888,11 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
      *     assert(moonLanding.month == 7);
      *     assert(moonLanding.month == DateTime.JULY);
      */
+
     /*external*/
-    get month(): int { return DartPrimitives.getMonth(this); }
+    get month(): int {
+        return DartPrimitives.getMonth(this);
+    }
 
     /**
      * The day of the month [1..31].
@@ -13860,8 +13900,11 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
      *     DateTime moonLanding = DateTime.parse("1969-07-20 20:18:00");
      *     assert(moonLanding.day == 20);
      */
+
     /*external*/
-    get day(): int { return DartPrimitives.getDay(this); }
+    get day(): int {
+        return DartPrimitives.getDay(this);
+    }
 
     /**
      * The hour of the day, expressed as in a 24-hour clock [0..23].
@@ -13869,8 +13912,11 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
      *     DateTime moonLanding = DateTime.parse("1969-07-20 20:18:00");
      *     assert(moonLanding.hour == 20);
      */
+
     /*external*/
-    get hour(): int { return DartPrimitives.getHours(this); }
+    get hour(): int {
+        return DartPrimitives.getHours(this);
+    }
 
     /**
      * The minute [0...59].
@@ -13878,8 +13924,11 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
      *     DateTime moonLanding = DateTime.parse("1969-07-20 20:18:00");
      *     assert(moonLanding.minute == 18);
      */
+
     /*external*/
-    get minute(): int { return DartPrimitives.getMinutes(this); }
+    get minute(): int {
+        return DartPrimitives.getMinutes(this);
+    }
 
     /**
      * The second [0...59].
@@ -13887,6 +13936,7 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
      *     DateTime moonLanding = DateTime.parse("1969-07-20 20:18:00");
      *     assert(moonLanding.second == 0);
      */
+
     /*external*/
     get second(): int {
         return DartPrimitives.getSeconds(this);
@@ -13899,6 +13949,7 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
      *     DateTime moonLanding = DateTime.parse("1969-07-20 20:18:00");
      *     assert(moonLanding.millisecond == 0);
      */
+
     /*external*/
     get millisecond(): int {
         return DartPrimitives.getMilliseconds(this);
@@ -13910,6 +13961,7 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
      *     DateTime moonLanding = DateTime.parse("1969-07-20 20:18:00");
      *     assert(moonLanding.microsecond == 0);
      */
+
     /*external*/
     get microsecond(): int {
         return 0;
@@ -13927,6 +13979,7 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
      *     assert(moonLanding.weekday == DateTime.SUNDAY);
      *
      */
+
     /*external*/
     get weekday(): int {
         return DartPrimitives.getWeekday(this);
@@ -14045,6 +14098,7 @@ interface DartMatch {
      *
      * Short alias for [Match.group].
      */
+
     //String operator [](int group);
 
     /**
@@ -14106,7 +14160,7 @@ interface DartMatch {
  *     RegExp exp = new RegExp(r"(\w+)");
  *     String str = "Parse my string";
  *     Iterable<Match> matches = exp.allMatches(str);
- * 
+ *
  * Note the use of a _raw string_ (a string prefixed with `r`)
  * in the example above. Use a raw string to treat each character in a string
  * as a literal character.
@@ -14117,21 +14171,23 @@ class DartRegExp implements DartPattern {
     matchAsPrefix(string: string, start?: number): DartMatch {
         throw new Error("Method not implemented.");
     }
+
     /**
      * Constructs a regular expression.
      *
      * Throws a [FormatException] if [source] is not valid regular
      * expression syntax.
      */
+
     /*external*/
     @defaultFactory
     protected static _create(source: string,
-        _?: { multiLine?: bool /*false*/, caseSensitive?: bool /*true*/ }): DartRegExp {
+                             _?: { multiLine?: bool /*false*/, caseSensitive?: bool /*true*/ }): DartRegExp {
         return new JSSyntaxRegExp(source, _);
     }
 
     constructor(source: string,
-        _?: { multiLine?: bool /*false*/, caseSensitive?: bool /*true*/ }) {
+                _?: { multiLine?: bool /*false*/, caseSensitive?: bool /*true*/ }) {
 
     }
 
@@ -14210,7 +14266,7 @@ class DartRegExp implements DartPattern {
 //part of _js_helper;
 
 // Helper method used by internal libraries.
-const regExpGetNative = (regexp: JSSyntaxRegExp):RegExp => regexp._nativeRegExp;
+const regExpGetNative = (regexp: JSSyntaxRegExp): RegExp => regexp._nativeRegExp;
 
 /**
  * Returns a native version of the RegExp with the global flag set.
@@ -14221,7 +14277,7 @@ const regExpGetNative = (regexp: JSSyntaxRegExp):RegExp => regexp._nativeRegExp;
  * modified by other uses, so the returned regexp must be used immediately
  * when it's returned, with no user-provided code run in between.
  */
-const regExpGetGlobalNative = (regexp: JSSyntaxRegExp):RegExp => {
+const regExpGetGlobalNative = (regexp: JSSyntaxRegExp): RegExp => {
     let nativeRegexp: RegExp = regexp._nativeGlobalVersion;
     // JS('void', '#.lastIndex = 0', nativeRegexp);
     nativeRegexp.lastIndex = 0;
@@ -14253,20 +14309,22 @@ class JSSyntaxRegExp implements DartRegExp {
     _nativeGlobalRegExp: RegExp;
     _nativeAnchoredRegExp: RegExp;
 
-    toString(): string { return `RegExp/${this.pattern}/`; }
+    toString(): string {
+        return `RegExp/${this.pattern}/`;
+    }
 
     constructor(source: string,
-        _?: { multiLine?: bool /* false*/, caseSensitive?: bool /* true*/ }) {
-        let { multiLine, caseSensitive } = Object.assign({ multiLine: false, caseSensitive: true }, _);
+                _?: { multiLine?: bool /* false*/, caseSensitive?: bool /* true*/ }) {
+        let {multiLine, caseSensitive} = Object.assign({multiLine: false, caseSensitive: true}, _);
         this.pattern = source;
         this._nativeRegExp =
-        JSSyntaxRegExp.makeNative(source, multiLine, caseSensitive, false);
+            JSSyntaxRegExp.makeNative(source, multiLine, caseSensitive, false);
     }
 
     get _nativeGlobalVersion(): RegExp {
         if (this._nativeGlobalRegExp != null) return this._nativeGlobalRegExp;
         return this._nativeGlobalRegExp =
-        JSSyntaxRegExp.makeNative(this.pattern, this._isMultiLine, this._isCaseSensitive, true);
+            JSSyntaxRegExp.makeNative(this.pattern, this._isMultiLine, this._isCaseSensitive, true);
     }
 
     get _nativeAnchoredVersion(): RegExp {
@@ -14277,11 +14335,16 @@ class JSSyntaxRegExp implements DartRegExp {
         // was the added zero-width match that matched, by looking at the last
         // capture. If it is a String, the match participated, otherwise it didn't.
         return this._nativeAnchoredRegExp =
-        JSSyntaxRegExp.makeNative(`${this.pattern}|()`, this._isMultiLine, this._isCaseSensitive, true);
+            JSSyntaxRegExp.makeNative(`${this.pattern}|()`, this._isMultiLine, this._isCaseSensitive, true);
     }
 
-    get _isMultiLine(): bool { return this._nativeRegExp.multiline /* JS('bool', '#.multiline', _nativeRegExp)*/; }
-    get _isCaseSensitive(): bool { return this._nativeRegExp.ignoreCase /*JS('bool', '!#.ignoreCase', _nativeRegExp)*/; }
+    get _isMultiLine(): bool {
+        return this._nativeRegExp.multiline /* JS('bool', '#.multiline', _nativeRegExp)*/;
+    }
+
+    get _isCaseSensitive(): bool {
+        return this._nativeRegExp.ignoreCase /*JS('bool', '!#.ignoreCase', _nativeRegExp)*/;
+    }
 
     static makeNative(
         source: string, multiLine: bool, caseSensitive: bool, global: bool): RegExp {
@@ -14292,20 +14355,21 @@ class JSSyntaxRegExp implements DartRegExp {
         // We're using the JavaScript's try catch instead of the Dart one to avoid
         // dragging in Dart runtime support just because of using RegExp.
         try {
-            return new RegExp(source, `${m}${i}${g}`) /* JS(
-        '',
-        r'''
-          (function(source, modifiers) {
-            try {
-              return new RegExp(source, modifiers);
-            } catch (e) {
-              return e;
-            }
-          })(#, # + # + #)''',
-        source,
-        m,
-        i,
-        g);*/
+            return new RegExp(source, `${m}${i}${g}`)
+            /* JS(
+                   '',
+                   r'''
+                     (function(source, modifiers) {
+                       try {
+                         return new RegExp(source, modifiers);
+                       } catch (e) {
+                         return e;
+                       }
+                     })(#, # + # + #)''',
+                   source,
+                   m,
+                   i,
+                   g);*/
         } catch (errorMessage) {
             // The returned value is the JavaScript exception. Turn it into a
             // Dart exception.
@@ -14322,7 +14386,8 @@ class JSSyntaxRegExp implements DartRegExp {
     }
 
     hasMatch(string: string): bool {
-        return this._nativeRegExp.test(checkString(string)); /*JS('bool', r'#.test(#)', _nativeRegExp, checkString(string));*/
+        return this._nativeRegExp.test(checkString(string));
+        /*JS('bool', r'#.test(#)', _nativeRegExp, checkString(string));*/
     }
 
     stringMatch(string: string): string {
@@ -14370,8 +14435,13 @@ class JSSyntaxRegExp implements DartRegExp {
         return this._execAnchored(string, start);
     }
 
-    get isMultiLine(): bool { return this._isMultiLine; }
-    get isCaseSensitive(): bool { return this._isCaseSensitive; }
+    get isMultiLine(): bool {
+        return this._isMultiLine;
+    }
+
+    get isCaseSensitive(): bool {
+        return this._isCaseSensitive;
+    }
 }
 
 class _MatchImplementation implements DartMatch {
@@ -14380,7 +14450,7 @@ class _MatchImplementation implements DartMatch {
     // It is an Array of String values with extra 'index' and 'input' properties.
     _match: RegExpMatchArray;
 
-    constructor(pattern:DartPattern, _match:RegExpMatchArray) {
+    constructor(pattern: DartPattern, _match: RegExpMatchArray) {
         this.pattern = pattern;
         this._match = _match;
         //assert(JS('var', '#.input', _match) is String);
@@ -14408,6 +14478,7 @@ class _MatchImplementation implements DartMatch {
     group(index: int): string {
         return this._match[index];
     }
+
     //String operator [](int index) => group(index);
     get groupCount(): int {
         return this._match.length - 1;
@@ -14442,11 +14513,11 @@ class _AllMatchesIterable extends DartIterableBase<DartMatch> {
 class _AllMatchesIterator implements DartIterator<DartMatch> {
     next(value?: any): IteratorResult<DartMatch> {
         return {
-            done:!this.moveNext(),
-            value:this.current
+            done: !this.moveNext(),
+            value: this.current
         };
     }
-   
+
     _regExp: JSSyntaxRegExp;
     _string: string;
     _nextIndex: int;
@@ -14458,7 +14529,9 @@ class _AllMatchesIterator implements DartIterator<DartMatch> {
         this._nextIndex = _nextIndex;
     }
 
-    get current(): DartMatch { return this._current; }
+    get current(): DartMatch {
+        return this._current;
+    }
 
     moveNext(): bool {
         if (this._string == null) return false;
@@ -14484,8 +14557,6 @@ class _AllMatchesIterator implements DartIterator<DartMatch> {
 const firstMatchAfter = (regExp: JSSyntaxRegExp, string: string, start: int): DartMatch => {
     return regExp._execGlobal(string, start);
 }
-
-
 
 
 export {
