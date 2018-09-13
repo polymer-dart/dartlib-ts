@@ -4,7 +4,7 @@
 
 // Patch file for dart:collection classes.
 
-import {Abstract, AbstractMethods, bool, int, float, double, DartClass, defaultConstructor, defaultFactory, Implements, namedConstructor, namedFactory, Op, Operator, safeCallOriginal, With, num, EQUALS_OPERATOR} from "./utils";
+import {Abstract, AbstractMethods, bool, int, float, double, DartClass, defaultConstructor, defaultFactory, Implements, namedConstructor, namedFactory, Op, Operator, safeCallOriginal, With, num, EQUALS_OPERATOR, AbstractProperty} from "./utils";
 import _dart, { divide, isNot, is } from './_common';
 import {DartString} from "./string";
 import {OPERATOR_DIVIDE, OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN, OPERATOR_MINUS, OPERATOR_PLUS, OPERATOR_TIMES} from "./utils";
@@ -13942,6 +13942,267 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
 
 }
 
+// Copyright (c) 2011, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
+//part of dart.core;
+
+/**
+ * An interface for basic searches within strings.
+ */
+interface DartPattern {
+    // NOTE: When using "start" index from the language library, call
+    // without an argument if start is zero. This allows backwards compatibility
+    // with implementations of the older interface that didn't have the start
+    // index argument.
+    /**
+     * Match this pattern against the string repeatedly.
+     *
+     * If [start] is provided, matching will start at that index.
+     *
+     * The returned iterable lazily computes all the non-overlapping matches
+     * of the pattern on the string, ordered by start index.
+     * If a user only requests the first
+     * match, this function should not compute all possible matches.
+     *
+     * The matches are found by repeatedly finding the first match
+     * of the pattern on the string, starting from the end of the previous
+     * match, and initially starting from index zero.
+     *
+     * If the pattern matches the empty string at some point, the next
+     * match is found by starting at the previous match's end plus one.
+     */
+    allMatches(string: string, start?: int): DartIterable<DartMatch>;
+
+    /**
+     * Match this pattern against the start of `string`.
+     *
+     * If [start] is provided, it must be an integer in the range `0` ..
+     * `string.length`. In that case, this patten is tested against the
+     * string at the [start] position. That is, a [Match] is returned if the
+     * pattern can match a part of the string starting from position [start].
+     * Returns `null` if the pattern doesn't match.
+     */
+    matchAsPrefix(string: string, start?: int): DartMatch;
+}
+
+/**
+ * A result from searching within a string.
+ *
+ * A Match or an [Iterable] of Match objects is returned from [Pattern]
+ * matching methods.
+ *
+ * The following example finds all matches of a [RegExp] in a [String]
+ * and iterates through the returned iterable of Match objects.
+ *
+ *     RegExp exp = new RegExp(r"(\w+)");
+ *     String str = "Parse my string";
+ *     Iterable<Match> matches = exp.allMatches(str);
+ *     for (Match m in matches) {
+ *       String match = m.group(0);
+ *       print(match);
+ *     }
+ *
+ * The output of the example is:
+ *
+ *     Parse
+ *     my
+ *     string
+ *
+ * Some patterns, regular expressions in particular, may record substrings
+ * that were part of the matching. These are called _groups_ in the Match
+ * object. Some patterns may never have any groups, and their matches always
+ * have zero [groupCount].
+ */
+interface DartMatch {
+    /**
+     * Returns the index in the string where the match starts.
+     */
+    readonly start: int;
+
+    /**
+     * Returns the index in the string after the last character of the
+     * match.
+     */
+    readonly end: int;
+
+    /**
+     * Returns the string matched by the given [group].
+     *
+     * If [group] is 0, returns the match of the pattern.
+     *
+     * The result may be `null` if the pattern didn't assign a value to it
+     * as part of this match.
+     */
+    //@Operator(Op.INDEX)
+    group(group: int): string;
+
+    /**
+     * Returns the string matched by the given [group].
+     *
+     * If [group] is 0, returns the match of the pattern.
+     *
+     * Short alias for [Match.group].
+     */
+    //String operator [](int group);
+
+    /**
+     * Returns a list of the groups with the given indices.
+     *
+     * The list contains the strings returned by [group] for each index in
+     * [groupIndices].
+     */
+    groups(groupIndices: DartList<int>): DartList<string>;
+
+    /**
+     * Returns the number of captured groups in the match.
+     *
+     * Some patterns may capture parts of the input that was used to
+     * compute the full match. This is the number of captured groups,
+     * which is also the maximal allowed argument to the [group] method.
+     */
+    readonly groupCount: int;
+
+    /**
+     * The string on which this match was computed.
+     */
+    readonly input: string;
+
+    /**
+     * The pattern used to search in [input].
+     */
+    readonly pattern: DartPattern;
+}
+
+
+// Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
+//part of dart.core;
+
+/**
+ * A regular expression pattern.
+ *
+ * Regular expressions are [Pattern]s, and can as such be used to match strings
+ * or parts of strings.
+ *
+ * Dart regular expressions have the same syntax and semantics as
+ * JavaScript regular expressions. See
+ * <http://ecma-international.org/ecma-262/5.1/#sec-15.10>
+ * for the specification of JavaScript regular expressions.
+ *
+ * [firstMatch] is the main implementation method that applies a regular
+ * expression to a string and returns the first [Match]. All
+ * other methods in [RegExp] can build on it.
+ *
+ * Use [allMatches] to look for all matches of a regular expression in
+ * a string.
+ *
+ * The following example finds all matches of a regular expression in
+ * a string.
+ *
+ *     RegExp exp = new RegExp(r"(\w+)");
+ *     String str = "Parse my string";
+ *     Iterable<Match> matches = exp.allMatches(str);
+ * 
+ * Note the use of a _raw string_ (a string prefixed with `r`)
+ * in the example above. Use a raw string to treat each character in a string
+ * as a literal character.
+ */
+@DartClass
+class DartRegExp implements DartPattern {
+    @Abstract
+    matchAsPrefix(string: string, start?: number): DartMatch {
+        throw new Error("Method not implemented.");
+    }
+    /**
+     * Constructs a regular expression.
+     *
+     * Throws a [FormatException] if [source] is not valid regular
+     * expression syntax.
+     */
+    /*external*/
+    @defaultFactory
+    protected static _create(source: string,
+        _?: { multiLine?: bool /*false*/, caseSensitive?: bool /*true*/ }): DartRegExp {
+        throw 'external';
+    }
+
+    constructor(source: string,
+        _?: { multiLine?: bool /*false*/, caseSensitive?: bool /*true*/ }) {
+
+    }
+
+    /**
+     * Searches for the first match of the regular expression
+     * in the string [input]. Returns `null` if there is no match.
+     */
+    @Abstract
+    firstMatch(input: string): DartMatch {
+        throw 'abstract';
+    }
+
+    /**
+     * Returns an iterable of the matches of the regular expression on [input].
+     *
+     * If [start] is provided, only start looking for matches at `start`.
+     */
+    @Abstract
+    allMatches(input: string, start?: int): DartIterable<DartMatch> {
+        throw 'abstract';
+    }
+
+    /**
+     * Returns whether the regular expression has a match in the string [input].
+     */
+    @Abstract
+    hasMatch(input: string): bool {
+        throw 'abstract';
+    }
+
+    /**
+     * Returns the first substring match of this regular expression in [input].
+     */
+    @Abstract
+    stringMatch(input: string): string {
+        throw 'abstract';
+    }
+
+    /**
+     * The source regular expression string used to create this `RegExp`.
+     */
+    @AbstractProperty
+    get pattern(): string {
+        throw 'abstract';
+    }
+
+    /**
+     * Whether this regular expression matches multiple lines.
+     *
+     * If the regexp does match multiple lines, the "^" and "$" characters
+     * match the beginning and end of lines. If not, the character match the
+     * beginning and end of the input.
+     */
+    @AbstractProperty
+    get isMultiLine(): bool {
+        throw 'abstract';
+    }
+
+    /**
+     * Whether this regular expression is case sensitive.
+     *
+     * If the regular expression is not case sensitive, it will match an input
+     * letter with a pattern letter even if the two letters are different case
+     * versions of the same letter.
+     */
+    @AbstractProperty
+    get isCaseSensitive(): bool {
+        throw 'abstract';
+    }
+}
+
 
 
 export {
@@ -14012,5 +14273,9 @@ export {
     NullThrownError,
     DartSink,
     DartStopwatch,
-    DartDateTime
+    DartDateTime,
+    FormatException,
+    DartPattern,
+    DartRegExp,
+    DartMatch
 }
