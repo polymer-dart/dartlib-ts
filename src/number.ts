@@ -70,7 +70,7 @@ export const _DartNumber: DartNumberConstructor = class extends Number implement
 };
 
 // @ts-ignore
-const _DartInt: DartIntConstructor = class extends DartNumber implements DartInt {
+const _DartInt: DartIntConstructor = class extends _DartNumber implements DartInt {
     static parse(s: string): int {
         return new Number(s).valueOf();
     }

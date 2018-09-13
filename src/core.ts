@@ -14442,9 +14442,9 @@ class _AllMatchesIterable extends DartIterableBase<DartMatch> {
 class _AllMatchesIterator implements DartIterator<DartMatch> {
     next(value?: any): IteratorResult<DartMatch> {
         return {
-            done:this.moveNext(),
+            done:!this.moveNext(),
             value:this.current
-        }
+        };
     }
    
     _regExp: JSSyntaxRegExp;
