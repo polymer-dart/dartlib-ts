@@ -724,7 +724,7 @@ describe("Utils", () => {
             constructor() {
                 this.res = new Promise<string>((resolve, reject) => {
                     setTimeout(() => {
-                        console.log('fired!');
+                       // console.log('fired!');
                         resolve('hi');
                     }, 1000);
                 });
@@ -748,7 +748,7 @@ describe("Utils", () => {
         }
 
         let res = await new OneSecPromise();
-        console.log(`Return :${res}`);
+     //   console.log(`Return :${res}`);
         expect(res).toEqual('hi');
     })
 });
