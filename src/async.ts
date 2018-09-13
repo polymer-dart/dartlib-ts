@@ -55,7 +55,7 @@ import {
     DartSink, DartIterator, DartError, DartObject, DartStopwatch
 } from "./core";
 import {$with, Abstract, AbstractProperty, bool, DartClass, defaultConstructor, defaultFactory, Implements, int, namedConstructor, namedFactory, Op, Operator, OPERATOR_INDEX_ASSIGN, OPERATOR_MINUS, With} from "./utils";
-import _dart from './_common';
+import {is,equals,isNot} from './_common';
 /*
 abstract class FutureOr<T> {
     // Private generative constructor, so that it is not subclassable, mixable, or
@@ -66,7 +66,7 @@ abstract class FutureOr<T> {
 export type FutureOr<T> = Future<T> | T;
 
 // @ts-ignore
-let self=global;
+let self = global;
 
 /**
  * An object representing a delayed computation.
@@ -250,8 +250,8 @@ class Future<T> implements Promise<T> {
     @namedFactory
     protected static _sync<T>(computation: () => FutureOr<T>): Future<T> {
         try {
-            var result = computation();
-            if (_dart.is(result, Future)) {
+            let result = computation();
+            if (is(result, Future)) {
                 return result as Future<T>;
             }/* else if (result is Future) {
             // TODO(lrn): Remove this case for Dart 2.0.
@@ -482,7 +482,7 @@ class Future<T> implements Promise<T> {
         let onValue = (value: T) => {
             if (!completer.isCompleted) completer.complete(value);
         };
-        var onError = (error, stack) => {
+        let onError = (error, stack) => {
             if (!completer.isCompleted) completer.completeError(error, stack);
         };
         for (let future of futures) {
@@ -513,8 +513,8 @@ class Future<T> implements Promise<T> {
         let iterator = input.iterator;
         return Future.doWhile(() => {
             if (!iterator.moveNext()) return false;
-            var result = f(iterator.current);
-            if (_dart.is(result, Future)) return result.then(Future._kTrue);
+            let result = f(iterator.current);
+            if (is(result, Future)) return result.then(Future._kTrue);
             return true;
         });
     }
@@ -564,7 +564,7 @@ class Future<T> implements Promise<T> {
                     _asyncCompleteWithErrorCallback(doneSignal, error, stackTrace);
                     return;
                 }
-                if (_dart.is(result, Future)) {
+                if (is(result, Future)) {
                     (result as Future<any>).then(nextIteration, {onError: doneSignal._completeError});
                     return;
                 }
@@ -2627,8 +2627,8 @@ class _Future<T> implements Future<T> {
 
     _complete(value: FutureOr<T>): void {
         //assert(!_isComplete);
-        if (_dart.is(value, Future)) {
-            if (_dart.is(value, _Future)) {
+        if (is(value, Future)) {
+            if (is(value, _Future)) {
                 _Future._chainCoreFuture(value as _Future<T>, this);
             } else {
                 _Future._chainForeignFuture(value as Future<any>, this);
@@ -2670,7 +2670,7 @@ class _Future<T> implements Future<T> {
         // unhandled error, even though we know we are already going to listen to
         // it.
 
-        if (_dart.is(value, Future)) {
+        if (is(value, Future)) {
             this._chainFuture(value as Future<T>);
             return;
         }
@@ -2683,7 +2683,7 @@ class _Future<T> implements Future<T> {
     }
 
     _chainFuture(value: Future<T>): void {
-        if (_dart.is(value, _Future)) {
+        if (is(value, _Future)) {
             if ((value as _Future<T>)._hasError) {
                 // Delay completion to allow the user to register callbacks.
                 this._setPendingComplete();
@@ -2784,8 +2784,8 @@ class _Future<T> implements Future<T> {
                         listenerHasError = true;
                         return;
                     }
-                    if (_dart.is(completeResult, Future)) {
-                        if (_dart.is(completeResult, _Future) && completeResult._isComplete) {
+                    if (is(completeResult, Future)) {
+                        if (is(completeResult, _Future) && completeResult._isComplete) {
                             if (completeResult._hasError) {
                                 listenerValueOrError = completeResult._error;
                                 listenerHasError = true;
@@ -2848,12 +2848,12 @@ class _Future<T> implements Future<T> {
 
                 // If the listener's value is a future we need to chain it. Note that
                 // this can only happen if there is a callback.
-                if (_dart.is(listenerValueOrError, Future)) {
+                if (is(listenerValueOrError, Future)) {
                     let chainSource = listenerValueOrError;
                     // Shortcut if the chain-source is already completed. Just continue
                     // the loop.
                     let result = listener.result;
-                    if (_dart.is(chainSource, _Future)) {
+                    if (is(chainSource, _Future)) {
                         if (chainSource._isComplete) {
                             listeners = result._removeListeners();
                             result._cloneResult(chainSource);
@@ -3105,7 +3105,7 @@ class _FutureListener<S, T> {
     handleError(asyncError: DartAsyncError): FutureOr<T> {
         //assert(handlesError && hasErrorCallback);
         // NOTE(dart2ts): we cannot distinguish, use always binary
-        //if (_dart.is(this.errorCallback, ZoneBinaryCallback)) {
+        //if (is(this.errorCallback, ZoneBinaryCallback)) {
         let typedErrorCallback = this.errorCallback as any
             /*=ZoneBinaryCallback<FutureOr<T>, Object, StackTrace>*/;
         return this._zone.runBinary(
@@ -3209,7 +3209,7 @@ class DartTimer {
         }
         // TODO(floitsch): the return type should be 'void', and the type
         // should be inferred.
-        var boundCallback = DartZone.current
+        let boundCallback = DartZone.current
             .bindUnaryCallback<any, DartTimer>(callback, {runGuarded: true});
         return DartZone.current.createPeriodicTimer(duration, boundCallback);
     }
@@ -4155,13 +4155,13 @@ function _rootFork(self: DartZone, parent: DartZoneDelegate, zone: DartZone,
 
     if (specification == null) {
         specification = new DartZoneSpecification();
-    } else if (_dart.isNot(specification, _ZoneSpecification)) {
+    } else if (isNot(specification, _ZoneSpecification)) {
         throw new ArgumentError("ZoneSpecifications must be instantiated" +
             " with the provided constructor.");
     }
     let valueMap: DartMap<any, any>;
     if (zoneValues == null) {
-        if (_dart.is(zone, _Zone)) {
+        if (is(zone, _Zone)) {
             valueMap = (zone as any as _Zone)._map;
         } else {
             valueMap = new DartHashMap<any, any>();
@@ -4208,7 +4208,7 @@ function runZoned<R>(body: () => R,
             try {
                 // NOTE(dart2ts): we have no way to distinguish, use binary always
                 // TODO(floitsch): the return type should be 'void'.
-                //if (_dart.is(onError ,ZoneBinaryCallback)) {
+                //if (is(onError ,ZoneBinaryCallback)) {
                 return self.parent.runBinary(onError as ZoneBinaryCallback<any, any, any>, error, stackTrace);
                 //}
                 //return self.parent.runUnary(onError, error);
@@ -4462,7 +4462,7 @@ class _AsyncRun {
 
     static _initializeScheduleImmediate(): Function {
         requiresPreamble();
-      //  let self = global || window;
+        //  let self = global || window;
 
 
         // @ts-ignore
@@ -4485,7 +4485,7 @@ class _AsyncRun {
             };
 
             // @ts-ignore
-            var observer = new self.MutationObserver(convertDartClosureToJS(internalCallback, 1)) /* JS('', 'new self.MutationObserver(#)',
+            let observer = new self.MutationObserver(convertDartClosureToJS(internalCallback, 1)) /* JS('', 'new self.MutationObserver(#)',
             convertDartClosureToJS(internalCallback, 1))*/;
             //JS('', '#.observe(#, { childList: true })', observer, div);
             observer.observe(div, {childList: true});
@@ -5028,7 +5028,7 @@ class DartStream<T> implements AsyncIterable<T> {
                     controller.addError(e, s);
                     return;
                 }
-                if (_dart.is(newValue, Future)) {
+                if (is(newValue, Future)) {
                     subscription.pause();
                     (newValue as Future<E>)
                         .then(add, {onError: addError})
@@ -5314,7 +5314,7 @@ class DartStream<T> implements AsyncIterable<T> {
         let subscription: DartStreamSubscription<any>;
         subscription = this.listen(
             (element: T) => {
-                _runUserCode(() => (_dart.equals(element, needle)), (isMatch: bool) => {
+                _runUserCode(() => (equals(element, needle)), (isMatch: bool) => {
                     if (isMatch) {
                         _cancelAndValue(subscription, future, true);
                     }
@@ -5893,7 +5893,7 @@ class DartStream<T> implements AsyncIterable<T> {
      * with a [RangeError].
      */
     elementAt(index: int): Future<T> {
-        if (_dart.is(index, 'int') || index < 0) throw new ArgumentError(index);
+        if (is(index, 'int') || index < 0) throw new ArgumentError(index);
         let future = new _Future<T>();
         let subscription: DartStreamSubscription<T>;
         let elementIndex = 0;
@@ -6944,7 +6944,7 @@ class _BufferingStreamSubscription<T>
             if (this._isCanceled && !this._waitsForCancel) return;
             this._state |= _BufferingStreamSubscription._STATE_IN_CALLBACK;
             // TODO(floitsch): this dynamic should be 'void'.
-            //if (_dart.is(this._onError is ZoneBinaryCallback<dynamic, Object, StackTrace>) {
+            //if (is(this._onError is ZoneBinaryCallback<dynamic, Object, StackTrace>) {
             let errorCallback: ZoneBinaryCallback<any, any, DartStackTrace> = this._onError as any/*=ZoneBinaryCallback<dynamic, Object, StackTrace>*/;
             this._zone.runBinaryGuarded(errorCallback, error, stackTrace);
             //} else {
@@ -6957,7 +6957,7 @@ class _BufferingStreamSubscription<T>
         if (this._cancelOnError) {
             this._state |= _BufferingStreamSubscription._STATE_WAIT_FOR_CANCEL;
             this._cancel();
-            if (_dart.is(this._cancelFuture, Future) &&
+            if (is(this._cancelFuture, Future) &&
                 !identical(this._cancelFuture, Future._nullFuture)) {
                 this._cancelFuture.whenComplete(sendError);
             } else {
@@ -6986,7 +6986,7 @@ class _BufferingStreamSubscription<T>
 
         this._cancel();
         this._state |= _BufferingStreamSubscription._STATE_WAIT_FOR_CANCEL;
-        if (_dart.is(this._cancelFuture, Future) &&
+        if (is(this._cancelFuture, Future) &&
             !identical(this._cancelFuture, Future._nullFuture)) {
             this._cancelFuture.whenComplete(sendDone);
         } else {
@@ -7800,7 +7800,7 @@ function _runUserCode<T>(
 function _cancelAndError(subscription: DartStreamSubscription<any>, future: _Future<any>, error: any,
                          stackTrace: DartStackTrace): void {
     let cancelFuture = subscription.cancel();
-    if (_dart.is(cancelFuture, Future) && !identical(cancelFuture, Future._nullFuture)) {
+    if (is(cancelFuture, Future) && !identical(cancelFuture, Future._nullFuture)) {
         cancelFuture.whenComplete(() => future._completeError(error, stackTrace));
     } else {
         future._completeError(error, stackTrace);
@@ -7831,7 +7831,7 @@ function _cancelAndErrorClosure(
  before completing with a value. */
 function _cancelAndValue(subscription: DartStreamSubscription<any>, future: _Future<any>, value: any): void {
     let cancelFuture = subscription.cancel();
-    if (_dart.is(cancelFuture, Future) && !identical(cancelFuture, Future._nullFuture)) {
+    if (is(cancelFuture, Future) && !identical(cancelFuture, Future._nullFuture)) {
         cancelFuture.whenComplete(() => future._complete(value));
     } else {
         future._complete(value);
@@ -8101,7 +8101,7 @@ class _TakeStream<T> extends _ForwardingStream<T, T> {
         this._count = count;
         // This test is done early to avoid handling an async error
         // in the _handleData method.
-        if (_dart.isNot(count, 'int')) throw new ArgumentError(count);
+        if (isNot(count, 'int')) throw new ArgumentError(count);
     }
 
     _createSubscription(onData: (data: T) => any,
@@ -8208,7 +8208,7 @@ class _SkipStream<T> extends _ForwardingStream<T, T> {
         this._count = count;
         // This test is done early to avoid handling an async error
         // in the _handleData method.
-        if (_dart.isNot(count, 'int') || count < 0) throw new ArgumentError(count);
+        if (isNot(count, 'int') || count < 0) throw new ArgumentError(count);
     }
 
     _createSubscription(onData: (data: T) => any,
@@ -8287,7 +8287,7 @@ class _DistinctStream<T> extends _ForwardingStream<T, T> {
 
     _handleData(inputEvent: T, sink: _EventSink<T>): void {
         let subscription: _StateStreamSubscription<T> = sink as any;
-        var previous = subscription._value;
+        let previous = subscription._value;
         if (identical(previous, _DistinctStream._SENTINEL)) {
             // First event.
             subscription._value = inputEvent;
@@ -8297,7 +8297,7 @@ class _DistinctStream<T> extends _ForwardingStream<T, T> {
             let isEqual: bool;
             try {
                 if (this._equals == null) {
-                    isEqual = (_dart.equals(previousEvent, inputEvent));
+                    isEqual = (equals(previousEvent, inputEvent));
                 } else {
                     isEqual = this._equals(previousEvent, inputEvent);
                 }
@@ -9310,7 +9310,7 @@ class _ControllerStream<T> extends _StreamImpl<T> {
     @Operator(Op.EQUALS)
     equals(other: any): bool {
         if (identical(this, other)) return true;
-        if (_dart.isNot(other, _ControllerStream)) return false;
+        if (isNot(other, _ControllerStream)) return false;
         let otherStream: _ControllerStream<T> = other;
         return identical(otherStream._controller, this._controller);
     }
@@ -10517,7 +10517,7 @@ function requiresPreamble() {
 
 function hasTimer(): bool {
     requiresPreamble();
-   // let self = global || window;
+    // let self = global || window;
     return self.setTimeout != null /* JS('', 'self.setTimeout') != null*/;
 }
 

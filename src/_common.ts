@@ -7,7 +7,11 @@ type BaseType<X> = X extends 'string' ? string :
                 (X extends 'double' ? number :
                     (X extends 'bool' ? boolean :
                         (X extends 'boolean' ? boolean : any))))));
-
+/**
+ * TODO: more complex
+ * @param a
+ * @param b
+ */
 function _is<X extends ('num' | 'int' | 'float' | 'double' | 'number' | 'bool' | 'boolean' | 'string' | Function)>(a: any, b: X): boolean /* a is (BaseType<X>)*/ {
     if (typeof b === 'string') {
         if (b === 'num' || b === 'int' || b === 'float' || b === 'double') {
@@ -23,34 +27,42 @@ function _is<X extends ('num' | 'int' | 'float' | 'double' | 'number' | 'bool' |
     return isA(a, b);
 }
 
-export default {
-    /**
-     * @param a
-     * @param b
-     */
-    equals: (a: any, b: any) => {
-        if (a && a[EQUALS_OPERATOR]) {
-            return a[EQUALS_OPERATOR](b);
-        } else if (b && b[EQUALS_OPERATOR]) {
-            return b[EQUALS_OPERATOR](a);
-        }
-        return a === b;
-    },
+function _equals(a: any, b: any) {
+    if (a && a[EQUALS_OPERATOR]) {
+        return a[EQUALS_OPERATOR](b);
+    } else if (b && b[EQUALS_OPERATOR]) {
+        return b[EQUALS_OPERATOR](a);
+    }
+    return a === b;
+}
 
-    /**
-     * TODO: more complex
-     * @param a
-     * @param b
-     */
+function _divide(a: int, b: int): int {
+    return Math.floor(a / b);
+}
+
+const _assert = (expr) => {
+    if (!expr) throw expr;
+};
+
+const _isNot = (a: any, b: any) => !_is(a, b);
+
+export default {
+
+    equals: _equals,
+
     is: _is,
 
-    isNot: (a: any, b: any) => !_is(a, b),
+    isNot: _isNot,
 
-    divide(a: int, b: int): int {
-        return Math.floor(a / b);
-    },
+    divide: _divide,
 
-    assert: (expr) => {
-        if (!expr) throw expr;
-    }
+    assert: _assert,
+}
+
+export {
+    _is as is,
+    _equals as equals,
+    _isNot as isNot,
+    _divide as divide,
+    _assert as assert
 }
