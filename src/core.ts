@@ -6255,18 +6255,18 @@ class DartList<E> implements DartEfficientLengthIterable<E> {
      */
 
     @namedFactory
-    protected static _literal<T>(it: Iterable<T>): DartList<T> {
+    protected static _fromArray<T>(it: Iterable<T>): DartList<T> {
         return new JSArray.list(it);
     }
 
-    static literal: new<T>(it: Iterable<T>) => DartList<T>;
+    static fromArray: new<T>(it: Iterable<T>) => DartList<T>;
 
     @namedFactory
-    protected static _make<T>(...elems: T[]): DartList<T> {
+    protected static _literal<T>(...elems: T[]): DartList<T> {
         return new JSArray.list(elems);
     }
 
-    static make: new<T>(...elems: T[]) => DartList<T>;
+    static literal: new<T>(...elems: T[]) => DartList<T>;
 
     /**
      * Creates a list of the given length.
@@ -12378,7 +12378,7 @@ class DartPrimitives {
         // Example: "Wed May 16 2012 21:13:00 GMT+0200 (CEST)".
         // We extract this name using a regexp.
         let d = this.lazyAsJsDate(receiver);
-        let match = new DartList.literal(/\((.*)\)/.exec(d.toString())) /*JS('JSArray|Null', r'/\((.*)\)/.exec(#.toString())', d)*/;
+        let match = new DartList.fromArray(/\((.*)\)/.exec(d.toString())) /*JS('JSArray|Null', r'/\((.*)\)/.exec(#.toString())', d)*/;
         if (match != null) return match[1];
 
         // Internet Explorer 10+ emits the zone name without parenthesis:
@@ -14240,7 +14240,7 @@ const regExpGetGlobalNative = (regexp: JSSyntaxRegExp):RegExp => {
  */
 const regExpCaptureCount = (regexp: JSSyntaxRegExp): int => {
     let nativeAnchoredRegExp: RegExp = regexp._nativeAnchoredVersion;
-    let match = new DartList.literal(nativeAnchoredRegExp.exec("")) /*JS('JSExtendableArray', '#.exec("")', nativeAnchoredRegExp)*/;
+    let match = new DartList.fromArray(nativeAnchoredRegExp.exec("")) /*JS('JSExtendableArray', '#.exec("")', nativeAnchoredRegExp)*/;
     // The native-anchored regexp always have one capture more than the original,
     // and always matches the empty string.
     return match.length - 2;

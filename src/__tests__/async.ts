@@ -30,7 +30,7 @@ describe("async", () => {
             let future1 = new Future.delayed(new DartDuration({seconds: 1}), () => 'first');
             let future2 = new Future.delayed(new DartDuration({seconds: 2}), () => 'second');
 
-            let future3 = Future.wait(new DartList.make(future1, future2));
+            let future3 = Future.wait(new DartList.literal(future1, future2));
 
             let list = await future3;
 

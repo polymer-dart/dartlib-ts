@@ -144,22 +144,22 @@ describe('DartList', () => {
 
     });
 
-    it('literal constructor works', () => {
-        let l = new DartList.literal(['a', 'b', 'c']);
+    it('fromArray constructor works', () => {
+        let l = new DartList.fromArray(['a', 'b', 'c']);
         expect(l.length).toEqual(3);
         expect(l[0]).toEqual('a');
         expect(l[OPERATOR_INDEX](1)).toEqual('b');
     });
 
     it('maps works', () => {
-        let l = new DartList.literal([1, 2, 3]).map((x) => x * 100).toList();
+        let l = new DartList.fromArray([1, 2, 3]).map((x) => x * 100).toList();
 
         expect(l.length).toEqual(3);
         expect(l[1]).toEqual(200);
     });
 
     it('expand works', () => {
-        let x = new DartList.make(1, 2, 3).expand((n) => new DartList.make(`${n}a`, `${n}b`)).toList();
+        let x = new DartList.literal(1, 2, 3).expand((n) => new DartList.literal(`${n}a`, `${n}b`)).toList();
         expect(x.length).toEqual(6);
         expect(x.join(',')).toEqual('1a,1b,2a,2b,3a,3b');
     });
