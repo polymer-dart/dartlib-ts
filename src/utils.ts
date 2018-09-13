@@ -126,6 +126,7 @@ export function With(mixin: any): ClassDecorator {
     return (ctor) => {
         copyProps(mixin.prototype, ctor.prototype);
         copyProps(mixin, ctor, new Set(['constructor', 'prototype']));
+        getMetadata(ctor).implements.push(mixin);
     };
 }
 

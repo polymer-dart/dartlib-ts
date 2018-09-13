@@ -10922,7 +10922,7 @@ class ArgumentError extends DartError {
     toString(): string {
         let nameString = "";
         if (this.name != null) {
-            nameString = ` (${name})`;
+            nameString = ` (${this.name})`;
         }
         let message = (this.message == null) ? "" : `: ${this.message}`;
         let prefix = `${this._errorName}${nameString}${this.message}`;
@@ -11204,7 +11204,7 @@ class IndexError extends RangeError {
         if (this.length == 0) {
             return ": no indices are valid";
         }
-        return `: index should be less than ${length}`;
+        return `: index should be less than ${this.length}`;
     }
 }
 

@@ -93,7 +93,7 @@ describe("async", () => {
                 n += x;
             }
 
-            expect(n).toEqual(12);
+            expect(n).toEqual(10);
 
         });
 

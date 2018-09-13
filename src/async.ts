@@ -65,6 +65,9 @@ abstract class FutureOr<T> {
 
 export type FutureOr<T> = Future<T> | T;
 
+// @ts-ignore
+let self=global;
+
 /**
  * An object representing a delayed computation.
  *
@@ -10404,8 +10407,6 @@ class _BoundSubscriptionStream<S, T> extends DartStream<T> {
         return result;
     }
 }
-
-let self=global;
 
 @DartClass
 class TimerImpl implements DartTimer {
