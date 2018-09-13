@@ -5,10 +5,10 @@
 // Patch file for dart:collection classes.
 
 import {Abstract, AbstractMethods, bool, int, float, double, DartClass, defaultConstructor, defaultFactory, Implements, namedConstructor, namedFactory, Op, Operator, safeCallOriginal, With, num, EQUALS_OPERATOR} from "./utils";
-import _dart from './_common';
+import _dart, { divide, isNot, is } from './_common';
 import {DartString} from "./string";
 import {OPERATOR_DIVIDE, OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN, OPERATOR_MINUS, OPERATOR_PLUS, OPERATOR_TIMES} from "./utils";
-import {DartNumber} from "./number";
+import {DartInt, DartNumber} from "./number";
 
 
 export type PropertySetter<K, V> = (key: K, value: V) => void;
@@ -10842,6 +10842,13 @@ class NullThrownError extends DartError {
     }
 }
 
+// TODO : needs to be ported if we wont the same error messages here
+class FormatException extends DartError {
+    constructor(message:string,formatString:string) {
+        super(message);
+    }
+}
+
 /**
  * Error thrown when a function is passed an unacceptable argument.
  */
@@ -12238,6 +12245,188 @@ class DartPrimitives {
 
     static timerFrequency: int;
     static timerTicks: Function;
+
+    static valueFromDecomposedDate(
+        years, month, day, hours, minutes, seconds, milliseconds, isUtc): int {
+        const MAX_MILLISECONDS_SINCE_EPOCH = 8640000000000000;
+        checkInt(years);
+        checkInt(month);
+        checkInt(day);
+        checkInt(hours);
+        checkInt(minutes);
+        checkInt(seconds);
+        checkInt(milliseconds);
+        checkBool(isUtc);
+        let jsMonth = month - 1;
+        // The JavaScript Date constructor 'corrects' year NN to 19NN. Sidestep that
+        // correction by adjusting years out of that range and compensating with an
+        // adjustment of months. This hack should not be sensitive to leap years but
+        // use 400 just in case.
+        if (0 <= years && years < 100) {
+            years += 400;
+            jsMonth -= 400 * 12;
+        }
+        let value;
+        if (isUtc) {
+            value = Date.UTC(years, jsMonth, day, hours, minutes, seconds, milliseconds) /*JS('num', r'Date.UTC(#, #, #, #, #, #, #)', years, jsMonth, day,
+            hours, minutes, seconds, milliseconds)*/;
+        } else {
+            value = new Date(years, jsMonth, day, hours, minutes, seconds, milliseconds).valueOf /* JS('num', r'new Date(#, #, #, #, #, #, #).valueOf()', years,
+            jsMonth, day, hours, minutes, seconds, milliseconds)*/;
+        }
+        if (isNaN(value) ||
+            value < -MAX_MILLISECONDS_SINCE_EPOCH ||
+            value > MAX_MILLISECONDS_SINCE_EPOCH) {
+            return null;
+        }
+        return value /* JS('int', '#', value)*/;
+    }
+  
+    // Lazily keep a JS Date stored in the JS object.
+
+    static lazyAsJsDate(receiver: DartDateTime) {
+        if ((receiver as any).date === (void 0) /*JS('bool', r'#.date === (void 0)', receiver)*/) {
+            /*JS('void', r'#.date = new Date(#)', receiver,
+                receiver.millisecondsSinceEpoch);*/
+            (receiver as any).date = new Date(receiver.millisecondsSinceEpoch);
+        }
+        return (receiver as any).date /*JS('var', r'#.date', receiver)*/;
+    }
+
+    // The getters for date and time parts below add a positive integer to ensure
+    // that the result is really an integer, because the JavaScript implementation
+    // may return -0.0 instead of 0.
+    //
+    // They are marked as @NoThrows() because `receiver` comes from a receiver of
+    // a method on DateTime (i.e. is not `null`).
+
+    // TODO(sra): These methods are GVN-able. dart2js should implement an
+    // annotation for that.
+
+    // TODO(sra): These methods often occur in groups (e.g. day, month and
+    // year). Is it possible to factor them so that the `Date` is visible and can
+    // be GVN-ed without a lot of code bloat?
+
+
+    static getYear(receiver: DartDateTime) {
+        return (receiver.isUtc)
+            ? (this.lazyAsJsDate(receiver).getUTCFullYear() + 0)/*JS('int', r'(#.getUTCFullYear() + 0)', lazyAsJsDate(receiver))*/
+            : (this.lazyAsJsDate(receiver).getFullYear() + 0) /*JS('int', r'(#.getFullYear() + 0)', lazyAsJsDate(receiver))*/;
+    }
+
+
+    static getMonth(receiver: DartDateTime) {
+        return (receiver.isUtc)
+            ? (this.lazyAsJsDate(receiver).getUTCMonth() + 1) /* JS('JSUInt31', r'#.getUTCMonth() + 1', lazyAsJsDate(receiver))*/
+            : (this.lazyAsJsDate(receiver).getMonth() + 1) /*JS('JSUInt31', r'#.getMonth() + 1', lazyAsJsDate(receiver))*/;
+    }
+
+
+    static getDay(receiver: DartDateTime) {
+        return (receiver.isUtc)
+            ? (this.lazyAsJsDate(receiver).getUTCDate() + 0) /*JS('JSUInt31', r'(#.getUTCDate() + 0)', lazyAsJsDate(receiver))*/
+            : (this.lazyAsJsDate(receiver).getDate() + 0) /*JS('JSUInt31', r'(#.getDate() + 0)', lazyAsJsDate(receiver))*/;
+    }
+
+
+    static getHours(receiver: DartDateTime) {
+        return (receiver.isUtc)
+            ? (this.lazyAsJsDate(receiver).getUTCHours() + 0)  /*S('JSUInt31', r'(#.getUTCHours() + 0)', lazyAsJsDate(receiver))*/
+            : (this.lazyAsJsDate(receiver).getHours() + 0)/*JS('JSUInt31', r'(#.getHours() + 0)', lazyAsJsDate(receiver))*/;
+    }
+
+
+    static getMinutes(receiver: DartDateTime) {
+        return (receiver.isUtc)
+            ? (this.lazyAsJsDate(receiver).getUTCMinutes() + 0)  /*JS('JSUInt31', r'(#.getUTCMinutes() + 0)', lazyAsJsDate(receiver))*/
+            : (this.lazyAsJsDate(receiver).getMinutes() + 0)/*JS('JSUInt31', r'(#.getMinutes() + 0)', lazyAsJsDate(receiver))*/;
+    }
+
+
+    static getSeconds(receiver: DartDateTime) {
+        return (receiver.isUtc)
+            ? (this.lazyAsJsDate(receiver).getUTCSeconds() + 0)  /*JS('JSUInt31', r'(#.getUTCSeconds() + 0)', lazyAsJsDate(receiver))*/
+            : (this.lazyAsJsDate(receiver).getSeconds() + 0)/*JS('JSUInt31', r'(#.getSeconds() + 0)', lazyAsJsDate(receiver))*/;
+    }
+
+
+    static getMilliseconds(receiver: DartDateTime) {
+        return (receiver.isUtc)
+            ? (this.lazyAsJsDate(receiver).getUTCMilliseconds() + 0)  /* JS(
+              'JSUInt31', r'(#.getUTCMilliseconds() + 0)', lazyAsJsDate(receiver))*/
+            : (this.lazyAsJsDate(receiver).getMilliseconds() + 0) /*JS('JSUInt31', r'(#.getMilliseconds() + 0)', lazyAsJsDate(receiver))*/;
+    }
+
+
+    static getWeekday(receiver: DartDateTime) {
+        let weekday = (receiver.isUtc)
+            ? (this.lazyAsJsDate(receiver).getUTCDay() + 0)  /*JS('int', r'#.getUTCDay() + 0', lazyAsJsDate(receiver))*/
+            : (this.lazyAsJsDate(receiver).getDay() + 0)/* JS('int', r'#.getDay() + 0', lazyAsJsDate(receiver))*/;
+        // Adjust by one because JS weeks start on Sunday.
+        return (weekday + 6) % 7 + 1;
+    }
+
+    static valueFromDateString(str) {
+        if (isNot(str, 'string')) throw argumentErrorValue(str);
+        let value = Date.parse(str) /* JS('num', r'Date.parse(#)', str)*/;
+        if (new DartNumber(value).isNaN) throw argumentErrorValue(str);
+        return value;
+    }
+
+    static getTimeZoneName(receiver: DartDateTime): string {
+        // Firefox and Chrome emit the timezone in parenthesis.
+        // Example: "Wed May 16 2012 21:13:00 GMT+0200 (CEST)".
+        // We extract this name using a regexp.
+        let d = this.lazyAsJsDate(receiver);
+        let match = new DartList.literal(/\((.*)\)/.exec(d.toString())) /*JS('JSArray|Null', r'/\((.*)\)/.exec(#.toString())', d)*/;
+        if (match != null) return match[1];
+
+        // Internet Explorer 10+ emits the zone name without parenthesis:
+        // Example: Thu Oct 31 14:07:44 PDT 2013
+        match = new RegExp(
+            // Thu followed by a space.
+            '/^[A-Z,a-z]{3}\\s' +
+            // Oct 31 followed by space.
+            '[A-Z,a-z]{3}\\s\\d+\\s' +
+            // Time followed by a space.
+            '\\d{2}:\\d{2}:\\d{2}\\s' +
+            // The time zone name followed by a space.
+            '([A-Z]{3,5})\\s' +
+            // The year.
+            '\\d{4}$/')
+            .exec(d.toString());
+
+        /*JS(
+            'JSArray|Null',
+            // Thu followed by a space.
+            r'/^[A-Z,a-z]{3}\s'
+            // Oct 31 followed by space.
+            r'[A-Z,a-z]{3}\s\d+\s'
+            // Time followed by a space.
+            r'\d{2}:\d{2}:\d{2}\s'
+            // The time zone name followed by a space.
+            r'([A-Z]{3,5})\s'
+            // The year.
+            r'\d{4}$/'
+            '.exec(#.toString())',
+            d);*/
+        if (match != null) return match[1];
+
+        // IE 9 and Opera don't provide the zone name. We fall back to emitting the
+        // UTC/GMT offset.
+        // Example (IE9): Wed Nov 20 09:51:00 UTC+0100 2013
+        //       (Opera): Wed Nov 20 2013 11:03:38 GMT+0100
+        match = /(?:GMT|UTC)[+-]\d{4}/.exec(d.toString()) /* JS('JSArray|Null', r'/(?:GMT|UTC)[+-]\d{4}/.exec(#.toString())', d)*/;
+        if (match != null) return match[0];
+        return "";
+    }
+
+    static getTimeZoneOffsetInMinutes(receiver: DartDateTime): int {
+        // Note that JS and Dart disagree on the sign of the offset.
+        // Subtract to avoid -0.0
+        return 0 - this.lazyAsJsDate(receiver).getTimezoneOffset()/* JS('int', r'#.getTimezoneOffset()', lazyAsJsDate(receiver))*/;
+    }
+
 }
 
 /**
@@ -12842,6 +13031,918 @@ class DartStopwatch {
     }
 }
 
+// Copyright (c) 2011, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
+//part of dart.core;
+
+/**
+ * An instant in time, such as July 20, 1969, 8:18pm GMT.
+ *
+ * Create a DateTime object by using one of the constructors
+ * or by parsing a correctly formatted string,
+ * which complies with a subset of ISO 8601.
+ * Note that hours are specified between 0 and 23,
+ * as in a 24-hour clock.
+ * For example:
+ *
+ *     DateTime now = new DateTime.now();
+ *     DateTime berlinWallFell = new DateTime(1989, 11, 9);
+ *     DateTime moonLanding = DateTime.parse("1969-07-20 20:18:00");  // 8:18pm
+ *
+ * A DateTime object is anchored either in the UTC time zone
+ * or in the local time zone of the current computer
+ * when the object is created.
+ *
+ * Once created, neither the value nor the time zone
+ * of a DateTime object may be changed.
+ *
+ * You can use properties to get
+ * the individual units of a DateTime object.
+ *
+ *     assert(berlinWallFell.month == 11);
+ *     assert(moonLanding.hour == 20);
+ *
+ * For convenience and readability,
+ * the DateTime class provides a constant for each day and month
+ * name&mdash;for example, [AUGUST] and [FRIDAY].
+ * You can use these constants to improve code readability:
+ *
+ *     DateTime berlinWallFell = new DateTime(1989, DateTime.NOVEMBER, 9);
+ *     assert(berlinWallFell.weekday == DateTime.THURSDAY);
+ *
+ * Day and month values begin at 1, and the week starts on Monday.
+ * That is, the constants [JANUARY] and [MONDAY] are both 1.
+ *
+ * ## Working with UTC and local time
+ *
+ * A DateTime object is in the local time zone
+ * unless explicitly created in the UTC time zone.
+ *
+ *     DateTime dDay = new DateTime.utc(1944, 6, 6);
+ *
+ * Use [isUtc] to determine whether a DateTime object is based in UTC.
+ * Use the methods [toLocal] and [toUtc]
+ * to get the equivalent date/time value specified in the other time zone.
+ * Use [timeZoneName] to get an abbreviated name of the time zone
+ * for the DateTime object.
+ * To find the difference
+ * between UTC and the time zone of a DateTime object
+ * call [timeZoneOffset].
+ *
+ * ## Comparing DateTime objects
+ *
+ * The DateTime class contains several handy methods,
+ * such as [isAfter], [isBefore], and [isAtSameMomentAs],
+ * for comparing DateTime objects.
+ *
+ *     assert(berlinWallFell.isAfter(moonLanding) == true);
+ *     assert(berlinWallFell.isBefore(moonLanding) == false);
+ *
+ * ## Using DateTime with Duration
+ *
+ * Use the [add] and [subtract] methods with a [Duration] object
+ * to create a new DateTime object based on another.
+ * For example, to find the date that is sixty days after today, write:
+ *
+ *     DateTime today = new DateTime.now();
+ *     DateTime sixtyDaysFromNow = today.add(new Duration(days: 60));
+ *
+ * To find out how much time is between two DateTime objects use
+ * [difference], which returns a [Duration] object:
+ *
+ *     Duration difference = berlinWallFell.difference(moonLanding)
+ *     assert(difference.inDays == 7416);
+ *
+ * The difference between two dates in different time zones
+ * is just the number of nanoseconds between the two points in time.
+ * It doesn't take calendar days into account.
+ * That means that the difference between two midnights in local time may be
+ * less than 24 hours times the number of days between them,
+ * if there is a daylight saving change in between.
+ * If the difference above is calculated using Australian local time, the
+ * difference is 7415 days and 23 hours, which is only 7415 whole days as
+ * reported by `inDays`.
+ *
+ * ## Other resources
+ *
+ * See [Duration] to represent a span of time.
+ * See [Stopwatch] to measure timespans.
+ *
+ * The DateTime class does not provide internationalization.
+ * To internationalize your code, use
+ * the [intl](http://pub.dartlang.org/packages/intl) package.
+ *
+ */
+@DartClass
+class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
+    // Weekday constants that are returned by [weekday] method:
+    static MONDAY = 1;
+    static TUESDAY = 2;
+    static WEDNESDAY = 3;
+    static THURSDAY = 4;
+    static FRIDAY = 5;
+    static SATURDAY = 6;
+    static SUNDAY = 7;
+    static DAYS_PER_WEEK = 7;
+
+    // Month constants that are returned by the [month] getter.
+    static JANUARY = 1;
+    static FEBRUARY = 2;
+    static MARCH = 3;
+    static APRIL = 4;
+    static MAY = 5;
+    static JUNE = 6;
+    static JULY = 7;
+    static AUGUST = 8;
+    static SEPTEMBER = 9;
+    static OCTOBER = 10;
+    static NOVEMBER = 11;
+    static DECEMBER = 12;
+    static MONTHS_PER_YEAR = 12;
+
+    /**
+     * The value of this DateTime.
+     *
+     * The content of this field is implementation dependent. On JavaScript it is
+     * equal to [millisecondsSinceEpoch]. On the VM it is equal to
+     * [microsecondsSinceEpoch].
+     */
+    _value: int;
+
+    /**
+     * True if this [DateTime] is set to UTC time.
+     *
+     *     DateTime dDay = new DateTime.utc(1944, 6, 6);
+     *     assert(dDay.isUtc);
+     *
+     */
+    isUtc: bool;
+
+    /**
+     * Constructs a [DateTime] instance specified in the local time zone.
+     *
+     * For example,
+     * to create a new DateTime object representing April 29, 2014, 6:04am:
+     *
+     *     DateTime annularEclipse = new DateTime(2014, DateTime.APRIL, 29, 6, 4);
+     */
+    @defaultConstructor
+    protected DartDateTime(year: int,
+        month?: int /* = 1*/,
+        day?: int /*= 1*/,
+        hour?: int /*= 0*/,
+        minute?: int /* = 0*/,
+        second?: int /* = 0*/,
+        millisecond?: int /* = 0*/,
+        microsecond?: int /* = 0*/) {
+        this._internal(year, month, day, hour, minute, second, millisecond, microsecond, false);
+    }
+
+    constructor(year: int,
+        month?: int /* = 1*/,
+        day?: int /*= 1*/,
+        hour?: int /*= 0*/,
+        minute?: int /* = 0*/,
+        second?: int /* = 0*/,
+        millisecond?: int /* = 0*/,
+        microsecond?: int /* = 0*/) {
+        super();
+    }
+
+    /**
+     * Constructs a [DateTime] instance specified in the UTC time zone.
+     *
+     *     DateTime dDay = new DateTime.utc(1944, DateTime.JUNE, 6);
+     */
+    @namedConstructor
+    protected utc(year: int,
+        month?: int /* = 1*/,
+        day?: int /*= 1*/,
+        hour?: int /*= 0*/,
+        minute?: int /* = 0*/,
+        second?: int /* = 0*/,
+        millisecond?: int /* = 0*/,
+        microsecond?: int /* = 0*/) {
+        this._internal(year, month, day, hour, minute, second, millisecond, microsecond, true);
+    }
+
+    static utc: new (year: int,
+        month?: int /* = 1*/,
+        day?: int /*= 1*/,
+        hour?: int /*= 0*/,
+        minute?: int /* = 0*/,
+        second?: int /* = 0*/,
+        millisecond?: int /* = 0*/,
+        microsecond?: int /* = 0*/) => DartDateTime;
+
+    /**
+     * Constructs a [DateTime] instance with current date and time in the
+     * local time zone.
+     *
+     *     DateTime thisInstant = new DateTime.now();
+     *
+     */
+    @namedConstructor
+    protected now() {
+        this._now();
+    }
+
+    static now: new () => DartDateTime;
+
+    /**
+     * Constructs a new [DateTime] instance based on [formattedString].
+     *
+     * Throws a [FormatException] if the input cannot be parsed.
+     *
+     * The function parses a subset of ISO 8601
+     * which includes the subset accepted by RFC 3339.
+     *
+     * The accepted inputs are currently:
+     *
+     * * A date: A signed four-to-six digit year, two digit month and
+     *   two digit day, optionally separated by `-` characters.
+     *   Examples: "19700101", "-0004-12-24", "81030-04-01".
+     * * An optional time part, separated from the date by either `T` or a space.
+     *   The time part is a two digit hour,
+     *   then optionally a two digit minutes value,
+     *   then optionally a two digit seconds value, and
+     *   then optionally a '.' followed by a one-to-six digit second fraction.
+     *   The minutes and seconds may be separated from the previous parts by a
+     *   ':'.
+     *   Examples: "12", "12:30:24.124", "123010.50".
+     * * An optional time-zone offset part,
+     *   possibly separated from the previous by a space.
+     *   The time zone is either 'z' or 'Z', or it is a signed two digit hour
+     *   part and an optional two digit minute part. The sign must be either
+     *   "+" or "-", and can not be omitted.
+     *   The minutes may be separated from the hours by a ':'.
+     *   Examples: "Z", "-10", "01:30", "1130".
+     *
+     * This includes the output of both [toString] and [toIso8601String], which
+     * will be parsed back into a `DateTime` object with the same time as the
+     * original.
+     *
+     * The result is always in either local time or UTC.
+     * If a time zone offset other than UTC is specified,
+     * the time is converted to the equivalent UTC time.
+     *
+     * Examples of accepted strings:
+     *
+     * * `"2012-02-27 13:27:00"`
+     * * `"2012-02-27 13:27:00.123456z"`
+     * * `"20120227 13:27:00"`
+     * * `"20120227T132700"`
+     * * `"20120227"`
+     * * `"+20120227"`
+     * * `"2012-02-27T14Z"`
+     * * `"2012-02-27T14+00:00"`
+     * * `"-123450101 00:00:00 Z"`: in the year -12345.
+     * * `"2002-02-27T14:00:00-0500"`: Same as `"2002-02-27T19:00:00Z"`
+     */
+    // TODO(lrn): restrict incorrect values like  2003-02-29T50:70:80.
+    // Or not, that may be a breaking change.
+    static parse(formattedString: string): DartDateTime {
+        /*
+         * date ::= yeardate time_opt timezone_opt
+         * yeardate ::= year colon_opt month colon_opt day
+         * year ::= sign_opt digit{4,6}
+         * colon_opt :: <empty> | ':'
+         * sign ::= '+' | '-'
+         * sign_opt ::=  <empty> | sign
+         * month ::= digit{2}
+         * day ::= digit{2}
+         * time_opt ::= <empty> | (' ' | 'T') hour minutes_opt
+         * minutes_opt ::= <empty> | colon_opt digit{2} seconds_opt
+         * seconds_opt ::= <empty> | colon_opt digit{2} millis_opt
+         * micros_opt ::= <empty> | '.' digit{1,6}
+         * timezone_opt ::= <empty> | space_opt timezone
+         * space_opt :: ' ' | <empty>
+         * timezone ::= 'z' | 'Z' | sign digit{2} timezonemins_opt
+         * timezonemins_opt ::= <empty> | colon_opt digit{2}
+         */
+        let re = new DartRegExp('^([+-]?\d{4,6})-?(\d\d)-?(\d\d)' + // Day part.
+            '(?:[ T](\d\d)(?::?(\d\d)(?::?(\d\d)(?:\.(\d{1,6}))?)?)?' +// Time part.
+            '( ?[zZ]| ?([-+])(\d\d)(?::?(\d\d))?)?)?$'); // Timezone part.
+
+        let match: DartMatch = re.firstMatch(formattedString);
+        if (match != null) {
+            let parseIntOrZero = (matched: string): int => {
+                if (matched == null) return 0;
+                return DartInt.parse(matched);
+            };
+
+            // Parses fractional second digits of '.(\d{1,6})' into the combined
+            // microseconds.
+            let parseMilliAndMicroseconds = (matched: string): int => {
+                if (matched == null) return 0;
+                let length = matched.length;
+                //assert(length >= 1);
+                //assert(length <= 6);
+
+                let result = 0;
+                for (let i = 0; i < 6; i++) {
+                    result *= 10;
+                    if (i < matched.length) {
+                        result += new DartString(matched).codeUnitAt(i) ^ 0x30;
+                    }
+                }
+                return result;
+            }
+
+            let years = DartInt.parse(match[1]);
+            let month = DartInt.parse(match[2]);
+            let day = DartInt.parse(match[3]);
+            let hour = parseIntOrZero(match[4]);
+            let minute = parseIntOrZero(match[5]);
+            let second = parseIntOrZero(match[6]);
+            let addOneMillisecond = false;
+            let milliAndMicroseconds = parseMilliAndMicroseconds(match[7]);
+            let millisecond =
+                divide(milliAndMicroseconds, MICROSECONDS_PER_MILLISECOND);
+            let microsecond =
+                new DartInt(milliAndMicroseconds).remainder(MICROSECONDS_PER_MILLISECOND);
+            let isUtc = false;
+            if (match[8] != null) {
+                // timezone part
+                isUtc = true;
+                if (match[9] != null) {
+                    // timezone other than 'Z' and 'z'.
+                    let sign = (match[9] == '-') ? -1 : 1;
+                    let hourDifference = DartInt.parse(match[10]);
+                    let minuteDifference = parseIntOrZero(match[11]);
+                    minuteDifference += 60 * hourDifference;
+                    minute -= sign * minuteDifference;
+                }
+            }
+            let value = DartDateTime._brokenDownDateToValue(years, month, day, hour, minute,
+                second, millisecond, microsecond, isUtc);
+            if (value == null) {
+                throw new FormatException("Time out of range", formattedString);
+            }
+            return new DartDateTime._withValue(value, {isUtc: isUtc});
+        } else {
+            throw new FormatException("Invalid date format", formattedString);
+        }
+    }
+
+    static _MAX_MILLISECONDS_SINCE_EPOCH = 8640000000000000;
+
+    /**
+     * Constructs a new [DateTime] instance
+     * with the given [millisecondsSinceEpoch].
+     *
+     * If [isUtc] is false then the date is in the local time zone.
+     *
+     * The constructed [DateTime] represents
+     * 1970-01-01T00:00:00Z + [millisecondsSinceEpoch] ms in the given
+     * time zone (local or UTC).
+     */
+    /* external */
+    @namedConstructor
+    protected fromMillisecondsSinceEpoch(millisecondsSinceEpoch: int,
+        _?: { isUtc?: bool /*false*/ }) {
+        let { isUtc } = Object.assign({ isUtc: false }, _);
+        this._withValue(0 + millisecondsSinceEpoch, { isUtc: isUtc });
+    }
+
+    static fromMillisecondsSinceEpoch: new (millisecondsSinceEpoch: int,
+        _?: { isUtc?: bool /*false*/ }) => DartDateTime;
+
+    /**
+     * Constructs a new [DateTime] instance
+     * with the given [microsecondsSinceEpoch].
+     *
+     * If [isUtc] is false then the date is in the local time zone.
+     *
+     * The constructed [DateTime] represents
+     * 1970-01-01T00:00:00Z + [microsecondsSinceEpoch] us in the given
+     * time zone (local or UTC).
+     */
+    /* external */
+    @namedConstructor
+    protected fromMicrosecondsSinceEpoch(microsecondsSinceEpoch: int,
+        _?: { isUtc?: bool /* false*/ }) {
+        let { isUtc } = Object.assign({ isUtc: false }, _);
+        this._withValue(
+            DartDateTime._microsecondInRoundedMilliseconds(microsecondsSinceEpoch),
+            { isUtc: isUtc });
+    }
+
+
+
+    static fromMicrosecondsSinceEpoch: new (microsecondsSinceEpoch: int,
+        _?: { isUtc?: bool /* false*/ }) => DartDateTime;
+
+    /**
+     * Constructs a new [DateTime] instance with the given value.
+     *
+     * If [isUtc] is false then the date is in the local time zone.
+     */
+    @namedConstructor
+    protected _withValue(_value: int, _?: { isUtc: bool }) {
+        let { isUtc } = Object.assign({}, _);
+        this._value = _value;
+        this.isUtc = isUtc;
+        if (new DartNumber(this.millisecondsSinceEpoch).abs() > DartDateTime._MAX_MILLISECONDS_SINCE_EPOCH ||
+            (new DartNumber(this.millisecondsSinceEpoch).abs() == DartDateTime._MAX_MILLISECONDS_SINCE_EPOCH &&
+                this.microsecond != 0)) {
+            throw new ArgumentError(this.millisecondsSinceEpoch);
+        }
+        if (isUtc == null) throw new ArgumentError(isUtc);
+    }
+    static _withValue: new (_value: int, _?: { isUtc: bool }) => DartDateTime;
+    /**
+     * Returns true if [other] is a [DateTime] at the same moment and in the
+     * same time zone (UTC or local).
+     *
+     *     DateTime dDayUtc   = new DateTime.utc(1944, DateTime.JUNE, 6);
+     *     DateTime dDayLocal = new DateTime(1944, DateTime.JUNE, 6);
+     *
+     *     assert(dDayUtc.isAtSameMomentAs(dDayLocal) == false);
+     *
+     * See [isAtSameMomentAs] for a comparison that adjusts for time zone.
+     */
+    @Operator(Op.EQUALS)
+    equals(other): bool {
+        if (isNot(other, DartDateTime)) return false;
+        return (this._value == other._value && this.isUtc == other.isUtc);
+    }
+
+    /**
+     * Returns true if [this] occurs before [other].
+     *
+     * The comparison is independent
+     * of whether the time is in UTC or in the local time zone.
+     *
+     *     DateTime berlinWallFell = new DateTime(1989, 11, 9);
+     *     DateTime moonLanding    = DateTime.parse("1969-07-20 20:18:00");
+     *
+     *     assert(berlinWallFell.isBefore(moonLanding) == false);
+     *
+     */
+    isBefore(other: DartDateTime): bool {
+        return this._value < other._value;
+    }
+
+    /**
+     * Returns true if [this] occurs after [other].
+     *
+     * The comparison is independent
+     * of whether the time is in UTC or in the local time zone.
+     *
+     *     DateTime berlinWallFell = new DateTime(1989, 11, 9);
+     *     DateTime moonLanding    = DateTime.parse("1969-07-20 20:18:00");
+     *
+     *     assert(berlinWallFell.isAfter(moonLanding) == true);
+     *
+     */
+    isAfter(other: DartDateTime): bool {
+        return this._value > other._value;
+    }
+
+    /**
+     * Returns true if [this] occurs at the same moment as [other].
+     *
+     * The comparison is independent of whether the time is in UTC or in the local
+     * time zone.
+     *
+     *     DateTime berlinWallFell = new DateTime(1989, 11, 9);
+     *     DateTime moonLanding    = DateTime.parse("1969-07-20 20:18:00");
+     *
+     *     assert(berlinWallFell.isAtSameMomentAs(moonLanding) == false);
+     */
+    isAtSameMomentAs(other: DartDateTime): bool {
+        return this._value == other._value;
+    }
+
+    /**
+     * Compares this DateTime object to [other],
+     * returning zero if the values are equal.
+     *
+     * This function returns a negative integer
+     * if this DateTime is smaller (earlier) than [other],
+     * or a positive integer if it is greater (later).
+     */
+    compareTo(other: DartDateTime): int { return new DartInt(this._value).compareTo(other._value); }
+
+    get hashCode(): int { return (this._value ^ (this._value >> 30)) & 0x3FFFFFFF; }
+
+    /**
+     * Returns this DateTime value in the local time zone.
+     *
+     * Returns [this] if it is already in the local time zone.
+     * Otherwise this method is equivalent to:
+     *
+     *     new DateTime.fromMicrosecondsSinceEpoch(microsecondsSinceEpoch,
+     *                                             isUtc: false)
+     */
+    toLocal(): DartDateTime {
+        if (this.isUtc) {
+            return new DartDateTime._withValue(this._value, { isUtc: false });
+        }
+        return this;
+    }
+
+    /**
+     * Returns this DateTime value in the UTC time zone.
+     *
+     * Returns [this] if it is already in UTC.
+     * Otherwise this method is equivalent to:
+     *
+     *     new DateTime.fromMicrosecondsSinceEpoch(microsecondsSinceEpoch,
+     *                                             isUtc: true)
+     */
+    toUtc(): DartDateTime {
+        if (this.isUtc) return this;
+        return new DartDateTime._withValue(this._value, { isUtc: true });
+    }
+
+    static _fourDigits(n: int): string {
+        let absN = new DartNumber(n).abs();
+        let sign = n < 0 ? "-" : "";
+        if (absN >= 1000) return `${n}`;
+        if (absN >= 100) return `${sign}0${absN}`;
+        if (absN >= 10) return `${sign}00${absN}`;
+        return `${sign}000${absN}`;
+    }
+
+    static _sixDigits(n: int): string {
+        //assert(n < -9999 || n > 9999);
+        let absN = new DartNumber(n).abs();
+        let sign = n < 0 ? "-" : "+";
+        if (absN >= 100000) return `${sign}${absN}`;
+        return "${sign}0${absN}";
+    }
+
+    static _threeDigits(n: int): string {
+        if (n >= 100) return `${n}`;
+        if (n >= 10) return `0${n}`;
+        return `00${n}`;
+    }
+
+    static _twoDigits(n: int): string {
+        if (n >= 10) return `${n}`;
+        return `0${n}`;
+    }
+
+    /**
+     * Returns a human-readable string for this instance.
+     *
+     * The returned string is constructed for the time zone of this instance.
+     * The `toString()` method provides a simply formatted string.
+     * It does not support internationalized strings.
+     * Use the [intl](http://pub.dartlang.org/packages/intl) package
+     * at the pub shared packages repo.
+     *
+     * The resulting string can be parsed back using [parse].
+     */
+    toString(): string {
+        let y = DartDateTime._fourDigits(this.year);
+        let m = DartDateTime._twoDigits(this.month);
+        let d = DartDateTime._twoDigits(this.day);
+        let h = DartDateTime._twoDigits(this.hour);
+        let min = DartDateTime._twoDigits(this.minute);
+        let sec = DartDateTime._twoDigits(this.second);
+        let ms = DartDateTime._threeDigits(this.millisecond);
+        let us = this.microsecond == 0 ? "" : DartDateTime._threeDigits(this.microsecond);
+        if (this.isUtc) {
+            return `${y}-${m}-${d} ${h}:${min}:${sec}.${ms}${us}Z`;
+        } else {
+            return `${y}-${m}-${d} ${h}:${min}:${sec}.${ms}${us}`;
+        }
+    }
+
+    /**
+     * Returns an ISO-8601 full-precision extended format representation.
+     *
+     * The format is `yyyy-MM-ddTHH:mm:ss.mmmuuuZ` for UTC time, and
+     * `yyyy-MM-ddTHH:mm:ss.mmmuuu` (no trailing "Z") for local/non-UTC time,
+     * where:
+     *
+     * * `yyyy` is a, possibly negative, four digit representation of the year,
+     *   if the year is in the range -9999 to 9999,
+     *   otherwise it is a signed six digit representation of the year.
+     * * `MM` is the month in the range 01 to 12,
+     * * `dd` is the day of the month in the range 01 to 31,
+     * * `HH` are hours in the range 00 to 23,
+     * * `mm` are minutes in the range 00 to 59,
+     * * `ss` are seconds in the range 00 to 59 (no leap seconds),
+     * * `mmm` are milliseconds in the range 000 to 999, and
+     * * `uuu` are microseconds in the range 001 to 999. If [microsecond] equals
+     *   0, then this part is omitted.
+     *
+     * The resulting string can be parsed back using [parse].
+     */
+    toIso8601String(): string {
+        let y =
+            (this.year >= -9999 && this.year <= 9999) ? DartDateTime._fourDigits(this.year) : DartDateTime._sixDigits(this.year);
+        let m = DartDateTime._twoDigits(this.month);
+        let d = DartDateTime._twoDigits(this.day);
+        let h = DartDateTime._twoDigits(this.hour);
+        let min = DartDateTime._twoDigits(this.minute);
+        let sec = DartDateTime._twoDigits(this.second);
+        let ms = DartDateTime._threeDigits(this.millisecond);
+        let us = this.microsecond == 0 ? "" : DartDateTime._threeDigits(this.microsecond);
+        if (this.isUtc) {
+            return "$y-$m-${d}T$h:$min:$sec.$ms${us}Z";
+        } else {
+            return "$y-$m-${d}T$h:$min:$sec.$ms$us";
+        }
+    }
+
+    /**
+     * Returns a new [DateTime] instance with [duration] added to [this].
+     *
+     *     DateTime today = new DateTime.now();
+     *     DateTime fiftyDaysFromNow = today.add(new Duration(days: 50));
+     *
+     * Notice that the duration being added is actually 50 * 24 * 60 * 60
+     * seconds. If the resulting `DateTime` has a different daylight saving offset
+     * than `this`, then the result won't have the same time-of-day as `this`, and
+     * may not even hit the calendar date 50 days later.
+     *
+     * Be careful when working with dates in local time.
+     */
+    /*external*/
+    add(duration: DartDuration): DartDateTime {
+        return new DartDateTime._withValue(this._value + duration.inMilliseconds,
+            { isUtc: this.isUtc });
+    }
+
+    /**
+     * Returns a new [DateTime] instance with [duration] subtracted from [this].
+     *
+     *     DateTime today = new DateTime.now();
+     *     DateTime fiftyDaysAgo = today.subtract(new Duration(days: 50));
+     *
+     * Notice that the duration being subtracted is actually 50 * 24 * 60 * 60
+     * seconds. If the resulting `DateTime` has a different daylight saving offset
+     * than `this`, then the result won't have the same time-of-day as `this`, and
+     * may not even hit the calendar date 50 days earlier.
+     *
+     * Be careful when working with dates in local time.
+     */
+    /*external*/
+    subtract(duration: DartDuration): DartDateTime {
+        return new DartDateTime._withValue(this._value - duration.inMilliseconds,
+            { isUtc: this.isUtc });
+    }
+
+    /**
+     * Returns a [Duration] with the difference between [this] and [other].
+     *
+     *     DateTime berlinWallFell = new DateTime.utc(1989, DateTime.NOVEMBER, 9);
+     *     DateTime dDay = new DateTime.utc(1944, DateTime.JUNE, 6);
+     *
+     *     Duration difference = berlinWallFell.difference(dDay);
+     *     assert(difference.inDays == 16592);
+     *
+     * The difference is measured in seconds and fractions of seconds.
+     * The difference above counts the number of fractional seconds between
+     * midnight at the beginning of those dates.
+     * If the dates above had been in local time, not UTC, then the difference
+     * between two midnights may not be a multiple of 24 hours due to daylight
+     * saving differences.
+     *
+     * For example, in Australia, similar code using local time instead of UTC:
+     *
+     *     DateTime berlinWallFell = new DateTime(1989, DateTime.NOVEMBER, 9);
+     *     DateTime dDay = new DateTime(1944, DateTime.JUNE, 6);
+     *     Duration difference = berlinWallFell.difference(dDay);
+     *     assert(difference.inDays == 16592);
+     *
+     * will fail because the difference is actually 16591 days and 23 hours, and
+     * [Duration.inDays] only returns the number of whole days.
+     */
+    /*external*/
+    difference(other: DartDateTime): DartDuration {
+        return new DartDuration({ milliseconds: this._value - other._value });
+    }
+
+    /* external */
+    @namedConstructor
+    protected _internal(year: int, month: int, day: int, hour: int,
+        minute: int, second: int, millisecond: int, microsecond: int, isUtc: bool) {
+        this.isUtc = is(isUtc, 'bool')
+            ? isUtc
+            : (() => { throw new ArgumentError.value(isUtc, 'isUtc'); })();
+        this._value = checkInt(DartPrimitives.valueFromDecomposedDate(
+            year,
+            month,
+            day,
+            hour,
+            minute,
+            second,
+            millisecond + DartDateTime._microsecondInRoundedMilliseconds(microsecond),
+            isUtc));
+    }
+
+    static _internal: new (year: int, month: int, day: int, hour: int,
+        minute: int, second: int, millisecond: int, microsecond: int, isUtc: bool) => DartDateTime;
+
+    /*external*/
+    @namedConstructor
+    protected _now() {
+        this.isUtc = false;
+        this._value = DartPrimitives.dateNow();
+    }
+
+    static _now: new () => DartDateTime;
+
+    /// Returns the time as value (millisecond or microsecond since epoch), or
+    /// null if the values are out of range.
+
+    static _brokenDownDateToValue(year: int, month: int, day: int, hour: int,
+        minute: int, second: int, millisecond: int, microsecond: int, isUtc: bool): int {
+        return DartPrimitives.valueFromDecomposedDate(
+            year,
+            month,
+            day,
+            hour,
+            minute,
+            second,
+            millisecond + DartDateTime._microsecondInRoundedMilliseconds(microsecond),
+            isUtc);
+    }
+
+    /**
+     * The number of milliseconds since
+     * the "Unix epoch" 1970-01-01T00:00:00Z (UTC).
+     *
+     * This value is independent of the time zone.
+     *
+     * This value is at most
+     * 8,640,000,000,000,000ms (100,000,000 days) from the Unix epoch.
+     * In other words: `millisecondsSinceEpoch.abs() <= 8640000000000000`.
+     */
+    /*external*/
+    get millisecondsSinceEpoch(): int {
+        return this._value;
+    }
+
+    /**
+     * The number of microseconds since
+     * the "Unix epoch" 1970-01-01T00:00:00Z (UTC).
+     *
+     * This value is independent of the time zone.
+     *
+     * This value is at most
+     * 8,640,000,000,000,000,000us (100,000,000 days) from the Unix epoch.
+     * In other words: `microsecondsSinceEpoch.abs() <= 8640000000000000000`.
+     *
+     * Note that this value does not fit into 53 bits (the size of a IEEE double).
+     * A JavaScript number is not able to hold this value.
+     */
+    /*external*/
+    get microsecondsSinceEpoch(): int {
+        return 1000 * this._value;
+    }
+
+    /**
+     * The time zone name.
+     *
+     * This value is provided by the operating system and may be an
+     * abbreviation or a full name.
+     *
+     * In the browser or on Unix-like systems commonly returns abbreviations,
+     * such as "CET" or "CEST". On Windows returns the full name, for example
+     * "Pacific Standard Time".
+     */
+    /*external*/
+    get timeZoneName(): string {
+        if (this.isUtc) return "UTC";
+        return DartPrimitives.getTimeZoneName(this);
+    }
+
+    /**
+     * The time zone offset, which
+     * is the difference between local time and UTC.
+     *
+     * The offset is positive for time zones east of UTC.
+     *
+     * Note, that JavaScript, Python and C return the difference between UTC and
+     * local time. Java, C# and Ruby return the difference between local time and
+     * UTC.
+     */
+    /*external*/
+    get timeZoneOffset(): DartDuration {
+        if (this.isUtc) return new DartDuration();
+        return new DartDuration({ minutes: DartPrimitives.getTimeZoneOffsetInMinutes(this) });
+
+    }
+
+    /**
+     * The year.
+     *
+     *     DateTime moonLanding = DateTime.parse("1969-07-20 20:18:00"){         throw 'external';     }
+     *     assert(moonLanding.year == 1969){         throw 'external';     }
+     */
+    /*external*/
+    get year(): int {
+        return DartPrimitives.getYear(this);
+    }
+
+    /**
+     * The month [1..12].
+     *
+     *     DateTime moonLanding = DateTime.parse("1969-07-20 20:18:00");
+     *     assert(moonLanding.month == 7);
+     *     assert(moonLanding.month == DateTime.JULY);
+     */
+    /*external*/
+    get month(): int { return DartPrimitives.getMonth(this); }
+
+    /**
+     * The day of the month [1..31].
+     *
+     *     DateTime moonLanding = DateTime.parse("1969-07-20 20:18:00");
+     *     assert(moonLanding.day == 20);
+     */
+    /*external*/
+    get day(): int { return DartPrimitives.getDay(this); }
+
+    /**
+     * The hour of the day, expressed as in a 24-hour clock [0..23].
+     *
+     *     DateTime moonLanding = DateTime.parse("1969-07-20 20:18:00");
+     *     assert(moonLanding.hour == 20);
+     */
+    /*external*/
+    get hour(): int { return DartPrimitives.getHours(this); }
+
+    /**
+     * The minute [0...59].
+     *
+     *     DateTime moonLanding = DateTime.parse("1969-07-20 20:18:00");
+     *     assert(moonLanding.minute == 18);
+     */
+    /*external*/
+    get minute(): int { return DartPrimitives.getMinutes(this); }
+
+    /**
+     * The second [0...59].
+     *
+     *     DateTime moonLanding = DateTime.parse("1969-07-20 20:18:00");
+     *     assert(moonLanding.second == 0);
+     */
+    /*external*/
+    get second(): int {
+        return DartPrimitives.getSeconds(this);
+    }
+
+
+    /**
+     * The millisecond [0...999].
+     *
+     *     DateTime moonLanding = DateTime.parse("1969-07-20 20:18:00");
+     *     assert(moonLanding.millisecond == 0);
+     */
+    /*external*/
+    get millisecond(): int {
+        return DartPrimitives.getMilliseconds(this);
+    }
+
+    /**
+     * The microsecond [0...999].
+     *
+     *     DateTime moonLanding = DateTime.parse("1969-07-20 20:18:00");
+     *     assert(moonLanding.microsecond == 0);
+     */
+    /*external*/
+    get microsecond(): int {
+        return 0;
+    }
+
+
+    /**
+     * The day of the week [MONDAY]..[SUNDAY].
+     *
+     * In accordance with ISO 8601
+     * a week starts with Monday, which has the value 1.
+     *
+     *     DateTime moonLanding = DateTime.parse("1969-07-20 20:18:00");
+     *     assert(moonLanding.weekday == 7);
+     *     assert(moonLanding.weekday == DateTime.SUNDAY);
+     *
+     */
+    /*external*/
+    get weekday(): int {
+        return DartPrimitives.getWeekday(this);
+    }
+
+
+    /// Rounds the given [microsecond] to the nearest milliseconds value.
+    ///
+    /// For example, invoked with argument `2600` returns `3`.
+    static _microsecondInRoundedMilliseconds(microsecond: int): int {
+        return new DartNumber((microsecond / 1000)).round();
+    }
+
+}
+
+
 
 export {
     DartIterable,
@@ -12910,5 +14011,6 @@ export {
     DartIntegerDivisionByZeroException,
     NullThrownError,
     DartSink,
-    DartStopwatch
+    DartStopwatch,
+    DartDateTime
 }

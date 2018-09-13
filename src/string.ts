@@ -1,9 +1,10 @@
-import {DartIterable} from "./core";
-import {DartClass, int, namedFactory} from "./utils";
+import { DartIterable } from "./core";
+import { DartClass, int, namedFactory } from "./utils";
 
 export interface DartString extends String {
     readonly isEmpty: boolean;
 
+    codeUnitAt(pos: int): int;
 }
 
 export interface FromCharCodeConstructor {
@@ -19,7 +20,7 @@ export interface DartStringConstructor extends StringConstructor {
 
     readonly prototype: DartString;
 
-    fromCharCodes: new(charCodes: DartIterable<int>, start?: int /* = 0*/, end?: int) => DartString;
+    fromCharCodes: new (charCodes: DartIterable<int>, start?: int /* = 0*/, end?: int) => DartString;
 
     fromCharCode: FromCharCodeConstructor;
 
@@ -41,6 +42,10 @@ class _DartString extends String implements DartString {
         return this.length === 0;
     }
 
+    codeUnitAt(pos: int): int {
+        return this.charCodeAt(pos);
+    }
+
     @namedFactory
     protected static _fromCharCodes(charCodes: DartIterable<int>, start?: int /* = 0*/, end?: int): _DartString {
         start = start || 0;
@@ -58,4 +63,4 @@ class _DartString extends String implements DartString {
 
 // @ts-ignore
 DartString.prototype = _DartString.prototype;
-Object.setPrototypeOf(DartString,_DartString);
+Object.setPrototypeOf(DartString, _DartString);
