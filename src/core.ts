@@ -10710,18 +10710,6 @@ class _GeneratorIterable<E> extends DartListIterable<E> {
     static _id = (n: int): int => n;
 }
 
-/**
- * An Iterator that allows moving backwards as well as forwards.
- */
-interface DartBidirectionalIterator<E> extends DartIterator<E> {
-    /**
-     * Move back to the previous element.
-     *
-     * Returns true and updates [current] if successful. Returns false
-     * and sets [current] to null if there is no previous element.
-     */
-    movePrevious(): boolean;
-}
 
 // Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
@@ -10784,6 +10772,19 @@ export interface DartIterator<E> extends Iterator<E> {
      * the current value, but can keep reading it from the iterator.
      */
     readonly current: E;
+}
+
+/**
+ * An Iterator that allows moving backwards as well as forwards.
+ */
+interface DartBidirectionalIterator<E> extends DartIterator<E> {
+    /**
+     * Move back to the previous element.
+     *
+     * Returns true and updates [current] if successful. Returns false
+     * and sets [current] to null if there is no previous element.
+     */
+    movePrevious(): bool;
 }
 
 /**
@@ -14040,6 +14041,17 @@ interface DartPattern {
     matchAsPrefix(string: string, start?: int): DartMatch;
 }
 
+// abstract impl needed for type check
+const DartPattern = class implements DartPattern {
+    allMatches(string: string, start?: int): DartIterable<DartMatch> {
+        throw 'abstract';
+    }
+
+    matchAsPrefix(string: string, start?: int): DartMatch {
+        throw 'abstract';
+    }
+};
+
 /**
  * A result from searching within a string.
  *
@@ -14166,6 +14178,7 @@ interface DartMatch {
  * as a literal character.
  */
 @DartClass
+@Implements(DartPattern)
 class DartRegExp implements DartPattern {
     @Abstract
     matchAsPrefix(string: string, start?: number): DartMatch {
@@ -14631,5 +14644,7 @@ export {
     FormatException,
     DartPattern,
     DartRegExp,
-    DartMatch
+    DartMatch,
+    DartBidirectionalIterator,
+    JSSyntaxRegExp, regExpCaptureCount, regExpGetNative, regExpGetGlobalNative, firstMatchAfter,
 }
