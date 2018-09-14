@@ -55,7 +55,7 @@ import {
     DartSink, DartIterator, DartError, DartObject, DartStopwatch
 } from "./core";
 import {$with, Abstract, AbstractProperty, bool, DartClass, defaultConstructor, defaultFactory, Implements, int, namedConstructor, namedFactory, Op, Operator, OPERATOR_INDEX_ASSIGN, OPERATOR_MINUS, With} from "./utils";
-import {is,equals,isNot} from './_common';
+import {is, equals, isNot} from './_common';
 /*
 abstract class FutureOr<T> {
     // Private generative constructor, so that it is not subclassable, mixable, or

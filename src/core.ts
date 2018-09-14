@@ -1854,7 +1854,7 @@ class _LinkedCustomHashMap<K, V> extends DartJsLinkedHashMap<K, V> {
     internalFindBucketIndex(bucket: any, key: any): int {
         if (bucket == null) return -1;
         let length = bucket.length /*JS('int', '#.length', bucket)*/;
-        for (let i = 0; i < length; i++) {
+        for (let i = 0; i < this.length; i++) {
             let cell: LinkedHashMapCell<K, V> = bucket[i] /*JS('var', '#[#]', bucket, i)*/;
             if (this._equals(cell.hashMapCellKey, key)) return i;
         }
@@ -2000,9 +2000,9 @@ class DartSetMixin<E> implements DartSet<E> {
         let result =
             growable ? (() => {
                 let l = new DartList<E>();
-                l.length = length;
+                l.length = this.length;
                 return l
-            })() : new DartList<E>(length);
+            })() : new DartList<E>(this.length);
         let i = 0;
         for (let element of this) result[OPERATOR_INDEX_ASSIGN](i++, element);
         return result;
@@ -7557,11 +7557,11 @@ class DartListMixin<E> implements DartList<E> {
         let result: DartList<E>;
         if (growable) {
             result = new DartList<E>();
-            result.length = length;
+            result.length = this.length;
         } else {
-            result = new DartList<E>(length);
+            result = new DartList<E>(this.length);
         }
-        for (let i = 0; i < length; i++) {
+        for (let i = 0; i < this.length; i++) {
             result[OPERATOR_INDEX_ASSIGN](i, this[OPERATOR_INDEX](i));
         }
         return result;
@@ -7569,7 +7569,7 @@ class DartListMixin<E> implements DartList<E> {
 
     toSet(): DartSet<E> {
         let result: DartSet<E> = new DartSet<E>();
-        for (let i = 0; i < length; i++) {
+        for (let i = 0; i < this.length; i++) {
             result.add(this[OPERATOR_INDEX](i));
         }
         return result;
@@ -7638,7 +7638,7 @@ class DartListMixin<E> implements DartList<E> {
             throw DartIterableElementError.noElement();
         }
         let result = this[OPERATOR_INDEX](this.length - 1);
-        length--;
+        this.length--;
         return result;
     }
 
@@ -7658,7 +7658,7 @@ class DartListMixin<E> implements DartList<E> {
         while (length > 1) {
             let pos = random.nextInt(length);
             length -= 1;
-            var tmp = this[OPERATOR_INDEX](length);
+            let tmp = this[OPERATOR_INDEX](length);
             this[OPERATOR_INDEX_ASSIGN](length, this[OPERATOR_INDEX](pos));
             this[OPERATOR_INDEX_ASSIGN](pos, tmp);
         }
@@ -7799,7 +7799,7 @@ class DartListMixin<E> implements DartList<E> {
     }
 
     insert(index: int, element: E): void {
-        RangeError.checkValueInInterval(index, 0, length, "index");
+        RangeError.checkValueInInterval(index, 0, this.length, "index");
         if (index == this.length) {
             this.add(element);
             return;
@@ -7821,7 +7821,7 @@ class DartListMixin<E> implements DartList<E> {
     }
 
     insertAll(index: int, iterable: DartIterable<E>): void {
-        RangeError.checkValueInInterval(index, 0, length, "index");
+        RangeError.checkValueInInterval(index, 0, this.length, "index");
         if (!_dart.is(iterable, DartEfficientLengthIterable) || identical(iterable, this)) {
             iterable = iterable.toList();
         }
@@ -9421,8 +9421,8 @@ export abstract class DartListIterable<E> extends DartEfficientLengthIterable<E>
     }
 
     get single(): E {
-        if (length == 0) throw DartIterableElementError.noElement();
-        if (length > 1) throw DartIterableElementError.tooMany();
+        if (this.length == 0) throw DartIterableElementError.noElement();
+        if (this.length > 1) throw DartIterableElementError.tooMany();
         return this.elementAt(0);
     }
 
@@ -9604,7 +9604,7 @@ export abstract class DartListIterable<E> extends DartEfficientLengthIterable<E>
 
     toSet(): DartSet<E> {
         let result: DartSet<E> = new DartSet<E>();
-        for (let i = 0; i < length; i++) {
+        for (let i = 0; i < this.length; i++) {
             result.add(this.elementAt(i));
         }
         return result;
@@ -11545,7 +11545,7 @@ class JSArray<E> extends Array implements DartList<E>, JSIndexable<E> {
     insert(index: int, value: E): void {
         this.checkGrowable('insert');
         if (!_dart.is(index, 'int')) throw argumentErrorValue(index);
-        if (index < 0 || index > length) {
+        if (index < 0 || index > this.length) {
             throw new RangeError.value(index);
         }
         //JS('void', r'#.splice(#, 0, #)', this, index, value);
@@ -11735,7 +11735,7 @@ class JSArray<E> extends Array implements DartList<E>, JSIndexable<E> {
         for (let i = 0; i < end; ++i) {
             // TODO(22407): Improve bounds check elimination to allow this JS code to
             // be replaced by indexing.
-            var element = this[i] /*JS('', '#[#]', this, i)*/;
+            let element = this[i] /*JS('', '#[#]', this, i)*/;
             if (test(element)) return element;
             if (this.length != end) throw new ConcurrentModificationError(this);
         }
@@ -11766,7 +11766,7 @@ class JSArray<E> extends Array implements DartList<E>, JSIndexable<E> {
         for (let i = 0; i < length; i++) {
             // TODO(22407): Improve bounds check elimination to allow this JS code to
             // be replaced by indexing.
-            var element = this[i] /* JS('', '#[#]', this, i)*/;
+            let element = this[i] /* JS('', '#[#]', this, i)*/;
             if (test(element)) {
                 if (matchFound) {
                     throw DartIterableElementError.tooMany();
@@ -11790,14 +11790,14 @@ class JSArray<E> extends Array implements DartList<E>, JSIndexable<E> {
         checkNull(start); // TODO(ahe): This is not specified but co19 tests it.
         if (!_dart.is(start, 'int')) throw argumentErrorValue(start);
         if (start < 0 || start > this.length) {
-            throw new RangeError.range(start, 0, length, 'start');
+            throw new RangeError.range(start, 0, this.length, 'start');
         }
         if (end == null) {
-            end = length;
+            end = this.length;
         } else {
             if (!_dart.is(end, 'int')) throw argumentErrorValue(end);
             if (end < start || end > this.length) {
-                throw new RangeError.range(end, start, length, 'end');
+                throw new RangeError.range(end, start, this.length, 'end');
             }
         }
         if (start == end) return new DartList<E>();
@@ -11816,7 +11816,7 @@ class JSArray<E> extends Array implements DartList<E>, JSIndexable<E> {
     }
 
     get last(): E {
-        if (length > 0) return this[OPERATOR_INDEX](length - 1);
+        if (this.length > 0) return this[OPERATOR_INDEX](this.length - 1);
         throw DartIterableElementError.noElement();
     }
 
@@ -11998,7 +11998,7 @@ class JSArray<E> extends Array implements DartList<E>, JSIndexable<E> {
     }
 
     contains(other: any): bool {
-        for (let i = 0; i < length; i++) {
+        for (let i = 0; i < this.length; i++) {
             if (_dart.equals(this[OPERATOR_INDEX](i), other)) return true;
         }
         return false;
@@ -15671,8 +15671,8 @@ class JSString extends String implements DartString, JSIndexable<string> {
     endsWith(other: string): bool {
         checkString(other);
         let otherLength = other.length;
-        if (otherLength > length) return false;
-        return other == this.substring(length - otherLength);
+        if (otherLength > this.length) return false;
+        return other == this.substring(this.length - otherLength);
     }
 
     replaceAll(from: DartPattern, to: string): string {
@@ -15770,7 +15770,7 @@ class JSString extends String implements DartString, JSIndexable<string> {
             let other: DartString = pattern as DartString;
             let otherLength = other.length;
             let endIndex = index + otherLength;
-            if (endIndex > length) return false;
+            if (endIndex > this.length) return false;
             // this should work because of the way js handles == ... maybe
             return other.valueOf() == super.substring(index, endIndex) /*JS('String', r'#.substring(#, #)', this, index, endIndex)*/;
         }
@@ -15779,11 +15779,11 @@ class JSString extends String implements DartString, JSIndexable<string> {
 
     substring(startIndex: int, endIndex?: int): string {
         checkInt(startIndex);
-        if (endIndex == null) endIndex = length;
+        if (endIndex == null) endIndex = this.length;
         checkInt(endIndex);
         if (startIndex < 0) throw new RangeError.value(startIndex);
         if (startIndex > endIndex) throw new RangeError.value(startIndex);
-        if (endIndex > length) throw new RangeError.value(endIndex);
+        if (endIndex > this.length) throw new RangeError.value(endIndex);
         return super.substring(startIndex, endIndex) /*JS('String', r'#.substring(#, #)', this, startIndex, endIndex)*/;
     }
 
@@ -16040,7 +16040,7 @@ class JSString extends String implements DartString, JSIndexable<string> {
     lastIndexOf(pattern: DartPattern | string, start?: int): int {
         checkNull(pattern);
         if (start == null) {
-            start = length;
+            start = this.length;
         } else if (isNot(start, 'int')) {
             throw argumentErrorValue(start);
         } else if (start < 0 || start > this.length) {
@@ -16112,7 +16112,7 @@ class JSString extends String implements DartString, JSIndexable<string> {
 
     charAt(index: int): string {
         if (isNot(index, 'int')) throw diagnoseIndexError(this, index);
-        if (index >= length || index < 0) throw diagnoseIndexError(this, index);
+        if (index >= this.length || index < 0) throw diagnoseIndexError(this, index);
         return super[index] /*JS('String', '#[#]', this, index)*/;
     }
 }
