@@ -1,12 +1,11 @@
 import {DartList, JSArray, DartString, DartIterable, DartStringMatch} from "../core";
-import {$with, int} from "../utils";
 import {is} from "../_common";
 
 describe("DartString", () => {
     it('creates a dart string', () => {
         let x: DartString = new DartString("Ciao");
         expect(x).toBeInstanceOf(String);
-        expect(is(x,DartString)).toBe(true);
+        expect(is(x, DartString)).toBe(true);
         expect(x.valueOf()).toEqual('Ciao');
         expect(x).toEqual('Ciao');
     });
@@ -81,7 +80,7 @@ describe("DartString", () => {
         let s = new DartString('Hello Man!');
         expect(s.indexOf(new DartString('Man'))).toEqual(6);
 
-        let list = new DartString('Man').allMatches(''+s).toList();
+        let list = new DartString('Man').allMatches('' + s).toList();
         expect(list.length).toEqual(1);
         let m: DartStringMatch = list[0];
         expect(m.group(0)).toEqual('Man');
