@@ -167,7 +167,7 @@ function callConstructor(ctor: any, name: string, target: any, ...args: any[]) {
 
 export function DartConstructor(_: { default?: boolean, factory?: boolean, name?: string }): MethodDecorator {
     let {default: isDefault, factory, name: _name} = Object.assign({default: false, factory: false, name: undefined}, _);
-    return (tgt: any, methodName: string, descriptor: TypedPropertyDescriptor<any>) => {
+    return (tgt: any, methodName: PropertyKey, descriptor: TypedPropertyDescriptor<any>) => {
         // save it int the constructor table
 
         let T = factory ? tgt : tgt.constructor;
@@ -179,7 +179,7 @@ export function DartConstructor(_: { default?: boolean, factory?: boolean, name?
             let ctor;
             let name: string | symbol = _name;
             if (factory) {
-                if ((name === undefined || name === null) && methodName.startsWith('_')) {
+                if (typeof methodName == 'string' && (name === undefined || name === null) && methodName.startsWith('_')) {
                     name = methodName.substring(1);   // remove prefix '_' from method name
                 }
 
@@ -197,7 +197,7 @@ export function DartConstructor(_: { default?: boolean, factory?: boolean, name?
             Object.setPrototypeOf(ctor, Object.getPrototypeOf(tgt.constructor));
             copyProps(tgt.constructor, ctor);
 
-            meta.constructors.set(methodName, {ctor: ctor, factory: factory});
+            meta.constructors.set(methodName as string, {ctor: ctor, factory: factory});
             T[name || methodName] = ctor;
         }
     };

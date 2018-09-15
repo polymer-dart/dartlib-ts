@@ -5699,6 +5699,26 @@ let DartStreamIterator = class DartStreamIterator {
             };
         });
     }
+    return(value) {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log('Return called');
+            this.cancel();
+            return {
+                done: true,
+                value: this.current
+            };
+        });
+    }
+    throw(e) {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log('Throw called');
+            this.cancel();
+            return {
+                done: true,
+                value: this.current
+            };
+        });
+    }
 };
 __decorate([
     Abstract
@@ -6705,6 +6725,26 @@ class _StreamIterator {
             let hasNext = yield this.moveNext();
             return {
                 done: !hasNext,
+                value: this.current
+            };
+        });
+    }
+    return(value) {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log('Return called');
+            this.cancel();
+            return {
+                done: true,
+                value: this.current
+            };
+        });
+    }
+    throw(e) {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log('Throw called');
+            this.cancel();
+            return {
+                done: true,
                 value: this.current
             };
         });
