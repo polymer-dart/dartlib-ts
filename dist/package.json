@@ -2,18 +2,12 @@
   "name": "typescript_dart",
   "version": "0.1.0",
   "description": "",
-  "main": "dist/index.js",
-  "scripts": {
-    "build": "tsc",
-    "test": "jest"
-  },
+  "main": "index.js",
   "author": "",
   "license": "ISC",
-  "dependencies": {
-  },
   "devDependencies": {
-    "typescript": "^3.0.3",
     "@types/jest": "^23.3.2",
+    "typescript": "^3.0.3",
     "jest": "^23.6.0",
     "jest-cli": "^23.6.0",
     "jest-environment-node": "^23.4.0",
