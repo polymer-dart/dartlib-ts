@@ -1,23 +1,37 @@
 import { PolymerElement, html } from "@polymer/polymer/polymer-element";
+import { MutableData } from '@polymer/polymer/lib/mixins/mutable-data';
+
 import { customElement, property } from '@polymer/decorators';
 import '@polymer/paper-button';
 import { DartList, DartString, DartDuration, DartIterable } from 'typescript_dart/core';
 import { Future, DartStream } from 'typescript_dart/async';
+import { $with } from 'typescript_dart/utils';
 
 /**
  * @customElement
  * @polymer
  */
 @customElement('test-app')
-class PlaygroundApp extends PolymerElement {
+class PlaygroundApp extends MutableData(PolymerElement) {
     stream: DartStream<string>;
     stop: boolean = false;
+    @property({ type: Array, notify: true })
+    messages: DartList<string> = new DartList.literal<string>('console');
 
     @property({ type: Number })
     pageSelected: number = 0;
 
     static get template() {
-        return html`<p>
+        return html`
+        <style>
+            .console {
+                height: 200px;
+                overflow: auto;
+                padding:1em;
+                background-color: lightgrey;
+            }
+        </style>
+        <p>
         Click in the button to see some funny dart stuff.
         </p>
         <p>
@@ -27,13 +41,29 @@ class PlaygroundApp extends PolymerElement {
         <p>
         <paper-button on-click='startPeriodic'>Start Periodic</paper-button>
         <paper-button on-click='stopPeriodic'>Stop Periodic</paper-button>
-        </p>`;
+       
+        </p>
+        <div class='console'>
+        <dom-repeat items='[[messages]]' as='msg' mutable-data>
+        <template>
+            <p>[[index]] : [[msg]]</p>
+            </template>
+        </dom-repeat>
+        </div>
+        
+        `;
+    }
+
+    log(s: string) {
+        this.messages.insert(0,s);
+        this.notifyPath('messages');
+        console.log(s);
     }
 
     doSomething() {
         let s = new DartList.literal(1, 2, 3);
         s.expand((n) => new DartList.generate(n, (i) => new DartString(`Hello ${n}-${i}`))).forEach((n) => {
-            console.log("Ciao " + n);
+            this.log("Ciao " + n);
         });
 
     }
@@ -42,18 +72,26 @@ class PlaygroundApp extends PolymerElement {
         let f = new Future.delayed<string>(new DartDuration({ seconds: 4 }), () => {
             return new DartString.fromCharCodes(new DartIterable.generate(50, (i) => i + 65)).valueOf();
         });
-        console.log(`result : ${await f}`);
+        this.log(`result : ${await f}`);
+    }
+
+    createPeriodic() {
+        if (this.stream == null) {
+            this.stream = new DartStream.periodic<string>(new DartDuration({ seconds: 1 }), (count) => {
+                return `Tick ${count}`;
+            });
+
+            this.stream = this.stream.asBroadcastStream();
+        }
     }
 
     async startPeriodic() {
-        this.stream = new DartStream.periodic<string>(new DartDuration({ seconds: 1 }), (count) => {
-            return `Tick ${count}`;
-        });
+        this.createPeriodic();
         this.stop = false;
-        console.log("Started");
+        this.log("Started");
         try {
             for await (let s of this.stream) {
-                console.log(s);
+                this.log(s);
                 if (s == 'Tick 10') {
                     throw Error("When exception");
                 }
@@ -62,13 +100,13 @@ class PlaygroundApp extends PolymerElement {
                 }
             }
         } catch (e) {
-            console.log("Interrupted because of overflow");
+            this.log("Interrupted because of exception :" + e);
         }
-        this.stream = null;
-        console.log("Stopped");
+        this.log("Stopped");
     }
 
     stopPeriodic() {
         this.stop = true;
+        this.stream = null;
     }
 }
