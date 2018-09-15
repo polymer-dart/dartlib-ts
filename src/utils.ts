@@ -11,7 +11,14 @@ export const OPERATOR_GT = Symbol('>');
 export const OPERATOR_LEQ = Symbol('<=');
 export const OPERATOR_GEQ = Symbol('>=');
 export const OPERATOR_NEG = Symbol('-');
-
+export const OPERATOR_BITNEG = Symbol('~');
+export const OPERATOR_XOR = Symbol('^');
+export const OPERATOR_BITOR = Symbol('|');
+export const OPERATOR_BITAND = Symbol('&');
+export const OPERATOR_SHIFTRIGHT = Symbol('<<');
+export const OPERATOR_SHIFTLEFT = Symbol('>>');
+export const OPERATOR_INTDIVIDE = Symbol('~/');
+export const OPERATOR_MODULE = Symbol('%');
 
 export enum Op {
     PLUS,
@@ -26,7 +33,15 @@ export enum Op {
     GT,
     LEQ,
     GEQ,
-    NEG
+    NEG,
+    BITNEG,
+    XOR,
+    BITOR,
+    BITAND,
+    SHIFTRIGHT,
+    SHIFTLEFT,
+    INTDIVIDE,
+    MODULE,
 }
 
 const OpSymbolMap: Map<Op, symbol> = new Map([
@@ -43,6 +58,14 @@ const OpSymbolMap: Map<Op, symbol> = new Map([
     [Op.LEQ, OPERATOR_LEQ],
     [Op.GEQ, OPERATOR_GEQ],
     [Op.NEG, OPERATOR_NEG],
+    [Op.BITNEG, OPERATOR_BITNEG],
+    [Op.XOR, OPERATOR_XOR],
+    [Op.BITOR, OPERATOR_BITOR],
+    [Op.BITAND, OPERATOR_BITAND],
+    [Op.SHIFTRIGHT, OPERATOR_SHIFTRIGHT],
+    [Op.SHIFTLEFT, OPERATOR_SHIFTLEFT],
+    [Op.INTDIVIDE, OPERATOR_INTDIVIDE],
+    [Op.MODULE, OPERATOR_MODULE],
 ]);
 
 export type int = number;
