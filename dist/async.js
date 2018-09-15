@@ -5701,7 +5701,6 @@ let DartStreamIterator = class DartStreamIterator {
     }
     return(value) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log('Return called');
             this.cancel();
             return {
                 done: true,
@@ -5711,7 +5710,6 @@ let DartStreamIterator = class DartStreamIterator {
     }
     throw(e) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log('Throw called');
             this.cancel();
             return {
                 done: true,
@@ -6731,7 +6729,6 @@ class _StreamIterator {
     }
     return(value) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log('Return called');
             this.cancel();
             return {
                 done: true,
@@ -6741,7 +6738,6 @@ class _StreamIterator {
     }
     throw(e) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log('Throw called');
             this.cancel();
             return {
                 done: true,

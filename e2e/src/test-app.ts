@@ -10,8 +10,8 @@ import { Future, DartStream } from 'typescript_dart/async';
  */
 @customElement('test-app')
 class PlaygroundApp extends PolymerElement {
-    stream:DartStream<string>;
-    stop:boolean=false;
+    stream: DartStream<string>;
+    stop: boolean = false;
 
     @property({ type: Number })
     pageSelected: number = 0;
@@ -46,25 +46,29 @@ class PlaygroundApp extends PolymerElement {
     }
 
     async startPeriodic() {
-        this.stream = new DartStream.periodic<string>(new DartDuration({seconds:1}),(count)=>{
+        this.stream = new DartStream.periodic<string>(new DartDuration({ seconds: 1 }), (count) => {
             return `Tick ${count}`;
         });
-        this.stop=false;
+        this.stop = false;
         console.log("Started");
-        for await (let s of this.stream) {
-            console.log(s);
-            if (s == 'Tick 10') {
-                throw Error("When exception");
+        try {
+            for await (let s of this.stream) {
+                console.log(s);
+                if (s == 'Tick 10') {
+                    throw Error("When exception");
+                }
+                if (this.stop) {
+                    break;
+                }
             }
-            if (this.stop) {
-                break;
-            }
+        } catch (e) {
+            console.log("Interrupted because of overflow");
         }
-        this.stream=null;
+        this.stream = null;
         console.log("Stopped");
     }
 
     stopPeriodic() {
-        this.stop=true;
+        this.stop = true;
     }
 }

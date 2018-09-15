@@ -6540,7 +6540,6 @@ class DartStreamIterator<T> implements AsyncIterator<T> {
     }
 
     async return(value?: any): Promise<IteratorResult<T>> {
-        console.log('Return called');
         this.cancel();
         return {
             done: true,
@@ -6549,7 +6548,6 @@ class DartStreamIterator<T> implements AsyncIterator<T> {
     }
 
     async throw(e?:any):Promise<IteratorResult<T>> {
-        console.log('Throw called');
         this.cancel();
        
         return {
@@ -7768,7 +7766,6 @@ class _StreamIterator<T> implements DartStreamIterator<T> {
     }
 
     async return(value?: any): Promise<IteratorResult<T>> {
-        console.log('Return called');
         this.cancel();
         return {
             done: true,
@@ -7777,7 +7774,6 @@ class _StreamIterator<T> implements DartStreamIterator<T> {
     }
 
     async throw(e?:any):Promise<IteratorResult<T>> {
-        console.log('Throw called');
         this.cancel();
        
         return {
