@@ -281,4 +281,17 @@ export function $with(t, ...expressions) {
     expressions.forEach((e) => e(t));
     return t;
 }
+/**
+ * Apply operator o to arguments
+ * @param o
+ * @param first the first argument should define the operator
+ * @param rest
+ */
+export function op(o, first, ...rest) {
+    let sym = OpSymbolMap.get(o);
+    if (!first[sym]) {
+        throw `No operator ${o} in ${first}`;
+    }
+    return first[OpSymbolMap.get(o)](...rest);
+}
 //# sourceMappingURL=utils.js.map

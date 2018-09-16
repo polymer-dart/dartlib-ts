@@ -11019,7 +11019,7 @@ class DartPrimitives {
             hours, minutes, seconds, milliseconds)*/;
         }
         else {
-            value = new Date(years, jsMonth, day, hours, minutes, seconds, milliseconds).valueOf /* JS('num', r'new Date(#, #, #, #, #, #, #).valueOf()', years,
+            value = new Date(years, jsMonth, day, hours, minutes, seconds, milliseconds).valueOf() /* JS('num', r'new Date(#, #, #, #, #, #, #).valueOf()', years,
             jsMonth, day, hours, minutes, seconds, milliseconds)*/;
         }
         if (isNaN(value) ||
@@ -11152,7 +11152,116 @@ class DartPrimitives {
         // Subtract to avoid -0.0
         return 0 - this.lazyAsJsDate(receiver).getTimezoneOffset() /* JS('int', r'#.getTimezoneOffset()', lazyAsJsDate(receiver))*/;
     }
+    static _parseIntError(source, handleError) {
+        if (handleError == null)
+            throw new FormatException(source);
+        return handleError(source);
+    }
+    static parseInt(source, radix, handleError) {
+        checkString(source);
+        let re = /^\s*[+-]?((0x[a-f0-9]+)|(\d+)|([a-z0-9]+))\s*$/i /*JS('', r'/^\s*[+-]?((0x[a-f0-9]+)|(\d+)|([a-z0-9]+))\s*$/i')*/;
+        let match = re.exec(source) /*JS('JSExtendableArray|Null', '#.exec(#)', re, source)*/;
+        let digitsIndex = 1;
+        let hexIndex = 2;
+        let decimalIndex = 3;
+        let nonDecimalHexIndex = 4;
+        if (match == null) {
+            // TODO(sra): It might be that the match failed due to unrecognized U+0085
+            // spaces.  We could replace them with U+0020 spaces and try matching
+            // again.
+            return this._parseIntError(source, handleError);
+        }
+        let decimalMatch = match[decimalIndex];
+        if (radix == null) {
+            if (decimalMatch != null) {
+                // Cannot fail because we know that the digits are all decimal.
+                return parseInt(source, 10) /* JS('int', r'parseInt(#, 10)', source)*/;
+            }
+            if (match[hexIndex] != null) {
+                // Cannot fail because we know that the digits are all hex.
+                return parseInt(source, 16) /* JS('int', r'parseInt(#, 16)', source)*/;
+            }
+            return this._parseIntError(source, handleError);
+        }
+        if (isNot(radix, 'int')) {
+            throw new ArgumentError.value(radix, 'radix', 'is not an integer');
+        }
+        if (radix < 2 || radix > 36) {
+            throw new RangeError.range(radix, 2, 36, 'radix');
+        }
+        if (radix == 10 && decimalMatch != null) {
+            // Cannot fail because we know that the digits are all decimal.
+            return parseInt(source, 10) /*JS('int', r'parseInt(#, 10)', source)*/;
+        }
+        // If radix >= 10 and we have only decimal digits the string is safe.
+        // Otherwise we need to check the digits.
+        if (radix < 10 || decimalMatch == null) {
+            // We know that the characters must be ASCII as otherwise the
+            // regexp wouldn't have matched. Lowercasing by doing `| 0x20` is thus
+            // guaranteed to be a safe operation, since it preserves digits
+            // and lower-cases ASCII letters.
+            let maxCharCode;
+            if (radix <= 10) {
+                // Allow all digits less than the radix. For example 0, 1, 2 for
+                // radix 3.
+                // "0".codeUnitAt(0) + radix - 1;
+                maxCharCode = (0x30 - 1) + radix;
+            }
+            else {
+                // Letters are located after the digits in ASCII. Therefore we
+                // only check for the character code. The regexp above made already
+                // sure that the string does not contain anything but digits or
+                // letters.
+                // "a".codeUnitAt(0) + (radix - 10) - 1;
+                maxCharCode = (0x61 - 10 - 1) + radix;
+            }
+            //assert(match[digitsIndex] is String);
+            let digitsPart = match[digitsIndex] /* JS('String', '#[#]', match, digitsIndex)*/;
+            for (let i = 0; i < digitsPart.length; i++) {
+                let characterCode = new DartString(digitsPart).codeUnitAt(i) | 0x20;
+                if (characterCode > maxCharCode) {
+                    return this._parseIntError(source, handleError);
+                }
+            }
+        }
+        // The above matching and checks ensures the source has at least one digits
+        // and all digits are suitable for the radix, so parseInt cannot return NaN.
+        return parseInt(source, radix) /*JS('int', r'parseInt(#, #)', source, radix)*/;
+    }
+    static _parseDoubleError(source, handleError) {
+        if (handleError == null) {
+            throw new FormatException('Invalid double', source);
+        }
+        return handleError(source);
+    }
+    static parseDouble(source, handleError) {
+        checkString(source);
+        // Notice that JS parseFloat accepts garbage at the end of the string.
+        // Accept only:
+        // - [+/-]NaN
+        // - [+/-]Infinity
+        // - a Dart double literal
+        // We do allow leading or trailing whitespace.
+        if (!/^\s*[+-]?(?:Infinity|NaN|(?:\.\d+|\d+(?:\.\d*)?)(?:[eE][+-]?\d+)?)\s*$/.test(source) /*JS(
+        'bool',
+        r'/^\s*[+-]?(?:Infinity|NaN|'
+        r'(?:\.\d+|\d+(?:\.\d*)?)(?:[eE][+-]?\d+)?)\s*$/.test(#)',
+        source)*/) {
+            return this._parseDoubleError(source, handleError);
+        }
+        var result = parseFloat(source) /* JS('num', r'parseFloat(#)', source)*/;
+        if (new DartNumber(result).isNaN) {
+            var trimmed = new DartString(source).trim();
+            if (trimmed == 'NaN' || trimmed == '+NaN' || trimmed == '-NaN') {
+                return result;
+            }
+            return this._parseDoubleError(source, handleError);
+        }
+        return result;
+    }
 }
+/** [: r"$".codeUnitAt(0) :] */
+DartPrimitives.DOLLAR_CHAR_VALUE = 36;
 /**
  * Called by generated code to build a map literal. [keyValuePairs] is
  * a list of key, value, key, value, ..., etc.
@@ -12192,10 +12301,10 @@ let DartDateTime = DartDateTime_1 = class DartDateTime extends DartObject {
         let ms = DartDateTime_1._threeDigits(this.millisecond);
         let us = this.microsecond == 0 ? "" : DartDateTime_1._threeDigits(this.microsecond);
         if (this.isUtc) {
-            return "$y-$m-${d}T$h:$min:$sec.$ms${us}Z";
+            return `${y}-${m}-${d}T${h}:${min}:${sec}.${ms}${us}Z`;
         }
         else {
-            return "$y-$m-${d}T$h:$min:$sec.$ms$us";
+            return `${y}-${m}-${d}T${h}:${min}:${sec}.${ms}${us}`;
         }
     }
     /**
@@ -12264,6 +12373,13 @@ let DartDateTime = DartDateTime_1 = class DartDateTime extends DartObject {
     }
     /* external */
     _internal(year, month, day, hour, minute, second, millisecond, microsecond, isUtc) {
+        month = nullOr(month, 1);
+        day = nullOr(day, 1);
+        hour = nullOr(hour, 0);
+        minute = nullOr(minute, 0);
+        second = nullOr(second, 0);
+        millisecond = nullOr(millisecond, 0);
+        microsecond = nullOr(microsecond, 0);
         this.isUtc = is(isUtc, 'bool')
             ? isUtc
             : (() => {
@@ -14931,7 +15047,7 @@ let DartNumber = DartNumber_1 = class DartNumber {
      *
      * Returns a number of the same type as this number.
      * For doubles, `-0.0.sign == -0.0`.
-  
+
      * The result satisfies:
      *
      *     n == n.sign * n.abs()
@@ -15218,8 +15334,12 @@ let DartNumber = DartNumber_1 = class DartNumber {
         return onError(input);
     }
     /** Helper functions for [parse]. */
-    static _returnIntNull(_) { return null; }
-    static _returnDoubleNull(_) { return null; }
+    static _returnIntNull(_) {
+        return null;
+    }
+    static _returnDoubleNull(_) {
+        return null;
+    }
 };
 __decorate([
     Operator(Op.EQUALS),
@@ -15321,12 +15441,18 @@ let JSNumber = JSNumber_1 = class JSNumber extends Number {
             return -1;
         }
     }
-    get isNegative() { return (this.valueOf() == 0) ? (1 / this.valueOf()) < 0 : this.valueOf() < 0; }
-    get isNaN() { return isNaN(this.valueOf()) /* JS('bool', r'isNaN(#)', this)*/; }
+    get isNegative() {
+        return (this.valueOf() == 0) ? (1 / this.valueOf()) < 0 : this.valueOf() < 0;
+    }
+    get isNaN() {
+        return isNaN(this.valueOf()) /* JS('bool', r'isNaN(#)', this)*/;
+    }
     get isInfinite() {
         return this.valueOf() == (1 / 0) /*JS('bool', r'# == (1/0)', this)*/ || this.valueOf() == (-1 / 0) /*JS('bool', r'# == (-1/0)', this)*/;
     }
-    get isFinite() { return isFinite(this.valueOf()) /*JS('bool', r'isFinite(#)', this)*/; }
+    get isFinite() {
+        return isFinite(this.valueOf()) /*JS('bool', r'isFinite(#)', this)*/;
+    }
     remainder(b) {
         if (isNot(b, 'num'))
             throw argumentErrorValue(b);
@@ -16074,7 +16200,8 @@ let DartInt = class DartInt extends DartNumber {
      * not invoked if the [source] is, for example, `null`.
      */
     static parse(source, _) {
-        throw 'external';
+        let { radix, onError } = Object.assign({}, _);
+        return DartPrimitives.parseInt(source, radix, onError);
     }
 };
 __decorate([
@@ -16514,7 +16641,7 @@ let DartDouble = DartDouble_1 = class DartDouble extends DartNumber {
      *     "-NaN"
      */
     static parse(source, onError) {
-        throw 'external';
+        return DartPrimitives.parseDouble(source, onError);
     }
 };
 DartDouble.NAN = 0.0 / 0.0;

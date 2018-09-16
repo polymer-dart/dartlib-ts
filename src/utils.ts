@@ -351,3 +351,17 @@ export function $with<T>(t: T, ...expressions: ((t: T) => any)[]): T {
     expressions.forEach((e) => e(t));
     return t;
 }
+
+/**
+ * Apply operator o to arguments
+ * @param o
+ * @param first the first argument should define the operator
+ * @param rest
+ */
+export function op(o: Op, first: any, ...rest: any[]): any {
+    let sym = OpSymbolMap.get(o);
+    if (!first[sym]) {
+        throw `No operator ${o} in ${first}`;
+    }
+    return first[OpSymbolMap.get(o)](...rest);
+}

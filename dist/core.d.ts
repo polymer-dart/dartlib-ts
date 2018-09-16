@@ -3930,6 +3930,12 @@ declare class DartPrimitives {
     static valueFromDateString(str: any): number;
     static getTimeZoneName(receiver: DartDateTime): string;
     static getTimeZoneOffsetInMinutes(receiver: DartDateTime): int;
+    static _parseIntError(source: string, handleError: (source: string) => int): int;
+    static parseInt(source: string, radix: int, handleError: (source: string) => int): int;
+    static _parseDoubleError(source: string, handleError: (source: string) => double): double;
+    static parseDouble(source: string, handleError: (source: string) => double): double;
+    /** [: r"$".codeUnitAt(0) :] */
+    static DOLLAR_CHAR_VALUE: int;
 }
 /**
  * Called by generated code to build a map literal. [keyValuePairs] is
@@ -5820,7 +5826,7 @@ declare class DartNumber implements DartComparable<num> {
      *
      * Returns a number of the same type as this number.
      * For doubles, `-0.0.sign == -0.0`.
-  
+
      * The result satisfies:
      *
      *     n == n.sign * n.abs()

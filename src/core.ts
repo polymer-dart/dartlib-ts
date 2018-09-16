@@ -12290,7 +12290,7 @@ class DartPrimitives {
             value = Date.UTC(years, jsMonth, day, hours, minutes, seconds, milliseconds) /*JS('num', r'Date.UTC(#, #, #, #, #, #, #)', years, jsMonth, day,
             hours, minutes, seconds, milliseconds)*/;
         } else {
-            value = new Date(years, jsMonth, day, hours, minutes, seconds, milliseconds).valueOf /* JS('num', r'new Date(#, #, #, #, #, #, #).valueOf()', years,
+            value = new Date(years, jsMonth, day, hours, minutes, seconds, milliseconds).valueOf() /* JS('num', r'new Date(#, #, #, #, #, #, #).valueOf()', years,
             jsMonth, day, hours, minutes, seconds, milliseconds)*/;
         }
         if (isNaN(value) ||
@@ -12445,6 +12445,122 @@ class DartPrimitives {
         // Subtract to avoid -0.0
         return 0 - this.lazyAsJsDate(receiver).getTimezoneOffset()/* JS('int', r'#.getTimezoneOffset()', lazyAsJsDate(receiver))*/;
     }
+
+
+    static _parseIntError(source: string, handleError: (source: string) => int): int {
+        if (handleError == null) throw new FormatException(source);
+        return handleError(source);
+    }
+
+    static parseInt(
+        source: string, radix: int, handleError: (source: string) => int): int {
+        checkString(source);
+        let re: RegExp = /^\s*[+-]?((0x[a-f0-9]+)|(\d+)|([a-z0-9]+))\s*$/i /*JS('', r'/^\s*[+-]?((0x[a-f0-9]+)|(\d+)|([a-z0-9]+))\s*$/i')*/;
+        let match = re.exec(source) /*JS('JSExtendableArray|Null', '#.exec(#)', re, source)*/;
+        let digitsIndex = 1;
+        let hexIndex = 2;
+        let decimalIndex = 3;
+        let nonDecimalHexIndex = 4;
+        if (match == null) {
+            // TODO(sra): It might be that the match failed due to unrecognized U+0085
+            // spaces.  We could replace them with U+0020 spaces and try matching
+            // again.
+            return this._parseIntError(source, handleError);
+        }
+        let decimalMatch = match[decimalIndex];
+        if (radix == null) {
+            if (decimalMatch != null) {
+                // Cannot fail because we know that the digits are all decimal.
+                return parseInt(source, 10) /* JS('int', r'parseInt(#, 10)', source)*/;
+            }
+            if (match[hexIndex] != null) {
+                // Cannot fail because we know that the digits are all hex.
+                return parseInt(source, 16) /* JS('int', r'parseInt(#, 16)', source)*/;
+            }
+            return this._parseIntError(source, handleError);
+        }
+
+        if (isNot(radix, 'int')) {
+            throw new ArgumentError.value(radix, 'radix', 'is not an integer');
+        }
+        if (radix < 2 || radix > 36) {
+            throw new RangeError.range(radix, 2, 36, 'radix');
+        }
+        if (radix == 10 && decimalMatch != null) {
+            // Cannot fail because we know that the digits are all decimal.
+            return parseInt(source, 10) /*JS('int', r'parseInt(#, 10)', source)*/;
+        }
+        // If radix >= 10 and we have only decimal digits the string is safe.
+        // Otherwise we need to check the digits.
+        if (radix < 10 || decimalMatch == null) {
+            // We know that the characters must be ASCII as otherwise the
+            // regexp wouldn't have matched. Lowercasing by doing `| 0x20` is thus
+            // guaranteed to be a safe operation, since it preserves digits
+            // and lower-cases ASCII letters.
+            let maxCharCode;
+            if (radix <= 10) {
+                // Allow all digits less than the radix. For example 0, 1, 2 for
+                // radix 3.
+                // "0".codeUnitAt(0) + radix - 1;
+                maxCharCode = (0x30 - 1) + radix;
+            } else {
+                // Letters are located after the digits in ASCII. Therefore we
+                // only check for the character code. The regexp above made already
+                // sure that the string does not contain anything but digits or
+                // letters.
+                // "a".codeUnitAt(0) + (radix - 10) - 1;
+                maxCharCode = (0x61 - 10 - 1) + radix;
+            }
+            //assert(match[digitsIndex] is String);
+            let digitsPart: string = match[digitsIndex] /* JS('String', '#[#]', match, digitsIndex)*/;
+            for (let i = 0; i < digitsPart.length; i++) {
+                let characterCode = new DartString(digitsPart).codeUnitAt(i) | 0x20;
+                if (characterCode > maxCharCode) {
+                    return this._parseIntError(source, handleError);
+                }
+            }
+        }
+        // The above matching and checks ensures the source has at least one digits
+        // and all digits are suitable for the radix, so parseInt cannot return NaN.
+        return parseInt(source, radix) /*JS('int', r'parseInt(#, #)', source, radix)*/;
+    }
+
+
+    static _parseDoubleError(source: string, handleError: (source: string) => double): double {
+        if (handleError == null) {
+            throw new FormatException('Invalid double', source);
+        }
+        return handleError(source);
+    }
+
+    static parseDouble(source: string, handleError: (source: string) => double): double {
+        checkString(source);
+        // Notice that JS parseFloat accepts garbage at the end of the string.
+        // Accept only:
+        // - [+/-]NaN
+        // - [+/-]Infinity
+        // - a Dart double literal
+        // We do allow leading or trailing whitespace.
+        if (!/^\s*[+-]?(?:Infinity|NaN|(?:\.\d+|\d+(?:\.\d*)?)(?:[eE][+-]?\d+)?)\s*$/.test(source)/*JS(
+        'bool',
+        r'/^\s*[+-]?(?:Infinity|NaN|'
+        r'(?:\.\d+|\d+(?:\.\d*)?)(?:[eE][+-]?\d+)?)\s*$/.test(#)',
+        source)*/) {
+            return this._parseDoubleError(source, handleError);
+        }
+        var result = parseFloat(source) /* JS('num', r'parseFloat(#)', source)*/;
+        if (new DartNumber(result).isNaN) {
+            var trimmed = new DartString(source).trim();
+            if (trimmed == 'NaN' || trimmed == '+NaN' || trimmed == '-NaN') {
+                return result;
+            }
+            return this._parseDoubleError(source, handleError);
+        }
+        return result;
+    }
+
+    /** [: r"$".codeUnitAt(0) :] */
+    static DOLLAR_CHAR_VALUE: int = 36;
 
 }
 
@@ -13672,9 +13788,9 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
         let ms = DartDateTime._threeDigits(this.millisecond);
         let us = this.microsecond == 0 ? "" : DartDateTime._threeDigits(this.microsecond);
         if (this.isUtc) {
-            return "$y-$m-${d}T$h:$min:$sec.$ms${us}Z";
+            return `${y}-${m}-${d}T${h}:${min}:${sec}.${ms}${us}Z`;
         } else {
-            return "$y-$m-${d}T$h:$min:$sec.$ms$us";
+            return `${y}-${m}-${d}T${h}:${min}:${sec}.${ms}${us}`;
         }
     }
 
@@ -13754,6 +13870,13 @@ class DartDateTime extends DartObject implements DartComparable<DartDateTime> {
     @namedConstructor
     protected _internal(year: int, month: int, day: int, hour: int,
                         minute: int, second: int, millisecond: int, microsecond: int, isUtc: bool) {
+        month = nullOr(month, 1);
+        day = nullOr(day, 1);
+        hour = nullOr(hour, 0);
+        minute = nullOr(minute, 0);
+        second = nullOr(second, 0);
+        millisecond = nullOr(millisecond, 0);
+        microsecond = nullOr(microsecond, 0);
         this.isUtc = is(isUtc, 'bool')
             ? isUtc
             : (() => {
@@ -16075,7 +16198,7 @@ class JSString extends String implements DartString, JSIndexable<string> {
         return !this.isEmpty;
     }
 
-    compareTo(other: DartString|string): int {
+    compareTo(other: DartString | string): int {
         if (isNot(other, 'string') && isNot(other, DartString)) throw argumentErrorValue(other);
         return this == other ? 0 : this < other /*JS('bool', r'# < #', this, other)*/ ? -1 : 1;
     }
@@ -16481,6 +16604,7 @@ class DartNumber implements DartComparable<num> {
     static _create(n: num): DartNumber {
         return new JSNumber(n);
     }
+
     constructor(n: num) {
 
     }
@@ -16537,52 +16661,52 @@ class DartNumber implements DartComparable<num> {
         throw 'abstract';
     }
 
-  /**
-   * Compares this to `other`.
-   *
-   * Returns a negative number if `this` is less than `other`, zero if they are
-   * equal, and a positive number if `this` is greater than `other`.
-   *
-   * The ordering represented by this method is a total ordering of [num]
-   * values. All distinct doubles are non-equal, as are all distinct integers,
-   * but integers are equal to doubles if they have the same numerical
-   * value.
-   *
-   * For doubles, the `compareTo` operation is different from the partial
-   * ordering given by [operator==], [operator<] and [operator>]. For example,
-   * IEEE doubles impose that `0.0 == -0.0` and all comparison operations on
-   * NaN return false.
-   *
-   * This function imposes a complete ordering for doubles. When using
-   * `compareTo` the following properties hold:
-   *
-   * - All NaN values are considered equal, and greater than any numeric value.
-   * - -0.0 is less than 0.0 (and the integer 0), but greater than any non-zero
-   *    negative value.
-   * - Negative infinity is less than all other values and positive infinity is
-   *   greater than all non-NaN values.
-   * - All other values are compared using their numeric value.
-   *
-   * Examples:
-   * ```
-   * print(1.compareTo(2)); // => -1
-   * print(2.compareTo(1)); // => 1
-   * print(1.compareTo(1)); // => 0
-   *
-   * // The following comparisons yield different results than the
-   * // corresponding comparison operators.
-   * print((-0.0).compareTo(0.0));  // => -1
-   * print(double.NAN.compareTo(double.NAN));  // => 0
-   * print(double.INFINITY.compareTo(double.NAN)); // => -1
-   *
-   * // -0.0, and NaN comparison operators have rules imposed by the IEEE
-   * // standard.
-   * print(-0.0 == 0.0); // => true
-   * print(double.NAN == double.NAN);  // => false
-   * print(double.INFINITY < double.NAN);  // => false
-   * print(double.NAN < double.INFINITY);  // => false
-   * print(double.NAN == double.INFINITY);  // => false
-   */
+    /**
+     * Compares this to `other`.
+     *
+     * Returns a negative number if `this` is less than `other`, zero if they are
+     * equal, and a positive number if `this` is greater than `other`.
+     *
+     * The ordering represented by this method is a total ordering of [num]
+     * values. All distinct doubles are non-equal, as are all distinct integers,
+     * but integers are equal to doubles if they have the same numerical
+     * value.
+     *
+     * For doubles, the `compareTo` operation is different from the partial
+     * ordering given by [operator==], [operator<] and [operator>]. For example,
+     * IEEE doubles impose that `0.0 == -0.0` and all comparison operations on
+     * NaN return false.
+     *
+     * This function imposes a complete ordering for doubles. When using
+     * `compareTo` the following properties hold:
+     *
+     * - All NaN values are considered equal, and greater than any numeric value.
+     * - -0.0 is less than 0.0 (and the integer 0), but greater than any non-zero
+     *    negative value.
+     * - Negative infinity is less than all other values and positive infinity is
+     *   greater than all non-NaN values.
+     * - All other values are compared using their numeric value.
+     *
+     * Examples:
+     * ```
+     * print(1.compareTo(2)); // => -1
+     * print(2.compareTo(1)); // => 1
+     * print(1.compareTo(1)); // => 0
+     *
+     * // The following comparisons yield different results than the
+     * // corresponding comparison operators.
+     * print((-0.0).compareTo(0.0));  // => -1
+     * print(double.NAN.compareTo(double.NAN));  // => 0
+     * print(double.INFINITY.compareTo(double.NAN)); // => -1
+     *
+     * // -0.0, and NaN comparison operators have rules imposed by the IEEE
+     * // standard.
+     * print(-0.0 == 0.0); // => true
+     * print(double.NAN == double.NAN);  // => false
+     * print(double.INFINITY < double.NAN);  // => false
+     * print(double.NAN < double.INFINITY);  // => false
+     * print(double.NAN == double.INFINITY);  // => false
+     */
     @Abstract
     compareTo(other: num): int {
         throw 'abstract';
@@ -16607,21 +16731,21 @@ class DartNumber implements DartComparable<num> {
         throw 'abstract';
     }
 
-  /**
-   * Euclidean modulo operator.
-   *
-   * Returns the remainder of the euclidean division. The euclidean division of
-   * two integers `a` and `b` yields two integers `q` and `r` such that
-   * `a == b * q + r` and `0 <= r < b.abs()`.
-   *
-   * The euclidean division is only defined for integers, but can be easily
-   * extended to work with doubles. In that case `r` may have a non-integer
-   * value, but it still verifies `0 <= r < |b|`.
-   *
-   * The sign of the returned value `r` is always positive.
-   *
-   * See [remainder] for the remainder of the truncating division.
-   */
+    /**
+     * Euclidean modulo operator.
+     *
+     * Returns the remainder of the euclidean division. The euclidean division of
+     * two integers `a` and `b` yields two integers `q` and `r` such that
+     * `a == b * q + r` and `0 <= r < b.abs()`.
+     *
+     * The euclidean division is only defined for integers, but can be easily
+     * extended to work with doubles. In that case `r` may have a non-integer
+     * value, but it still verifies `0 <= r < |b|`.
+     *
+     * The sign of the returned value `r` is always positive.
+     *
+     * See [remainder] for the remainder of the truncating division.
+     */
     @Operator(Op.MODULE)
     module(other: num): num {
         throw 'abstract';
@@ -16716,7 +16840,6 @@ class DartNumber implements DartComparable<num> {
     }
 
 
-
     /**
      * True if the number is finite; otherwise, false.
      *
@@ -16745,7 +16868,7 @@ class DartNumber implements DartComparable<num> {
      *
      * Returns a number of the same type as this number.
      * For doubles, `-0.0.sign == -0.0`.
-  
+
      * The result satisfies:
      *
      *     n == n.sign * n.abs()
@@ -16855,7 +16978,6 @@ class DartNumber implements DartComparable<num> {
     ceilToDouble(): double {
         throw 'abstract';
     }
-
 
 
     /**
@@ -17029,37 +17151,42 @@ class DartNumber implements DartComparable<num> {
     }
 
 
-  /**
-   * Parses a string containing a number literal into a number.
-   *
-   * The method first tries to read the [input] as integer (similar to
-   * [int.parse] without a radix).
-   * If that fails, it tries to parse the [input] as a double (similar to
-   * [double.parse]).
-   * If that fails, too, it invokes [onError] with [input], and the result
-   * of that invocation becomes the result of calling `parse`.
-   *
-   * If no [onError] is supplied, it defaults to a function that throws a
-   * [FormatException].
-   *
-   * For any number `n`, this function satisfies
-   * `identical(n, num.parse(n.toString()))` (except when `n` is a NaN `double`
-   * with a payload).
-   */
-  static  parse( input:string, onError?:(input:string)=> num) :num{
-    let source = new DartString(input).trim();
-    // TODO(lrn): Optimize to detect format and result type in one check.
-    let result = DartInt.parse(source,{ onError: DartNumber._returnIntNull});
-    if (result != null) return result;
-    result = DartDouble.parse(source, DartNumber._returnDoubleNull);
-    if (result != null) return result;
-    if (onError == null) throw new FormatException(input);
-    return onError(input);
-  }
+    /**
+     * Parses a string containing a number literal into a number.
+     *
+     * The method first tries to read the [input] as integer (similar to
+     * [int.parse] without a radix).
+     * If that fails, it tries to parse the [input] as a double (similar to
+     * [double.parse]).
+     * If that fails, too, it invokes [onError] with [input], and the result
+     * of that invocation becomes the result of calling `parse`.
+     *
+     * If no [onError] is supplied, it defaults to a function that throws a
+     * [FormatException].
+     *
+     * For any number `n`, this function satisfies
+     * `identical(n, num.parse(n.toString()))` (except when `n` is a NaN `double`
+     * with a payload).
+     */
+    static parse(input: string, onError?: (input: string) => num): num {
+        let source = new DartString(input).trim();
+        // TODO(lrn): Optimize to detect format and result type in one check.
+        let result = DartInt.parse(source, {onError: DartNumber._returnIntNull});
+        if (result != null) return result;
+        result = DartDouble.parse(source, DartNumber._returnDoubleNull);
+        if (result != null) return result;
+        if (onError == null) throw new FormatException(input);
+        return onError(input);
+    }
 
-  /** Helper functions for [parse]. */
-  static  _returnIntNull( _:string) :int{ return null;}
-  static  _returnDoubleNull( _:string) :double { return null;}
+    /** Helper functions for [parse]. */
+    static _returnIntNull(_: string): int {
+        return null;
+    }
+
+    static _returnDoubleNull(_: string): double {
+        return null;
+    }
 }
 
 // Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
@@ -17083,6 +17210,7 @@ class JSNumber extends Number implements DartNumber, DartComparable<num> {
     equals(other: any): boolean {
         return this.valueOf() == other;
     }
+
     constructor(n: number) {
         super(n)
     }
@@ -17111,15 +17239,21 @@ class JSNumber extends Number implements DartNumber, DartComparable<num> {
         }
     }
 
-    get isNegative(): bool { return (this.valueOf() == 0) ? (1 / this.valueOf()) < 0 : this.valueOf() < 0; }
+    get isNegative(): bool {
+        return (this.valueOf() == 0) ? (1 / this.valueOf()) < 0 : this.valueOf() < 0;
+    }
 
-    get isNaN(): bool { return isNaN(this.valueOf())/* JS('bool', r'isNaN(#)', this)*/; }
+    get isNaN(): bool {
+        return isNaN(this.valueOf())/* JS('bool', r'isNaN(#)', this)*/;
+    }
 
     get isInfinite(): bool {
         return this.valueOf() == (1 / 0) /*JS('bool', r'# == (1/0)', this)*/ || this.valueOf() == (-1 / 0) /*JS('bool', r'# == (-1/0)', this)*/;
     }
 
-    get isFinite(): bool { return isFinite(this.valueOf()) /*JS('bool', r'isFinite(#)', this)*/; }
+    get isFinite(): bool {
+        return isFinite(this.valueOf()) /*JS('bool', r'isFinite(#)', this)*/;
+    }
 
     remainder(b: num): num {
         if (isNot(b, 'num')) throw argumentErrorValue(b);
@@ -17540,9 +17674,11 @@ class DartInt extends DartNumber {
     static _create(n: int): DartInt {
         return new JSInt(n);
     }
+
     constructor(n: int) {
         super(n);
     }
+
     /**
      * Returns the integer value of the given environment declaration [name].
      *
@@ -17568,20 +17704,21 @@ class DartInt extends DartNumber {
 
     static fromEnvironment: new (name: string, _?: { defaultValue: int }) => DartInt;
 
-  /**
-   * Bit-wise and operator.
-   *
-   * Treating both `this` and [other] as sufficiently large two's component
-   * integers, the result is a number with only the bits set that are set in
-   * both `this` and [other]
-   *
-   * Of both operands are negative, the result is negative, otherwise
-   * the result is non-negative.
-   */
+    /**
+     * Bit-wise and operator.
+     *
+     * Treating both `this` and [other] as sufficiently large two's component
+     * integers, the result is a number with only the bits set that are set in
+     * both `this` and [other]
+     *
+     * Of both operands are negative, the result is negative, otherwise
+     * the result is non-negative.
+     */
     @Operator(Op.BITAND)
     and(other: num): int {
         throw 'abstract';
     }
+
     /**
      * Bit-wise or operator.
      *
@@ -17658,6 +17795,7 @@ class DartInt extends DartNumber {
     rshift(other: num): num {
         throw 'abstract';
     }
+
     /**
      * Returns this integer to the power of [exponent] modulo [modulus].
      *
@@ -17681,7 +17819,6 @@ class DartInt extends DartNumber {
     }
 
 
-
     /**
      * Returns the greatest common divisor of this integer and [other].
      *
@@ -17698,8 +17835,6 @@ class DartInt extends DartNumber {
     gcd(other: int): int {
         throw 'abstract';
     }
-
-
 
 
     /** Returns true if and only if this integer is even. */
@@ -17794,109 +17929,110 @@ class DartInt extends DartNumber {
     }
 
 
-  /**
-   * Return the negative value of this integer.
-   *
-   * The result of negating an integer always has the opposite sign, except
-   * for zero, which is its own negation.
-   */
-  //int operator -();
+    /**
+     * Return the negative value of this integer.
+     *
+     * The result of negating an integer always has the opposite sign, except
+     * for zero, which is its own negation.
+     */
+    //int operator -();
 
-  /**
-   * Returns the absolute value of this integer.
-   *
-   * For any integer `x`, the result is the same as `x < 0 ? -x : x`.
-   */
-  //int abs();
+    /**
+     * Returns the absolute value of this integer.
+     *
+     * For any integer `x`, the result is the same as `x < 0 ? -x : x`.
+     */
+    //int abs();
 
-  /**
-   * Returns the sign of this integer.
-   *
-   * Returns 0 for zero, -1 for values less than zero and
-   * +1 for values greater than zero.
-   */
-  //int get sign;
+    /**
+     * Returns the sign of this integer.
+     *
+     * Returns 0 for zero, -1 for values less than zero and
+     * +1 for values greater than zero.
+     */
+    //int get sign;
 
-  /** Returns `this`. */
- // int round();
+    /** Returns `this`. */
+    // int round();
 
-  /** Returns `this`. */
-  //int floor();
+    /** Returns `this`. */
+    //int floor();
 
-  /** Returns `this`. */
- // int ceil();
+    /** Returns `this`. */
+    // int ceil();
 
-  /** Returns `this`. */
-  //int truncate();
+    /** Returns `this`. */
+    //int truncate();
 
-  /** Returns `this.toDouble()`. */
- // double roundToDouble();
+    /** Returns `this.toDouble()`. */
+    // double roundToDouble();
 
-  /** Returns `this.toDouble()`. */
- // double floorToDouble();
+    /** Returns `this.toDouble()`. */
+    // double floorToDouble();
 
-  /** Returns `this.toDouble()`. */
+    /** Returns `this.toDouble()`. */
 //  double ceilToDouble();
 
-  /** Returns `this.toDouble()`. */
- // double truncateToDouble();
+    /** Returns `this.toDouble()`. */
+    // double truncateToDouble();
 
-  /**
-   * Returns a String-representation of this integer.
-   *
-   * The returned string is parsable by [parse].
-   * For any `int` [:i:], it is guaranteed that
-   * [:i == int.parse(i.toString()):].
-   */
-  //String toString();
+    /**
+     * Returns a String-representation of this integer.
+     *
+     * The returned string is parsable by [parse].
+     * For any `int` [:i:], it is guaranteed that
+     * [:i == int.parse(i.toString()):].
+     */
+    //String toString();
 
-  /**
-   * Converts [this] to a string representation in the given [radix].
-   *
-   * In the string representation, lower-case letters are used for digits above
-   * '9', with 'a' being 10 an 'z' being 35.
-   *
-   * The [radix] argument must be an integer in the range 2 to 36.
-   */
- // String toRadixString(int radix);
+    /**
+     * Converts [this] to a string representation in the given [radix].
+     *
+     * In the string representation, lower-case letters are used for digits above
+     * '9', with 'a' being 10 an 'z' being 35.
+     *
+     * The [radix] argument must be an integer in the range 2 to 36.
+     */
 
-  /**
-   * Parse [source] as a, possibly signed, integer literal and return its value.
-   *
-   * The [source] must be a non-empty sequence of base-[radix] digits,
-   * optionally prefixed with a minus or plus sign ('-' or '+').
-   *
-   * The [radix] must be in the range 2..36. The digits used are
-   * first the decimal digits 0..9, and then the letters 'a'..'z' with
-   * values 10 through 35. Also accepts upper-case letters with the same
-   * values as the lower-case ones.
-   *
-   * If no [radix] is given then it defaults to 10. In this case, the [source]
-   * digits may also start with `0x`, in which case the number is interpreted
-   * as a hexadecimal literal, which effectively means that the `0x` is ignored
-   * and the radix is instead set to 16.
-   *
-   * For any int [:n:] and radix [:r:], it is guaranteed that
-   * [:n == int.parse(n.toRadixString(r), radix: r):].
-   *
-   * If the [source] is not a valid integer literal, optionally prefixed by a
-   * sign, the [onError] is called with the [source] as argument, and its return
-   * value is used instead. If no [onError] is provided, a [FormatException]
-   * is thrown.
-   *
-   * The [onError] handler can be chosen to return `null`.  This is preferable
-   * to to throwing and then immediately catching the [FormatException].
-   * Example:
-   *
-   *     var value = int.parse(text, onError: (source) => null);
-   *     if (value == null) ... handle the problem
-   *
-   * The [onError] function is only invoked if [source] is a [String]. It is
-   * not invoked if the [source] is, for example, `null`.
-   */
+    // String toRadixString(int radix);
+
+    /**
+     * Parse [source] as a, possibly signed, integer literal and return its value.
+     *
+     * The [source] must be a non-empty sequence of base-[radix] digits,
+     * optionally prefixed with a minus or plus sign ('-' or '+').
+     *
+     * The [radix] must be in the range 2..36. The digits used are
+     * first the decimal digits 0..9, and then the letters 'a'..'z' with
+     * values 10 through 35. Also accepts upper-case letters with the same
+     * values as the lower-case ones.
+     *
+     * If no [radix] is given then it defaults to 10. In this case, the [source]
+     * digits may also start with `0x`, in which case the number is interpreted
+     * as a hexadecimal literal, which effectively means that the `0x` is ignored
+     * and the radix is instead set to 16.
+     *
+     * For any int [:n:] and radix [:r:], it is guaranteed that
+     * [:n == int.parse(n.toRadixString(r), radix: r):].
+     *
+     * If the [source] is not a valid integer literal, optionally prefixed by a
+     * sign, the [onError] is called with the [source] as argument, and its return
+     * value is used instead. If no [onError] is provided, a [FormatException]
+     * is thrown.
+     *
+     * The [onError] handler can be chosen to return `null`.  This is preferable
+     * to to throwing and then immediately catching the [FormatException].
+     * Example:
+     *
+     *     var value = int.parse(text, onError: (source) => null);
+     *     if (value == null) ... handle the problem
+     *
+     * The [onError] function is only invoked if [source] is a [String]. It is
+     * not invoked if the [source] is, for example, `null`.
+     */
     static parse(source: string,
-        _?: { radix?: int, onError?: (source: string) => int } | ((input: string) => num)): int {
-        let { radix, onError } = Object.assign({}, _ as any);
+                 _?: { radix?: int, onError?: (source: string) => int } | ((input: string) => num)): int {
+        let {radix, onError} = Object.assign({}, _ as any);
         return DartPrimitives.parseInt(source, radix, onError);
     }
 }
@@ -18097,9 +18233,11 @@ class JSInt extends JSNumber implements DartInt/*implements int, double*/ {
     static _shru(value: int, shift: int) {
         return value >>> shift /* JS('int', '# >>> #', value, shift)*/;
     }
+
     static _shrs(value: int, shift: int) {
         return value >> shift /* JS('int', '# >> #', value, shift)*/;
     }
+
     static _ors(a: int, b: int) {
         return a | b /* JS('int', '# | #', a, b)*/;
     }
@@ -18153,6 +18291,7 @@ class DartDouble extends DartNumber {
     static _create(d: double): DartDouble {
         return new JSDouble(d);
     }
+
     constructor(d: double) {
         super(d);
     }
@@ -18164,180 +18303,181 @@ class DartDouble extends DartNumber {
     static MIN_POSITIVE: double = 5e-324;
     static MAX_FINITE: double = 1.7976931348623157e+308;
 
-  //double remainder(num other);
+    //double remainder(num other);
 
-  /** Addition operator. */
-  //double operator +(num other);
+    /** Addition operator. */
+    //double operator +(num other);
 
-  /** Subtraction operator. */
-  //double operator -(num other);
+    /** Subtraction operator. */
+    //double operator -(num other);
 
-  /** Multiplication operator. */
-  //double operator *(num other);
+    /** Multiplication operator. */
+    //double operator *(num other);
 
-  //double operator %(num other);
+    //double operator %(num other);
 
-  /** Division operator. */
-  //double operator /(num other);
+    /** Division operator. */
+    //double operator /(num other);
 
-  /**
-   * Truncating division operator.
-   *
-   * The result of the truncating division `a ~/ b` is equivalent to
-   * `(a / b).truncate()`.
-   */
-  //int operator ~/(num other);
+    /**
+     * Truncating division operator.
+     *
+     * The result of the truncating division `a ~/ b` is equivalent to
+     * `(a / b).truncate()`.
+     */
+    //int operator ~/(num other);
 
-  /** Negate operator. */
-  //double operator -();
+    /** Negate operator. */
+    //double operator -();
 
-  /** Returns the absolute value of this [double]. */
-  //double abs();
+    /** Returns the absolute value of this [double]. */
+    //double abs();
 
-  /**
-   * Returns the sign of the double's numerical value.
-   *
-   * Returns -1.0 if the value is less than zero,
-   * +1.0 if the value is greater than zero,
-   * and the value itself if it is -0.0, 0.0 or NaN.
-   */
-  //double get sign;
+    /**
+     * Returns the sign of the double's numerical value.
+     *
+     * Returns -1.0 if the value is less than zero,
+     * +1.0 if the value is greater than zero,
+     * and the value itself if it is -0.0, 0.0 or NaN.
+     */
+    //double get sign;
 
-  /**
-   * Returns the integer closest to `this`.
-   *
-   * Rounds away from zero when there is no closest integer:
-   *  `(3.5).round() == 4` and `(-3.5).round() == -4`.
-   *
-   * If `this` is not finite (`NaN` or infinity), throws an [UnsupportedError].
-   */
-  //int round();
+    /**
+     * Returns the integer closest to `this`.
+     *
+     * Rounds away from zero when there is no closest integer:
+     *  `(3.5).round() == 4` and `(-3.5).round() == -4`.
+     *
+     * If `this` is not finite (`NaN` or infinity), throws an [UnsupportedError].
+     */
+    //int round();
 
-  /**
-   * Returns the greatest integer no greater than `this`.
-   *
-   * If `this` is not finite (`NaN` or infinity), throws an [UnsupportedError].
-   */
-  //int floor();
+    /**
+     * Returns the greatest integer no greater than `this`.
+     *
+     * If `this` is not finite (`NaN` or infinity), throws an [UnsupportedError].
+     */
+    //int floor();
 
-  /**
-   * Returns the least integer no smaller than `this`.
-   *
-   * If `this` is not finite (`NaN` or infinity), throws an [UnsupportedError].
-   */
-  //int ceil();
+    /**
+     * Returns the least integer no smaller than `this`.
+     *
+     * If `this` is not finite (`NaN` or infinity), throws an [UnsupportedError].
+     */
+    //int ceil();
 
-  /**
-   * Returns the integer obtained by discarding any fractional
-   * digits from `this`.
-   *
-   * If `this` is not finite (`NaN` or infinity), throws an [UnsupportedError].
-   */
-  //int truncate();
+    /**
+     * Returns the integer obtained by discarding any fractional
+     * digits from `this`.
+     *
+     * If `this` is not finite (`NaN` or infinity), throws an [UnsupportedError].
+     */
+    //int truncate();
 
-  /**
-   * Returns the integer double value closest to `this`.
-   *
-   * Rounds away from zero when there is no closest integer:
-   *  `(3.5).roundToDouble() == 4` and `(-3.5).roundToDouble() == -4`.
-   *
-   * If this is already an integer valued double, including `-0.0`, or it is not
-   * a finite value, the value is returned unmodified.
-   *
-   * For the purpose of rounding, `-0.0` is considered to be below `0.0`,
-   * and `-0.0` is therefore considered closer to negative numbers than `0.0`.
-   * This means that for a value, `d` in the range `-0.5 < d < 0.0`,
-   * the result is `-0.0`.
-   */
-  //double roundToDouble();
+    /**
+     * Returns the integer double value closest to `this`.
+     *
+     * Rounds away from zero when there is no closest integer:
+     *  `(3.5).roundToDouble() == 4` and `(-3.5).roundToDouble() == -4`.
+     *
+     * If this is already an integer valued double, including `-0.0`, or it is not
+     * a finite value, the value is returned unmodified.
+     *
+     * For the purpose of rounding, `-0.0` is considered to be below `0.0`,
+     * and `-0.0` is therefore considered closer to negative numbers than `0.0`.
+     * This means that for a value, `d` in the range `-0.5 < d < 0.0`,
+     * the result is `-0.0`.
+     */
+    //double roundToDouble();
 
-  /**
-   * Returns the greatest integer double value no greater than `this`.
-   *
-   * If this is already an integer valued double, including `-0.0`, or it is not
-   * a finite value, the value is returned unmodified.
-   *
-   * For the purpose of rounding, `-0.0` is considered to be below `0.0`.
-   * A number `d` in the range `0.0 < d < 1.0` will return `0.0`.
-   */
-  //double floorToDouble();
+    /**
+     * Returns the greatest integer double value no greater than `this`.
+     *
+     * If this is already an integer valued double, including `-0.0`, or it is not
+     * a finite value, the value is returned unmodified.
+     *
+     * For the purpose of rounding, `-0.0` is considered to be below `0.0`.
+     * A number `d` in the range `0.0 < d < 1.0` will return `0.0`.
+     */
+    //double floorToDouble();
 
-  /**
-   * Returns the least integer double value no smaller than `this`.
-   *
-   * If this is already an integer valued double, including `-0.0`, or it is not
-   * a finite value, the value is returned unmodified.
-   *
-   * For the purpose of rounding, `-0.0` is considered to be below `0.0`.
-   * A number `d` in the range `-1.0 < d < 0.0` will return `-0.0`.
-   */
-  //double ceilToDouble();
+    /**
+     * Returns the least integer double value no smaller than `this`.
+     *
+     * If this is already an integer valued double, including `-0.0`, or it is not
+     * a finite value, the value is returned unmodified.
+     *
+     * For the purpose of rounding, `-0.0` is considered to be below `0.0`.
+     * A number `d` in the range `-1.0 < d < 0.0` will return `-0.0`.
+     */
+    //double ceilToDouble();
 
-  /**
-   * Returns the integer double value obtained by discarding any fractional
-   * digits from `this`.
-   *
-   * If this is already an integer valued double, including `-0.0`, or it is not
-   * a finite value, the value is returned unmodified.
-   *
-   * For the purpose of rounding, `-0.0` is considered to be below `0.0`.
-   * A number `d` in the range `-1.0 < d < 0.0` will return `-0.0`, and
-   * in the range `0.0 < d < 1.0` it will return 0.0.
-   */
-  //double truncateToDouble();
+    /**
+     * Returns the integer double value obtained by discarding any fractional
+     * digits from `this`.
+     *
+     * If this is already an integer valued double, including `-0.0`, or it is not
+     * a finite value, the value is returned unmodified.
+     *
+     * For the purpose of rounding, `-0.0` is considered to be below `0.0`.
+     * A number `d` in the range `-1.0 < d < 0.0` will return `-0.0`, and
+     * in the range `0.0 < d < 1.0` it will return 0.0.
+     */
+    //double truncateToDouble();
 
-  /**
-   * Provide a representation of this [double] value.
-   *
-   * The representation is a number literal such that the closest double value
-   * to the representation's mathematical value is this [double].
-   *
-   * Returns "NaN" for the Not-a-Number value.
-   * Returns "Infinity" and "-Infinity" for positive and negative Infinity.
-   * Returns "-0.0" for negative zero.
-   *
-   * For all doubles, `d`, converting to a string and parsing the string back
-   * gives the same value again: `d == double.parse(d.toString())` (except when
-   * `d` is NaN).
-   */
-  //String toString();
+    /**
+     * Provide a representation of this [double] value.
+     *
+     * The representation is a number literal such that the closest double value
+     * to the representation's mathematical value is this [double].
+     *
+     * Returns "NaN" for the Not-a-Number value.
+     * Returns "Infinity" and "-Infinity" for positive and negative Infinity.
+     * Returns "-0.0" for negative zero.
+     *
+     * For all doubles, `d`, converting to a string and parsing the string back
+     * gives the same value again: `d == double.parse(d.toString())` (except when
+     * `d` is NaN).
+     */
 
-  /**
-   * Parse [source] as an double literal and return its value.
-   *
-   * Accepts an optional sign (`+` or `-`) followed by either the characters
-   * "Infinity", the characters "NaN" or a floating-point representation.
-   * A floating-point representation is composed of a mantissa and an optional
-   * exponent part. The mantissa is either a decimal point (`.`) followed by a
-   * sequence of (decimal) digits, or a sequence of digits
-   * optionally followed by a decimal point and optionally more digits. The
-   * (optional) exponent part consists of the character "e" or "E", an optional
-   * sign, and one or more digits.
-   *
-   * Leading and trailing whitespace is ignored.
-   *
-   * If the [source] is not a valid double literal, the [onError]
-   * is called with the [source] as argument, and its return value is
-   * used instead. If no `onError` is provided, a [FormatException]
-   * is thrown instead.
-   *
-   * The [onError] function is only invoked if [source] is a [String] with an
-   * invalid format. It is not invoked if the [source] is invalid for some
-   * other reason, for example by being `null`.
-   *
-   * Examples of accepted strings:
-   *
-   *     "3.14"
-   *     "  3.14 \xA0"
-   *     "0."
-   *     ".0"
-   *     "-1.e3"
-   *     "1234E+7"
-   *     "+.12e-9"
-   *     "-NaN"
-   */
+    //String toString();
+
+    /**
+     * Parse [source] as an double literal and return its value.
+     *
+     * Accepts an optional sign (`+` or `-`) followed by either the characters
+     * "Infinity", the characters "NaN" or a floating-point representation.
+     * A floating-point representation is composed of a mantissa and an optional
+     * exponent part. The mantissa is either a decimal point (`.`) followed by a
+     * sequence of (decimal) digits, or a sequence of digits
+     * optionally followed by a decimal point and optionally more digits. The
+     * (optional) exponent part consists of the character "e" or "E", an optional
+     * sign, and one or more digits.
+     *
+     * Leading and trailing whitespace is ignored.
+     *
+     * If the [source] is not a valid double literal, the [onError]
+     * is called with the [source] as argument, and its return value is
+     * used instead. If no `onError` is provided, a [FormatException]
+     * is thrown instead.
+     *
+     * The [onError] function is only invoked if [source] is a [String] with an
+     * invalid format. It is not invoked if the [source] is invalid for some
+     * other reason, for example by being `null`.
+     *
+     * Examples of accepted strings:
+     *
+     *     "3.14"
+     *     "  3.14 \xA0"
+     *     "0."
+     *     ".0"
+     *     "-1.e3"
+     *     "1234E+7"
+     *     "+.12e-9"
+     *     "-NaN"
+     */
     static parse(source: string, onError?: (source: string) => double): double {
-        throw 'external'
+        return DartPrimitives.parseDouble(source, onError);
     }
 }
 
@@ -18347,14 +18487,18 @@ class JSDouble extends JSNumber implements DartDouble /*implements double */ {
     constructor(n: number) {
         super(n);
     }
+
     //Type get runtimeType => double;
 }
 
-class JSPositiveInt extends JSInt {}
+class JSPositiveInt extends JSInt {
+}
 
-class JSUInt32 extends JSPositiveInt {}
+class JSUInt32 extends JSPositiveInt {
+}
 
-class JSUInt31 extends JSUInt32 {}
+class JSUInt31 extends JSUInt32 {
+}
 
 export {
     DartIterable,
