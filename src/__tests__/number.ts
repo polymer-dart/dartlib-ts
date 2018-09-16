@@ -1,4 +1,4 @@
-import {DartNumber} from "../number";
+import {DartNumber} from "../core";
 
 describe('numbers', () => {
     it('creates dart numbers', () => {

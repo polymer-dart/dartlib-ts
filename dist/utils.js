@@ -11,6 +11,14 @@ export const OPERATOR_GT = Symbol('>');
 export const OPERATOR_LEQ = Symbol('<=');
 export const OPERATOR_GEQ = Symbol('>=');
 export const OPERATOR_NEG = Symbol('-');
+export const OPERATOR_BITNEG = Symbol('~');
+export const OPERATOR_XOR = Symbol('^');
+export const OPERATOR_BITOR = Symbol('|');
+export const OPERATOR_BITAND = Symbol('&');
+export const OPERATOR_SHIFTRIGHT = Symbol('<<');
+export const OPERATOR_SHIFTLEFT = Symbol('>>');
+export const OPERATOR_INTDIVIDE = Symbol('~/');
+export const OPERATOR_MODULE = Symbol('%');
 export var Op;
 (function (Op) {
     Op[Op["PLUS"] = 0] = "PLUS";
@@ -26,6 +34,14 @@ export var Op;
     Op[Op["LEQ"] = 10] = "LEQ";
     Op[Op["GEQ"] = 11] = "GEQ";
     Op[Op["NEG"] = 12] = "NEG";
+    Op[Op["BITNEG"] = 13] = "BITNEG";
+    Op[Op["XOR"] = 14] = "XOR";
+    Op[Op["BITOR"] = 15] = "BITOR";
+    Op[Op["BITAND"] = 16] = "BITAND";
+    Op[Op["SHIFTRIGHT"] = 17] = "SHIFTRIGHT";
+    Op[Op["SHIFTLEFT"] = 18] = "SHIFTLEFT";
+    Op[Op["INTDIVIDE"] = 19] = "INTDIVIDE";
+    Op[Op["MODULE"] = 20] = "MODULE";
 })(Op || (Op = {}));
 const OpSymbolMap = new Map([
     [Op.INDEX, OPERATOR_INDEX],
@@ -41,6 +57,14 @@ const OpSymbolMap = new Map([
     [Op.LEQ, OPERATOR_LEQ],
     [Op.GEQ, OPERATOR_GEQ],
     [Op.NEG, OPERATOR_NEG],
+    [Op.BITNEG, OPERATOR_BITNEG],
+    [Op.XOR, OPERATOR_XOR],
+    [Op.BITOR, OPERATOR_BITOR],
+    [Op.BITAND, OPERATOR_BITAND],
+    [Op.SHIFTRIGHT, OPERATOR_SHIFTRIGHT],
+    [Op.SHIFTLEFT, OPERATOR_SHIFTLEFT],
+    [Op.INTDIVIDE, OPERATOR_INTDIVIDE],
+    [Op.MODULE, OPERATOR_MODULE],
 ]);
 export const UNINITIALIZED = Symbol('_uninitialized_');
 const OLD_DEFS = Symbol('OLD_DEFS');

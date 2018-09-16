@@ -7,12 +7,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var DartJsLinkedHashMap_1, _LinkedIdentityHashMap_1, DartConstantMap_1, DartHashMap_1, DartHashSet_1, DartLinkedHashSet_1, DartList_1, DartLinkedHashMap_1, DartListMixin_1, DartStringBuffer_1, DartMappedIterable_1, DartSkipIterable_1, DartEfficientLengthSkipIterable_1, RangeError_1, JSArray_1, DartStackTrace_1, DartDuration_1, DartDateTime_1, JSSyntaxRegExp_1, DartString_1, JSString_1;
+var DartJsLinkedHashMap_1, _LinkedIdentityHashMap_1, DartConstantMap_1, DartHashMap_1, DartHashSet_1, DartLinkedHashSet_1, DartList_1, DartLinkedHashMap_1, DartListMixin_1, DartStringBuffer_1, DartMappedIterable_1, DartSkipIterable_1, DartEfficientLengthSkipIterable_1, RangeError_1, JSArray_1, DartStackTrace_1, DartDuration_1, DartDateTime_1, JSSyntaxRegExp_1, DartString_1, JSString_1, DartNumber_1, JSNumber_1, JSInt_1, DartDouble_1;
 // Patch file for dart:collection classes.
 import { Abstract, AbstractMethods, DartClass, defaultConstructor, defaultFactory, Implements, namedConstructor, namedFactory, Op, Operator, With, AbstractProperty } from "./utils";
 import _dart, { divide, isNot, is, nullOr } from './_common';
 import { OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN } from "./utils";
-import { DartInt, DartNumber } from "./number";
 const _USE_ES6_MAPS = true;
 class _HashMap {
     constructor() {
@@ -1115,7 +1114,7 @@ let DartJsLinkedHashMap = DartJsLinkedHashMap_1 = class DartJsLinkedHashMap {
         this._modifications = 0;
     }
     /// If ES6 Maps are available returns a linked hash-map backed by an ES6 Map.
-    //@ForceInline()
+    // @ForceInline()
     static _es6() {
         return (_USE_ES6_MAPS && DartJsLinkedHashMap_1._supportsEs6Maps)
             ? new DartEs6LinkedHashMap()
@@ -14701,7 +14700,1850 @@ class DartCodeUnits extends DartUnmodifiableListBase {
 __decorate([
     Operator(Op.INDEX)
 ], DartCodeUnits.prototype, "elementAt", null);
+// Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+//part of dart.core;
+/**
+ * An integer or floating-point number.
+ *
+ * It is a compile-time error for any type other than [int] or [double]
+ * to attempt to extend or implement num.
+ */
+let DartNumber = DartNumber_1 = class DartNumber {
+    constructor(n) {
+    }
+    static _create(n) {
+        return new JSNumber(n);
+    }
+    /**
+     * Test whether this value is numerically equal to `other`.
+     *
+     * If both operands are doubles, they are equal if they have the same
+     * representation, except that:
+     *
+     *   * zero and minus zero (0.0 and -0.0) are considered equal. They
+     *     both have the numerical value zero.
+     *   * NaN is not equal to anything, including NaN. If either operand is
+     *     NaN, the result is always false.
+     *
+     * If one operand is a double and the other is an int, they are equal if
+     * the double has an integer value (finite with no fractional part) and
+     * `identical(doubleValue.toInt(), intValue)` is true.
+     *
+     * If both operands are integers, they are equal if they have the same value.
+     *
+     * Returns false if `other` is not a [num].
+     *
+     * Notice that the behavior for NaN is non-reflexive. This means that
+     * equality of double values is not a proper equality relation, as is
+     * otherwise required of `operator==`. Using NaN in, e.g., a [HashSet]
+     * will fail to work. The behavior is the standard IEEE-754 equality of
+     * doubles.
+     *
+     * If you can avoid NaN values, the remaining doubles do have a proper
+     * equality relation, and can be used safely.
+     *
+     * Use [compareTo] for a comparison that distinguishes zero and minus zero,
+     * and that considers NaN values as equal.
+     */
+    equals(other) {
+        throw 'abstract';
+    }
+    /**
+     * Returns a hash code for a numerical value.
+     *
+     * The hash code is compatible with equality. It returns the same value
+     * for an [int] and a [double] with the same numerical value, and therefore
+     * the same value for the doubles zero and minus zero.
+     *
+     * No guarantees are made about the hash code of NaN values.
+     */
+    get hashCode() {
+        throw 'abstract';
+    }
+    /**
+     * Compares this to `other`.
+     *
+     * Returns a negative number if `this` is less than `other`, zero if they are
+     * equal, and a positive number if `this` is greater than `other`.
+     *
+     * The ordering represented by this method is a total ordering of [num]
+     * values. All distinct doubles are non-equal, as are all distinct integers,
+     * but integers are equal to doubles if they have the same numerical
+     * value.
+     *
+     * For doubles, the `compareTo` operation is different from the partial
+     * ordering given by [operator==], [operator<] and [operator>]. For example,
+     * IEEE doubles impose that `0.0 == -0.0` and all comparison operations on
+     * NaN return false.
+     *
+     * This function imposes a complete ordering for doubles. When using
+     * `compareTo` the following properties hold:
+     *
+     * - All NaN values are considered equal, and greater than any numeric value.
+     * - -0.0 is less than 0.0 (and the integer 0), but greater than any non-zero
+     *    negative value.
+     * - Negative infinity is less than all other values and positive infinity is
+     *   greater than all non-NaN values.
+     * - All other values are compared using their numeric value.
+     *
+     * Examples:
+     * ```
+     * print(1.compareTo(2)); // => -1
+     * print(2.compareTo(1)); // => 1
+     * print(1.compareTo(1)); // => 0
+     *
+     * // The following comparisons yield different results than the
+     * // corresponding comparison operators.
+     * print((-0.0).compareTo(0.0));  // => -1
+     * print(double.NAN.compareTo(double.NAN));  // => 0
+     * print(double.INFINITY.compareTo(double.NAN)); // => -1
+     *
+     * // -0.0, and NaN comparison operators have rules imposed by the IEEE
+     * // standard.
+     * print(-0.0 == 0.0); // => true
+     * print(double.NAN == double.NAN);  // => false
+     * print(double.INFINITY < double.NAN);  // => false
+     * print(double.NAN < double.INFINITY);  // => false
+     * print(double.NAN == double.INFINITY);  // => false
+     */
+    compareTo(other) {
+        throw 'abstract';
+    }
+    /** Addition operator. */
+    plus(other) {
+        throw 'abstract';
+    }
+    /** Subtraction operator. */
+    minus(other) {
+        throw 'abstract';
+    }
+    /** Multiplication operator. */
+    times(other) {
+        throw 'abstract';
+    }
+    /**
+     * Euclidean modulo operator.
+     *
+     * Returns the remainder of the euclidean division. The euclidean division of
+     * two integers `a` and `b` yields two integers `q` and `r` such that
+     * `a == b * q + r` and `0 <= r < b.abs()`.
+     *
+     * The euclidean division is only defined for integers, but can be easily
+     * extended to work with doubles. In that case `r` may have a non-integer
+     * value, but it still verifies `0 <= r < |b|`.
+     *
+     * The sign of the returned value `r` is always positive.
+     *
+     * See [remainder] for the remainder of the truncating division.
+     */
+    module(other) {
+        throw 'abstract';
+    }
+    /** Division operator. */
+    divide(other) {
+        throw 'abstract';
+    }
+    /**
+     * Truncating division operator.
+     *
+     * If either operand is a [double] then the result of the truncating division
+     * `a ~/ b` is equivalent to `(a / b).truncate().toInt()`.
+     *
+     * If both operands are [int]s then `a ~/ b` performs the truncating
+     * integer division.
+     */
+    intDivide(other) {
+        throw 'abstract';
+    }
+    /** Negate operator. */
+    neg() {
+        throw 'abstract';
+    }
+    /**
+     * Returns the remainder of the truncating division of `this` by [other].
+     *
+     * The result `r` of this operation satisfies:
+     * `this == (this ~/ other) * other + r`.
+     * As a consequence the remainder `r` has the same sign as the divider `this`.
+     */
+    remainder(b) {
+        throw 'abstract';
+    }
+    /** Relational less than operator. */
+    lt(other) {
+        throw 'abstract';
+    }
+    /** Relational less than or equal operator. */
+    leq(other) {
+        throw 'abstract';
+    }
+    /** Relational greater than operator. */
+    get(other) {
+        throw 'abstract';
+    }
+    /** Relational greater than or equal operator. */
+    geq(other) {
+        throw 'abstract';
+    }
+    /** True if the number is the double Not-a-Number value; otherwise, false. */
+    get isNaN() {
+        throw 'abstract';
+    }
+    /**
+     * True if the number is negative; otherwise, false.
+     *
+     * Negative numbers are those less than zero, and the double `-0.0`.
+     */
+    get isNegative() {
+        throw 'abstract';
+    }
+    /**
+     * True if the number is positive infinity or negative infinity; otherwise,
+     * false.
+     */
+    get isInfinite() {
+        throw 'abstract';
+    }
+    /**
+     * True if the number is finite; otherwise, false.
+     *
+     * The only non-finite numbers are NaN, positive infinity, and
+     * negative infinity.
+     */
+    get isFinite() {
+        throw 'abstract';
+    }
+    /** Returns the absolute value of this [num]. */
+    abs() {
+        throw 'abstract';
+    }
+    /**
+     * Returns minus one, zero or plus one depending on the sign and
+     * numerical value of the number.
+     *
+     * Returns minus one if the number is less than zero,
+     * plus one if the number is greater than zero,
+     * and zero if the number is equal to zero.
+     *
+     * Returns NaN if the number is the double NaN value.
+     *
+     * Returns a number of the same type as this number.
+     * For doubles, `-0.0.sign == -0.0`.
+  
+     * The result satisfies:
+     *
+     *     n == n.sign * n.abs()
+     *
+     * for all numbers `n` (except NaN, because NaN isn't `==` to itself).
+     */
+    get sign() {
+        throw 'abstract';
+    }
+    /**
+     * Returns the integer closest to `this`.
+     *
+     * Rounds away from zero when there is no closest integer:
+     *  `(3.5).round() == 4` and `(-3.5).round() == -4`.
+     *
+     * If `this` is not finite (`NaN` or infinity), throws an [UnsupportedError].
+     */
+    round() {
+        throw 'abstract';
+    }
+    /**
+     * Returns the greatest integer no greater than `this`.
+     *
+     * If `this` is not finite (`NaN` or infinity), throws an [UnsupportedError].
+     */
+    floor() {
+        throw 'abstract';
+    }
+    /**
+     * Returns the least integer no smaller than `this`.
+     *
+     * If `this` is not finite (`NaN` or infinity), throws an [UnsupportedError].
+     */
+    ceil() {
+        throw 'abstract';
+    }
+    /**
+     * Returns the integer obtained by discarding any fractional
+     * digits from `this`.
+     *
+     * If `this` is not finite (`NaN` or infinity), throws an [UnsupportedError].
+     */
+    truncate() {
+        throw 'abstract';
+    }
+    /**
+     * Returns the double integer value closest to `this`.
+     *
+     * Rounds away from zero when there is no closest integer:
+     *  `(3.5).roundToDouble() == 4` and `(-3.5).roundToDouble() == -4`.
+     *
+     * If this is already an integer valued double, including `-0.0`, or it is a
+     * non-finite double value, the value is returned unmodified.
+     *
+     * For the purpose of rounding, `-0.0` is considered to be below `0.0`,
+     * and `-0.0` is therefore considered closer to negative numbers than `0.0`.
+     * This means that for a value, `d` in the range `-0.5 < d < 0.0`,
+     * the result is `-0.0`.
+     *
+     * The result is always a double.
+     * If this is a numerically large integer, the result may be an infinite
+     * double.
+     */
+    roundToDouble() {
+        throw 'abstract';
+    }
+    /**
+     * Returns the greatest double integer value no greater than `this`.
+     *
+     * If this is already an integer valued double, including `-0.0`, or it is a
+     * non-finite double value, the value is returned unmodified.
+     *
+     * For the purpose of rounding, `-0.0` is considered to be below `0.0`.
+     * A number `d` in the range `0.0 < d < 1.0` will return `0.0`.
+     *
+     * The result is always a double.
+     * If this is a numerically large integer, the result may be an infinite
+     * double.
+     */
+    floorToDouble() {
+        throw 'abstract';
+    }
+    /**
+     * Returns the least double integer value no smaller than `this`.
+     *
+     * If this is already an integer valued double, including `-0.0`, or it is a
+     * non-finite double value, the value is returned unmodified.
+     *
+     * For the purpose of rounding, `-0.0` is considered to be below `0.0`.
+     * A number `d` in the range `-1.0 < d < 0.0` will return `-0.0`.
+     *
+     * The result is always a double.
+     * If this is a numerically large integer, the result may be an infinite
+     * double.
+     */
+    ceilToDouble() {
+        throw 'abstract';
+    }
+    /**
+     * Returns the double integer value obtained by discarding any fractional
+     * digits from the double value of `this`.
+     *
+     * If this is already an integer valued double, including `-0.0`, or it is a
+     * non-finite double value, the value is returned unmodified.
+     *
+     * For the purpose of rounding, `-0.0` is considered to be below `0.0`.
+     * A number `d` in the range `-1.0 < d < 0.0` will return `-0.0`, and
+     * in the range `0.0 < d < 1.0` it will return 0.0.
+     *
+     * The result is always a double.
+     * If this is a numerically large integer, the result may be an infinite
+     * double.
+     */
+    truncateToDouble() {
+        throw 'abstract';
+    }
+    /**
+     * Returns this [num] clamped to be in the range [lowerLimit]-[upperLimit].
+     *
+     * The comparison is done using [compareTo] and therefore takes `-0.0` into
+     * account. This also implies that [double.NAN] is treated as the maximal
+     * double value.
+     *
+     * The arguments [lowerLimit] and [upperLimit] must form a valid range where
+     * `lowerLimit.compareTo(upperLimit) <= 0`.
+     */
+    clamp(lowerLimit, upperLimit) {
+        throw 'abstract';
+    }
+    /** Truncates this [num] to an integer and returns the result as an [int]. */
+    toInt() {
+        throw 'abstract';
+    }
+    /**
+     * Return this [num] as a [double].
+     *
+     * If the number is not representable as a [double], an
+     * approximation is returned. For numerically large integers, the
+     * approximation may be infinite.
+     */
+    toDouble() {
+        throw 'abstract';
+    }
+    /**
+     * Returns a decimal-point string-representation of `this`.
+     *
+     * Converts `this` to a [double] before computing the string representation.
+     *
+     * If the absolute value of `this` is greater or equal to `10^21` then this
+     * methods returns an exponential representation computed by
+     * `this.toStringAsExponential()`. Otherwise the result
+     * is the closest string representation with exactly [fractionDigits] digits
+     * after the decimal point. If [fractionDigits] equals 0 then the decimal
+     * point is omitted.
+     *
+     * The parameter [fractionDigits] must be an integer satisfying:
+     * `0 <= fractionDigits <= 20`.
+     *
+     * Examples:
+     *
+     *     1.toStringAsFixed(3);  // 1.000
+     *     (4321.12345678).toStringAsFixed(3);  // 4321.123
+     *     (4321.12345678).toStringAsFixed(5);  // 4321.12346
+     *     123456789012345678901.toStringAsFixed(3);  // 123456789012345683968.000
+     *     1000000000000000000000.toStringAsFixed(3); // 1e+21
+     *     5.25.toStringAsFixed(0); // 5
+     */
+    toStringAsFixed(fractionDigits) {
+        throw 'abstract';
+    }
+    /**
+     * Returns an exponential string-representation of `this`.
+     *
+     * Converts `this` to a [double] before computing the string representation.
+     *
+     * If [fractionDigits] is given then it must be an integer satisfying:
+     * `0 <= fractionDigits <= 20`. In this case the string contains exactly
+     * [fractionDigits] after the decimal point. Otherwise, without the parameter,
+     * the returned string uses the shortest number of digits that accurately
+     * represent [this].
+     *
+     * If [fractionDigits] equals 0 then the decimal point is omitted.
+     * Examples:
+     *
+     *     1.toStringAsExponential();       // 1e+0
+     *     1.toStringAsExponential(3);      // 1.000e+0
+     *     123456.toStringAsExponential();  // 1.23456e+5
+     *     123456.toStringAsExponential(3); // 1.235e+5
+     *     123.toStringAsExponential(0);    // 1e+2
+     */
+    toStringAsExponential(fractionDigits) {
+        throw 'abstract';
+    }
+    /**
+     * Converts `this` to a double and returns a string representation with
+     * exactly [precision] significant digits.
+     *
+     * The parameter [precision] must be an integer satisfying:
+     * `1 <= precision <= 21`.
+     *
+     * Examples:
+     *
+     *     1.toStringAsPrecision(2);       // 1.0
+     *     1e15.toStringAsPrecision(3);    // 1.00+15
+     *     1234567.toStringAsPrecision(3); // 1.23e+6
+     *     1234567.toStringAsPrecision(9); // 1234567.00
+     *     12345678901234567890.toStringAsPrecision(20); // 12345678901234567168
+     *     12345678901234567890.toStringAsPrecision(14); // 1.2345678901235e+19
+     *     0.00000012345.toStringAsPrecision(15); // 1.23450000000000e-7
+     *     0.0000012345.toStringAsPrecision(15);  // 0.00000123450000000000
+     */
+    toStringAsPrecision(precision) {
+        throw 'abstract';
+    }
+    /**
+     * Returns the shortest string that correctly represent the input number.
+     *
+     * All [double]s in the range `10^-6` (inclusive) to `10^21` (exclusive)
+     * are converted to their decimal representation with at least one digit
+     * after the decimal point. For all other doubles,
+     * except for special values like `NaN` or `Infinity`, this method returns an
+     * exponential representation (see [toStringAsExponential]).
+     *
+     * Returns `"NaN"` for [double.NAN], `"Infinity"` for [double.INFINITY], and
+     * `"-Infinity"` for [double.NEGATIVE_INFINITY].
+     *
+     * An [int] is converted to a decimal representation with no decimal point.
+     *
+     * Examples:
+     *
+     *     (0.000001).toString();  // "0.000001"
+     *     (0.0000001).toString(); // "1e-7"
+     *     (111111111111111111111.0).toString();  // "111111111111111110000.0"
+     *     (100000000000000000000.0).toString();  // "100000000000000000000.0"
+     *     (1000000000000000000000.0).toString(); // "1e+21"
+     *     (1111111111111111111111.0).toString(); // "1.1111111111111111e+21"
+     *     1.toString(); // "1"
+     *     111111111111111111111.toString();  // "111111111111111110000"
+     *     100000000000000000000.toString();  // "100000000000000000000"
+     *     1000000000000000000000.toString(); // "1000000000000000000000"
+     *     1111111111111111111111.toString(); // "1111111111111111111111"
+     *     1.234e5.toString();   // 123400
+     *     1234.5e6.toString();  // 1234500000
+     *     12.345e67.toString(); // 1.2345e+68
+     *
+     * Note: the conversion may round the output if the returned string
+     * is accurate enough to uniquely identify the input-number.
+     * For example the most precise representation of the [double] `9e59` equals
+     * `"899999999999999918767229449717619953810131273674690656206848"`, but
+     * this method returns the shorter (but still uniquely identifying) `"9e59"`.
+     *
+     */
+    toString() {
+        throw 'abstract';
+    }
+    /**
+     * Parses a string containing a number literal into a number.
+     *
+     * The method first tries to read the [input] as integer (similar to
+     * [int.parse] without a radix).
+     * If that fails, it tries to parse the [input] as a double (similar to
+     * [double.parse]).
+     * If that fails, too, it invokes [onError] with [input], and the result
+     * of that invocation becomes the result of calling `parse`.
+     *
+     * If no [onError] is supplied, it defaults to a function that throws a
+     * [FormatException].
+     *
+     * For any number `n`, this function satisfies
+     * `identical(n, num.parse(n.toString()))` (except when `n` is a NaN `double`
+     * with a payload).
+     */
+    static parse(input, onError) {
+        let source = new DartString(input).trim();
+        // TODO(lrn): Optimize to detect format and result type in one check.
+        let result = DartInt.parse(source, { onError: DartNumber_1._returnIntNull });
+        if (result != null)
+            return result;
+        result = DartDouble.parse(source, DartNumber_1._returnDoubleNull);
+        if (result != null)
+            return result;
+        if (onError == null)
+            throw new FormatException(input);
+        return onError(input);
+    }
+    /** Helper functions for [parse]. */
+    static _returnIntNull(_) { return null; }
+    static _returnDoubleNull(_) { return null; }
+};
+__decorate([
+    Operator(Op.EQUALS),
+    Abstract
+], DartNumber.prototype, "equals", null);
+__decorate([
+    Abstract
+], DartNumber.prototype, "hashCode", null);
+__decorate([
+    Abstract
+], DartNumber.prototype, "compareTo", null);
+__decorate([
+    Operator(Op.PLUS),
+    Abstract
+], DartNumber.prototype, "plus", null);
+__decorate([
+    Operator(Op.MINUS)
+], DartNumber.prototype, "minus", null);
+__decorate([
+    Operator(Op.TIMES)
+], DartNumber.prototype, "times", null);
+__decorate([
+    Operator(Op.MODULE)
+], DartNumber.prototype, "module", null);
+__decorate([
+    Operator(Op.DIVIDE)
+], DartNumber.prototype, "divide", null);
+__decorate([
+    Operator(Op.INTDIVIDE)
+], DartNumber.prototype, "intDivide", null);
+__decorate([
+    Operator(Op.NEG)
+], DartNumber.prototype, "neg", null);
+__decorate([
+    Operator(Op.LT)
+], DartNumber.prototype, "lt", null);
+__decorate([
+    Operator(Op.LEQ)
+], DartNumber.prototype, "leq", null);
+__decorate([
+    Operator(Op.GT)
+], DartNumber.prototype, "get", null);
+__decorate([
+    Operator(Op.GEQ)
+], DartNumber.prototype, "geq", null);
+__decorate([
+    defaultFactory
+], DartNumber, "_create", null);
+DartNumber = DartNumber_1 = __decorate([
+    DartClass
+], DartNumber);
+// Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+//part of _interceptors;
+/**
+ * The super interceptor class for [JSInt] and [JSDouble]. The compiler
+ * recognizes this class as an interceptor, and changes references to
+ * [:this:] to actually use the receiver of the method, which is
+ * generated as an extra argument added to each member.
+ *
+ * Note that none of the methods here delegate to a method defined on JSInt or
+ * JSDouble.  This is exploited in [tryComputeConstantInterceptor].
+ */
+let JSNumber = JSNumber_1 = class JSNumber extends Number {
+    constructor(n) {
+        super(n);
+    }
+    equals(other) {
+        return this.valueOf() == other;
+    }
+    compareTo(b) {
+        if (isNot(b, 'num'))
+            throw argumentErrorValue(b);
+        if (this.valueOf() < b) {
+            return -1;
+        }
+        else if (this.valueOf() > b) {
+            return 1;
+        }
+        else if (this.valueOf() == b) {
+            if (this.valueOf() == 0) {
+                let bIsNegative = new DartNumber(b).isNegative;
+                if (this.isNegative == bIsNegative)
+                    return 0;
+                if (this.isNegative)
+                    return -1;
+                return 1;
+            }
+            return 0;
+        }
+        else if (this.isNaN) {
+            if (new DartNumber(b).isNaN) {
+                return 0;
+            }
+            return 1;
+        }
+        else {
+            return -1;
+        }
+    }
+    get isNegative() { return (this.valueOf() == 0) ? (1 / this.valueOf()) < 0 : this.valueOf() < 0; }
+    get isNaN() { return isNaN(this.valueOf()) /* JS('bool', r'isNaN(#)', this)*/; }
+    get isInfinite() {
+        return this.valueOf() == (1 / 0) /*JS('bool', r'# == (1/0)', this)*/ || this.valueOf() == (-1 / 0) /*JS('bool', r'# == (-1/0)', this)*/;
+    }
+    get isFinite() { return isFinite(this.valueOf()) /*JS('bool', r'isFinite(#)', this)*/; }
+    remainder(b) {
+        if (isNot(b, 'num'))
+            throw argumentErrorValue(b);
+        return this.valueOf() % b /* JS('num', r'# % #', this, b)*/;
+    }
+    abs() {
+        return Math.abs(this.valueOf()) /*JS('returns:num;effects:none;depends:none;throws:never;gvn:true',
+      r'Math.abs(#)', this)*/;
+    }
+    get sign() {
+        return this.valueOf() > 0 ? 1 : this.valueOf() < 0 ? -1 : this.valueOf();
+    }
+    toInt() {
+        if (this.valueOf() >= JSNumber_1._MIN_INT32 && this.valueOf() <= JSNumber_1._MAX_INT32) {
+            // 0 and -0.0 handled here.
+            return this.valueOf() | 0 /*JS('int', '# | 0', this)*/;
+        }
+        if (isFinite(this.valueOf()) /*JS('bool', r'isFinite(#)', this)*/) {
+            return this.truncateToDouble() + 0 /* JS('int', r'# + 0', truncateToDouble())*/; // Converts -0.0 to +0.0.
+        }
+        // [this] is either NaN, Infinity or -Infinity.
+        throw new UnsupportedError("" + this.valueOf() + ".toInt()" /*JS("String", '"" + # + ".toInt()"', this)*/);
+    }
+    truncate() {
+        return this.toInt();
+    }
+    ceil() {
+        if (this.valueOf() >= 0) {
+            if (this.valueOf() <= JSNumber_1._MAX_INT32) {
+                let truncated = this.valueOf() | 0 /* JS('int', '# | 0', this)*/; // converts -0.0 to 0.
+                return this.valueOf() == truncated ? truncated : truncated + 1;
+            }
+        }
+        else {
+            if (this.valueOf() >= JSNumber_1._MIN_INT32) {
+                return this.valueOf() | 0 /*JS('int', '# | 0', this)*/;
+            }
+        }
+        let d = Math.ceil(this.valueOf()) /* JS('num', 'Math.ceil(#)', this)*/;
+        if (isFinite(d) /*JS('bool', r'isFinite(#)', d)*/) {
+            return d /*JS('int', r'#', d)*/;
+        }
+        // [this] is either NaN, Infinity or -Infinity.
+        throw new UnsupportedError("" + this.valueOf() + ".ceil()" /*JS("String", '"" + # + ".ceil()"', this)*/);
+    }
+    floor() {
+        if (this.valueOf() >= 0) {
+            if (this.valueOf() <= JSNumber_1._MAX_INT32) {
+                return this.valueOf() | 0 /* JS('int', '# | 0', this)*/;
+            }
+        }
+        else {
+            if (this.valueOf() >= JSNumber_1._MIN_INT32) {
+                let truncated = this.valueOf() | 0 /*JS('int', '# | 0', this)*/;
+                return this.valueOf() == truncated ? truncated : truncated - 1;
+            }
+        }
+        let d = Math.floor(this.valueOf()) /*JS('num', 'Math.floor(#)', this)*/;
+        if (isFinite(d) /*JS('bool', r'isFinite(#)', d)*/) {
+            return d /*JS('int', r'#', d)*/;
+        }
+        // [this] is either NaN, Infinity or -Infinity.
+        throw new UnsupportedError("" + this.valueOf() + ".floor()" /*JS("String", '"" + # + ".floor()"', this)*/);
+    }
+    round() {
+        if (this.valueOf() > 0) {
+            // This path excludes the special cases -0.0, NaN and -Infinity, leaving
+            // only +Infinity, for which a direct test is faster than [isFinite].
+            if (this.valueOf() !== (1 / 0) /*JS('bool', r'# !== (1/0)', this)*/) {
+                return Math.round(this.valueOf()) /*JS('int', r'Math.round(#)', this)*/;
+            }
+        }
+        else if (this.valueOf() > (-1 / 0) /*JS('bool', '# > (-1/0)', this)*/) {
+            // This test excludes NaN and -Infinity, leaving only -0.0.
+            //
+            // Subtraction from zero rather than negation forces -0.0 to 0.0 so code
+            // inside Math.round and code to handle result never sees -0.0, which on
+            // some JavaScript VMs can be a slow path.
+            return 0 - Math.round(0 - this.valueOf()) /*JS('int', r'0 - Math.round(0 - #)', this)*/;
+        }
+        // [this] is either NaN, Infinity or -Infinity.
+        throw new UnsupportedError("" + this.valueOf() + ".round()" /*JS("String", '"" + # + ".round()"', this)*/);
+    }
+    ceilToDouble() {
+        return Math.ceil(this.valueOf()) /* JS('num', r'Math.ceil(#)', this)*/;
+    }
+    floorToDouble() {
+        return Math.floor(this.valueOf()) /* JS('num', r'Math.floor(#)', this)*/;
+    }
+    roundToDouble() {
+        if (this.valueOf() < 0) {
+            return -Math.round(-this.valueOf()) /* JS('num', r'-Math.round(-#)', this)*/;
+        }
+        else {
+            return Math.round(this.valueOf()) /*JS('num', r'Math.round(#)', this)*/;
+        }
+    }
+    truncateToDouble() {
+        return this.valueOf() < 0 ? this.ceilToDouble() : this.floorToDouble();
+    }
+    clamp(lowerLimit, upperLimit) {
+        if (isNot(lowerLimit, 'num'))
+            throw argumentErrorValue(lowerLimit);
+        if (isNot(upperLimit, 'num'))
+            throw argumentErrorValue(upperLimit);
+        if (new DartNumber(lowerLimit).compareTo(upperLimit) > 0) {
+            throw argumentErrorValue(lowerLimit);
+        }
+        if (this.compareTo(lowerLimit) < 0)
+            return lowerLimit;
+        if (this.compareTo(upperLimit) > 0)
+            return upperLimit;
+        return this.valueOf();
+    }
+    // The return type is intentionally omitted to avoid type checker warnings
+    // from assigning JSNumber to double.
+    toDouble() {
+        return this.valueOf();
+    }
+    toStringAsFixed(fractionDigits) {
+        checkInt(fractionDigits);
+        if (fractionDigits < 0 || fractionDigits > 20) {
+            throw new RangeError.range(fractionDigits, 0, 20, "fractionDigits");
+        }
+        let result = this.toFixed(fractionDigits) /*JS('String', r'#.toFixed(#)', this, fractionDigits)*/;
+        if (this.valueOf() == 0 && this.isNegative)
+            return `-${result}`;
+        return result;
+    }
+    toStringAsExponential(fractionDigits) {
+        let result;
+        if (fractionDigits != null) {
+            checkInt(fractionDigits);
+            if (fractionDigits < 0 || fractionDigits > 20) {
+                throw new RangeError.range(fractionDigits, 0, 20, "fractionDigits");
+            }
+            result = this.toExponential(fractionDigits) /*JS('String', r'#.toExponential(#)', this, fractionDigits)*/;
+        }
+        else {
+            result = this.toExponential() /* JS('String', r'#.toExponential()', this)*/;
+        }
+        if (this.valueOf() == 0 && this.isNegative)
+            return `-${result}`;
+        return result;
+    }
+    toStringAsPrecision(precision) {
+        checkInt(precision);
+        if (precision < 1 || precision > 21) {
+            throw new RangeError.range(precision, 1, 21, "precision");
+        }
+        let result = this.toPrecision(precision) /*JS('String', r'#.toPrecision(#)', this, precision)*/;
+        if (this.valueOf() == 0 && this.isNegative)
+            return `-${result}`;
+        return result;
+    }
+    toRadixString(radix) {
+        checkInt(radix);
+        if (radix < 2 || radix > 36) {
+            throw new RangeError.range(radix, 2, 36, "radix");
+        }
+        let result = super.toString(radix) /* JS('String', r'#.toString(#)', this, radix)*/;
+        const rightParenCode = 0x29;
+        if (new DartString(result).codeUnitAt(result.length - 1) != rightParenCode) {
+            return result;
+        }
+        return JSNumber_1._handleIEtoString(result);
+    }
+    static _handleIEtoString(result) {
+        // Result is probably IE's untraditional format for large numbers,
+        // e.g., "8.0000000000008(e+15)" for 0x8000000000000800.toString(16).
+        let match = /^([\da-z]+)(?:\.([\da-z]+))?\(e\+(\d+)\)$/.exec(result) /* JS('List|Null',
+        r'/^([\da-z]+)(?:\.([\da-z]+))?\(e\+(\d+)\)$/.exec(#)', result)*/;
+        if (match == null) {
+            // Then we don't know how to handle it at all.
+            throw new UnsupportedError("Unexpected toString result: $result");
+        }
+        result = match[1] /*JS('String', '#', match[1])*/;
+        let exponent = +match[3] /*JS("int", "+#", match[3])*/;
+        if (match[2] != null) {
+            result = result + match[2] /*JS('String', '# + #', result, match[2])*/;
+            exponent -= match[2].length /*JS('int', '#.length', match[2])*/;
+        }
+        return result + new DartString("0").repeat(exponent);
+    }
+    // Note: if you change this, also change the function [S].
+    toString() {
+        if (this.valueOf() == 0 && (1 / this.valueOf()) < 0 /* JS('bool', '(1 / #) < 0', this)*/) {
+            return '-0.0';
+        }
+        else {
+            return "" + (this.valueOf()) /* JS('String', r'"" + (#)', this)*/;
+        }
+    }
+    get hashCode() {
+        return this.valueOf() & 0x1FFFFFFF /* JS('int', '# & 0x1FFFFFFF', this)*/;
+    }
+    neg() {
+        return -this.valueOf() /* JS('num', r'-#', this)*/;
+    }
+    plus(other) {
+        if (isNot(other, 'num'))
+            throw argumentErrorValue(other);
+        return this.valueOf() + other /*JS('num', '# + #', this, other)*/;
+    }
+    minus(other) {
+        if (isNot(other, 'num'))
+            throw argumentErrorValue(other);
+        return this.valueOf() - other /* JS('num', '# - #', this, other)*/;
+    }
+    divide(other) {
+        if (isNot(other, 'num'))
+            throw argumentErrorValue(other);
+        return this.valueOf() / other /*JS('num', '# / #', this, other)*/;
+    }
+    times(other) {
+        if (isNot(other, 'num'))
+            throw argumentErrorValue(other);
+        return this.valueOf() * other /* JS('num', '# * #', this, other)*/;
+    }
+    module(other) {
+        if (isNot(other, 'num'))
+            throw argumentErrorValue(other);
+        // Euclidean Modulo.
+        let result = this.valueOf() % other /*JS('num', r'# % #', this, other)*/;
+        if (result == 0)
+            return 0; // Make sure we don't return -0.0.
+        if (result > 0)
+            return result;
+        if (other /*JS('num', '#', other)*/ < 0) {
+            return result - other /* JS('num', '#', other)*/;
+        }
+        else {
+            return result + other /* JS('num', '#', other)*/;
+        }
+    }
+    _isInt32(value) {
+        return (value | 0) === value /* JS('bool', '(# | 0) === #', value, value)*/;
+    }
+    intDivide(other) {
+        if (isNot(other, 'num'))
+            throw argumentErrorValue(other);
+        if (false)
+            this._tdivFast(other); // Ensure resolution.
+        if (this._isInt32(this.valueOf())) {
+            if (other >= 1 || other < -1) {
+                return (this.valueOf() / other) | 0 /*JS('int', r'(# / #) | 0', this, other)*/;
+            }
+        }
+        return this._tdivSlow(other);
+    }
+    _tdivFast(other) {
+        // [other] is known to be a number outside the range [-1, 1).
+        return this._isInt32(this.valueOf())
+            ? (this.valueOf() / other) | 0 /*JS('int', r'(# / #) | 0', this, other)*/
+            : this._tdivSlow(other);
+    }
+    _tdivSlow(other) {
+        let quotient = this.valueOf() / other /* JS('num', r'# / #', this, other)*/;
+        if (quotient >= JSNumber_1._MIN_INT32 && quotient <= JSNumber_1._MAX_INT32) {
+            // This path includes -0.0 and +0.0.
+            return quotient | 0 /* JS('int', '# | 0', quotient)*/;
+        }
+        if (quotient > 0) {
+            // This path excludes the special cases -0.0, NaN and -Infinity, leaving
+            // only +Infinity, for which a direct test is faster than [isFinite].
+            if (quotient !== (1 / 0) /*JS('bool', r'# !== (1/0)', quotient)*/) {
+                return Math.floor(quotient) /*JS('int', r'Math.floor(#)', quotient)*/;
+            }
+        }
+        else if (quotient > (-1 / 0) /*JS('bool', '# > (-1/0)', quotient)*/) {
+            // This test excludes NaN and -Infinity.
+            return Math.ceil(quotient) /* JS('int', r'Math.ceil(#)', quotient)*/;
+        }
+        // [quotient] is either NaN, Infinity or -Infinity.
+        throw new UnsupportedError(`Result of truncating division is ${quotient}: ${this} ~/ ${other}`);
+    }
+    // TODO(ngeoffray): Move the bit operations below to [JSInt] and
+    // make them take an int. Because this will make operations slower,
+    // we define these methods on number for now but we need to decide
+    // the grain at which we do the type checks.
+    lshift(other) {
+        if (isNot(other, 'num'))
+            throw argumentErrorValue(other);
+        if (other /*JS('num', '#', other)*/ < 0)
+            throw argumentErrorValue(other);
+        return this._shlPositive(other);
+    }
+    _shlPositive(other) {
+        // JavaScript only looks at the last 5 bits of the shift-amount. Shifting
+        // by 33 is hence equivalent to a shift by 1.
+        return other > 31 /*JS('bool', r'# > 31', other)*/
+            ? 0
+            : (this.valueOf() << other) >>> 0 /*JS('JSUInt32', r'(# << #) >>> 0', this, other)*/;
+    }
+    rshift(other) {
+        if (false)
+            this._shrReceiverPositive(other);
+        if (isNot(other, 'num'))
+            throw argumentErrorValue(other);
+        if (other /*JS('num', '#', other)*/ < 0)
+            throw argumentErrorValue(other);
+        return this._shrOtherPositive(other);
+    }
+    _shrOtherPositive(other) {
+        return this.valueOf() /*JS('num', '#', this)*/ > 0
+            ? this._shrBothPositive(other)
+            // For negative numbers we just clamp the shift-by amount.
+            // `this` could be negative but not have its 31st bit set.
+            // The ">>" would then shift in 0s instead of 1s. Therefore
+            // we cannot simply return 0xFFFFFFFF.
+            : (this.valueOf() >> (other > 31 ? 31 : other)) >>> 0 /* JS('JSUInt32', r'(# >> #) >>> 0', this, other > 31 ? 31 : other)*/;
+    }
+    _shrReceiverPositive(other) {
+        if (other /*JS('num', '#', other)*/ < 0)
+            throw argumentErrorValue(other);
+        return this._shrBothPositive(other);
+    }
+    _shrBothPositive(other) {
+        return other > 31 /* JS('bool', r'# > 31', other)*/
+            // JavaScript only looks at the last 5 bits of the shift-amount. In JS
+            // shifting by 33 is hence equivalent to a shift by 1. Shortcut the
+            // computation when that happens.
+            ? 0
+            // Given that `this` is positive we must not use '>>'. Otherwise a
+            // number that has the 31st bit set would be treated as negative and
+            // shift in ones.
+            : this.valueOf() >>> other /* JS('JSUInt32', r'# >>> #', this, other)*/;
+    }
+    and(other) {
+        if (isNot(other, 'num'))
+            throw argumentErrorValue(other);
+        return (this.valueOf() & other) >>> 0 /*JS('JSUInt32', r'(# & #) >>> 0', this, other)*/;
+    }
+    or(other) {
+        if (isNot(other, 'num'))
+            throw argumentErrorValue(other);
+        return (this.valueOf() | other) >>> 0 /* JS('JSUInt32', r'(# | #) >>> 0', this, other)*/;
+    }
+    xor(other) {
+        if (isNot(other, 'num'))
+            throw argumentErrorValue(other);
+        return (this.valueOf() ^ other) >>> 0 /*JS('JSUInt32', r'(# ^ #) >>> 0', this, other)*/;
+    }
+    lt(other) {
+        if (isNot(other, 'num'))
+            throw argumentErrorValue(other);
+        return this.valueOf() < other /* JS('bool', '# < #', this, other)*/;
+    }
+    get(other) {
+        if (isNot(other, 'num'))
+            throw argumentErrorValue(other);
+        return this.valueOf() > other /* JS('bool', '# > #', this, other)*/;
+    }
+    leq(other) {
+        if (isNot(other, 'num'))
+            throw argumentErrorValue(other);
+        return this.valueOf() <= other /* JS('bool', '# <= #', this, other)*/;
+    }
+    geq(other) {
+        if (isNot(other, 'num'))
+            throw argumentErrorValue(other);
+        return this.valueOf() >= other /*JS('bool', '# >= #', this, other)*/;
+    }
+};
+JSNumber._MIN_INT32 = -0x80000000;
+JSNumber._MAX_INT32 = 0x7FFFFFFF;
+__decorate([
+    Operator(Op.NEG)
+], JSNumber.prototype, "neg", null);
+__decorate([
+    Operator(Op.PLUS)
+], JSNumber.prototype, "plus", null);
+__decorate([
+    Operator(Op.MINUS)
+], JSNumber.prototype, "minus", null);
+__decorate([
+    Operator(Op.DIVIDE)
+], JSNumber.prototype, "divide", null);
+__decorate([
+    Operator(Op.TIMES)
+], JSNumber.prototype, "times", null);
+__decorate([
+    Operator(Op.MODULE)
+], JSNumber.prototype, "module", null);
+__decorate([
+    Operator(Op.INTDIVIDE)
+], JSNumber.prototype, "intDivide", null);
+__decorate([
+    Operator(Op.SHIFTLEFT)
+], JSNumber.prototype, "lshift", null);
+__decorate([
+    Operator(Op.SHIFTRIGHT)
+], JSNumber.prototype, "rshift", null);
+__decorate([
+    Operator(Op.BITAND)
+], JSNumber.prototype, "and", null);
+__decorate([
+    Operator(Op.BITOR)
+], JSNumber.prototype, "or", null);
+__decorate([
+    Operator(Op.XOR)
+], JSNumber.prototype, "xor", null);
+__decorate([
+    Operator(Op.LT)
+], JSNumber.prototype, "lt", null);
+__decorate([
+    Operator(Op.GT)
+], JSNumber.prototype, "get", null);
+__decorate([
+    Operator(Op.LEQ)
+], JSNumber.prototype, "leq", null);
+__decorate([
+    Operator(Op.GEQ)
+], JSNumber.prototype, "geq", null);
+JSNumber = JSNumber_1 = __decorate([
+    DartClass,
+    Implements(DartNumber)
+], JSNumber);
+// Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+//part of dart.core;
+/**
+ * An arbitrarily large integer.
+ *
+ * **Note:** When compiling to JavaScript, integers are
+ * implemented as JavaScript numbers. When compiling to JavaScript,
+ * integers are therefore restricted to 53 significant bits because
+ * all JavaScript numbers are double-precision floating point
+ * values. The behavior of the operators and methods in the [int]
+ * class therefore sometimes differs between the Dart VM and Dart code
+ * compiled to JavaScript.
+ *
+ * It is a compile-time error for a class to attempt to extend or implement int.
+ */
+let DartInt = class DartInt extends DartNumber {
+    constructor(n) {
+        super(n);
+    }
+    static _create(n) {
+        return new JSInt(n);
+    }
+    /**
+     * Returns the integer value of the given environment declaration [name].
+     *
+     * The result is the same as would be returned by:
+     *
+     *     int.parse(const String.fromEnvironment(name, defaultValue: ""),
+     *               (_) => defaultValue)
+     *
+     * Example:
+     *
+     *     const int.fromEnvironment("defaultPort", defaultValue: 80)
+     */
+    // The .fromEnvironment() constructors are special in that we do not want
+    // users to call them using "new". We prohibit that by giving them bodies
+    // that throw, even though const constructors are not allowed to have bodies.
+    // Disable those static errors.
+    //ignore: const_constructor_with_body
+    //ignore: const_factory
+    static _fromEnvironment(name, _) {
+        throw "external";
+    }
+    /**
+     * Bit-wise and operator.
+     *
+     * Treating both `this` and [other] as sufficiently large two's component
+     * integers, the result is a number with only the bits set that are set in
+     * both `this` and [other]
+     *
+     * Of both operands are negative, the result is negative, otherwise
+     * the result is non-negative.
+     */
+    and(other) {
+        throw 'abstract';
+    }
+    /**
+     * Bit-wise or operator.
+     *
+     * Treating both `this` and [other] as sufficiently large two's component
+     * integers, the result is a number with the bits set that are set in either
+     * of `this` and [other]
+     *
+     * If both operands are non-negative, the result is non-negative,
+     * otherwise the result us negative.
+     */
+    or(other) {
+        throw 'abstract';
+    }
+    /**
+     * Bit-wise exclusive-or operator.
+     *
+     * Treating both `this` and [other] as sufficiently large two's component
+     * integers, the result is a number with the bits set that are set in one,
+     * but not both, of `this` and [other]
+     *
+     * If the operands have the same sign, the result is non-negative,
+     * otherwise the result is negative.
+     */
+    xor(other) {
+        throw 'abstract';
+    }
+    /**
+     * The bit-wise negate operator.
+     *
+     * Treating `this` as a sufficiently large two's component integer,
+     * the result is a number with the opposite bits set.
+     *
+     * This maps any integer `x` to `-x - 1`.
+     */
+    bitneg() {
+        throw 'abstract';
+    }
+    /**
+     * Shift the bits of this integer to the left by [shiftAmount].
+     *
+     * Shifting to the left makes the number larger, effectively multiplying
+     * the number by `pow(2, shiftIndex)`.
+     *
+     * There is no limit on the size of the result. It may be relevant to
+     * limit intermediate values by using the "and" operator with a suitable
+     * mask.
+     *
+     * It is an error if [shiftAmount] is negative.
+     */
+    lshift(other) {
+        throw 'abstract';
+    }
+    /**
+     * Shift the bits of this integer to the right by [shiftAmount].
+     *
+     * Shifting to the right makes the number smaller and drops the least
+     * significant bits, effectively doing an integer division by
+     *`pow(2, shiftIndex)`.
+     *
+     * It is an error if [shiftAmount] is negative.
+     */
+    rshift(other) {
+        throw 'abstract';
+    }
+    /**
+     * Returns this integer to the power of [exponent] modulo [modulus].
+     *
+     * The [exponent] must be non-negative and [modulus] must be
+     * positive.
+     */
+    modPow(e, m) {
+        throw 'abstract';
+    }
+    /**
+     * Returns the modular multiplicative inverse of this integer
+     * modulo [modulus].
+     *
+     * The [modulus] must be positive.
+     *
+     * It is an error if no modular inverse exists.
+     */
+    modInverse(m) {
+        throw 'abstract';
+    }
+    /**
+     * Returns the greatest common divisor of this integer and [other].
+     *
+     * If either number is non-zero, the result is the numerically greatest
+     * integer dividing both `this` and `other`.
+     *
+     * The greatest common divisor is independent of the order,
+     * so `x.gcd(y)` is  always the same as `y.gcd(x)`.
+     *
+     * For any integer `x`, `x.gcd(x)` is `x.abs()`.
+     *
+     * If both `this` and `other` is zero, the result is also zero.
+     */
+    gcd(other) {
+        throw 'abstract';
+    }
+    /** Returns true if and only if this integer is even. */
+    get isEven() {
+        throw 'abstract';
+    }
+    /** Returns true if and only if this integer is odd. */
+    get isOdd() {
+        throw 'abstract';
+    }
+    /**
+     * Returns the minimum number of bits required to store this integer.
+     *
+     * The number of bits excludes the sign bit, which gives the natural length
+     * for non-negative (unsigned) values.  Negative values are complemented to
+     * return the bit position of the first bit that differs from the sign bit.
+     *
+     * To find the number of bits needed to store the value as a signed value,
+     * add one, i.e. use `x.bitLength + 1`.
+     *
+     *      x.bitLength == (-x-1).bitLength
+     *
+     *      3.bitLength == 2;     // 00000011
+     *      2.bitLength == 2;     // 00000010
+     *      1.bitLength == 1;     // 00000001
+     *      0.bitLength == 0;     // 00000000
+     *      (-1).bitLength == 0;  // 11111111
+     *      (-2).bitLength == 1;  // 11111110
+     *      (-3).bitLength == 2;  // 11111101
+     *      (-4).bitLength == 2;  // 11111100
+     */
+    get bitLength() {
+        throw 'abstract';
+    }
+    /**
+     * Returns the least significant [width] bits of this integer as a
+     * non-negative number (i.e. unsigned representation).  The returned value has
+     * zeros in all bit positions higher than [width].
+     *
+     *     (-1).toUnsigned(5) == 31   // 11111111  ->  00011111
+     *
+     * This operation can be used to simulate arithmetic from low level languages.
+     * For example, to increment an 8 bit quantity:
+     *
+     *     q = (q + 1).toUnsigned(8);
+     *
+     * `q` will count from `0` up to `255` and then wrap around to `0`.
+     *
+     * If the input fits in [width] bits without truncation, the result is the
+     * same as the input.  The minimum width needed to avoid truncation of `x` is
+     * given by `x.bitLength`, i.e.
+     *
+     *     x == x.toUnsigned(x.bitLength);
+     */
+    toUnsigned(width) {
+        throw 'abstract';
+    }
+    /**
+     * Returns the least significant [width] bits of this integer, extending the
+     * highest retained bit to the sign.  This is the same as truncating the value
+     * to fit in [width] bits using an signed 2-s complement representation.  The
+     * returned value has the same bit value in all positions higher than [width].
+     *
+     *                                    V--sign bit-V
+     *     16.toSigned(5) == -16   //  00010000 -> 11110000
+     *     239.toSigned(5) == 15   //  11101111 -> 00001111
+     *                                    ^           ^
+     *
+     * This operation can be used to simulate arithmetic from low level languages.
+     * For example, to increment an 8 bit signed quantity:
+     *
+     *     q = (q + 1).toSigned(8);
+     *
+     * `q` will count from `0` up to `127`, wrap to `-128` and count back up to
+     * `127`.
+     *
+     * If the input value fits in [width] bits without truncation, the result is
+     * the same as the input.  The minimum width needed to avoid truncation of `x`
+     * is `x.bitLength + 1`, i.e.
+     *
+     *     x == x.toSigned(x.bitLength + 1);
+     */
+    toSigned(width) {
+        throw 'abstract';
+    }
+    /**
+     * Return the negative value of this integer.
+     *
+     * The result of negating an integer always has the opposite sign, except
+     * for zero, which is its own negation.
+     */
+    //int operator -();
+    /**
+     * Returns the absolute value of this integer.
+     *
+     * For any integer `x`, the result is the same as `x < 0 ? -x : x`.
+     */
+    //int abs();
+    /**
+     * Returns the sign of this integer.
+     *
+     * Returns 0 for zero, -1 for values less than zero and
+     * +1 for values greater than zero.
+     */
+    //int get sign;
+    /** Returns `this`. */
+    // int round();
+    /** Returns `this`. */
+    //int floor();
+    /** Returns `this`. */
+    // int ceil();
+    /** Returns `this`. */
+    //int truncate();
+    /** Returns `this.toDouble()`. */
+    // double roundToDouble();
+    /** Returns `this.toDouble()`. */
+    // double floorToDouble();
+    /** Returns `this.toDouble()`. */
+    //  double ceilToDouble();
+    /** Returns `this.toDouble()`. */
+    // double truncateToDouble();
+    /**
+     * Returns a String-representation of this integer.
+     *
+     * The returned string is parsable by [parse].
+     * For any `int` [:i:], it is guaranteed that
+     * [:i == int.parse(i.toString()):].
+     */
+    //String toString();
+    /**
+     * Converts [this] to a string representation in the given [radix].
+     *
+     * In the string representation, lower-case letters are used for digits above
+     * '9', with 'a' being 10 an 'z' being 35.
+     *
+     * The [radix] argument must be an integer in the range 2 to 36.
+     */
+    // String toRadixString(int radix);
+    /**
+     * Parse [source] as a, possibly signed, integer literal and return its value.
+     *
+     * The [source] must be a non-empty sequence of base-[radix] digits,
+     * optionally prefixed with a minus or plus sign ('-' or '+').
+     *
+     * The [radix] must be in the range 2..36. The digits used are
+     * first the decimal digits 0..9, and then the letters 'a'..'z' with
+     * values 10 through 35. Also accepts upper-case letters with the same
+     * values as the lower-case ones.
+     *
+     * If no [radix] is given then it defaults to 10. In this case, the [source]
+     * digits may also start with `0x`, in which case the number is interpreted
+     * as a hexadecimal literal, which effectively means that the `0x` is ignored
+     * and the radix is instead set to 16.
+     *
+     * For any int [:n:] and radix [:r:], it is guaranteed that
+     * [:n == int.parse(n.toRadixString(r), radix: r):].
+     *
+     * If the [source] is not a valid integer literal, optionally prefixed by a
+     * sign, the [onError] is called with the [source] as argument, and its return
+     * value is used instead. If no [onError] is provided, a [FormatException]
+     * is thrown.
+     *
+     * The [onError] handler can be chosen to return `null`.  This is preferable
+     * to to throwing and then immediately catching the [FormatException].
+     * Example:
+     *
+     *     var value = int.parse(text, onError: (source) => null);
+     *     if (value == null) ... handle the problem
+     *
+     * The [onError] function is only invoked if [source] is a [String]. It is
+     * not invoked if the [source] is, for example, `null`.
+     */
+    static parse(source, _) {
+        throw 'external';
+    }
+};
+__decorate([
+    Operator(Op.BITAND)
+], DartInt.prototype, "and", null);
+__decorate([
+    Operator(Op.BITOR)
+], DartInt.prototype, "or", null);
+__decorate([
+    Operator(Op.XOR)
+], DartInt.prototype, "xor", null);
+__decorate([
+    Operator(Op.BITNEG)
+], DartInt.prototype, "bitneg", null);
+__decorate([
+    Operator(Op.SHIFTLEFT)
+], DartInt.prototype, "lshift", null);
+__decorate([
+    Operator(Op.SHIFTRIGHT)
+], DartInt.prototype, "rshift", null);
+__decorate([
+    defaultFactory
+], DartInt, "_create", null);
+__decorate([
+    namedFactory
+], DartInt, "_fromEnvironment", null);
+DartInt = __decorate([
+    DartClass
+], DartInt);
+/**
+ * The interceptor class for [int]s.
+ *
+ * This class implements double since in JavaScript all numbers are doubles, so
+ * while we want to treat `2.0` as an integer for some operations, its
+ * interceptor should answer `true` to `is double`.
+ */
+// tslint:disable-next-line:max-classes-per-file
+let JSInt = JSInt_1 = class JSInt extends JSNumber {
+    constructor(i) {
+        super(i);
+    }
+    get isEven() {
+        return (this.valueOf() & 1) == 0;
+    }
+    get isOdd() {
+        return (this.valueOf() & 1) == 1;
+    }
+    toUnsigned(width) {
+        return this.valueOf() & ((1 << width) - 1);
+    }
+    toSigned(width) {
+        let signMask = 1 << (width - 1);
+        return (this.valueOf() & (signMask - 1)) - (this.valueOf() & signMask);
+    }
+    get bitLength() {
+        let nonneg = this.valueOf() < 0 ? -this.valueOf() - 1 : this.valueOf();
+        if (nonneg >= 0x100000000) {
+            nonneg = new DartNumber(nonneg).divide(0x100000000);
+            return JSInt_1._bitCount(JSInt_1._spread(nonneg)) + 32;
+        }
+        return JSInt_1._bitCount(JSInt_1._spread(nonneg));
+    }
+    // Returns pow(this, e) % m.
+    modPow(e, m) {
+        if (isNot(e, 'int')) {
+            throw new ArgumentError.value(e, "exponent", "not an integer");
+        }
+        if (isNot(m, 'int')) {
+            throw new ArgumentError.value(m, "modulus", "not an integer");
+        }
+        if (e < 0)
+            throw new RangeError.range(e, 0, null, "exponent");
+        if (m <= 0)
+            throw new RangeError.range(m, 1, null, "modulus");
+        if (e == 0)
+            return 1;
+        let b = this.valueOf();
+        if (b < 0 || b > m) {
+            b %= m;
+        }
+        let r = 1;
+        while (e > 0) {
+            if (new DartInt(e).isOdd) {
+                r = (r * b) % m;
+            }
+            e = new DartNumber(e).intDivide(2);
+            b = (b * b) % m;
+        }
+        return r;
+    }
+    // If inv is false, returns gcd(x, y).
+    // If inv is true and gcd(x, y) = 1, returns d, so that c*x + d*y = 1.
+    // If inv is true and gcd(x, y) != 1, throws Exception("Not coprime").
+    static _binaryGcd(x, y, inv) {
+        let s = 1;
+        if (!inv) {
+            while (new DartInt(x).isEven && new DartInt(y).isEven) {
+                x = new DartNumber(x).intDivide(2);
+                y = new DartNumber(y).intDivide(2) /*~/= 2*/;
+                s *= 2;
+            }
+            if (new DartInt(y).isOdd) {
+                let t = x;
+                x = y;
+                y = t;
+            }
+        }
+        const ac = new DartInt(x).isEven;
+        let u = x;
+        let v = y;
+        let a = 1, b = 0, c = 0, d = 1;
+        do {
+            while (new DartInt(u).isEven) {
+                u = new DartNumber(u).intDivide(2);
+                if (ac) {
+                    if (!new DartInt(a).isEven || !new DartInt(b).isEven) {
+                        a += y;
+                        b -= x;
+                    }
+                    a = new DartNumber(a).intDivide(2);
+                }
+                else if (!new DartInt(b).isEven) {
+                    b -= x;
+                }
+                b = new DartNumber(b).intDivide(2) /* ~/= 2*/;
+            }
+            while (new DartInt(v).isEven) {
+                v = new DartNumber(v).intDivide(2) /* ~/= 2*/;
+                if (ac) {
+                    if (!new DartInt(c).isEven || !new DartInt(d).isEven) {
+                        c += y;
+                        d -= x;
+                    }
+                    c = new DartNumber(c).intDivide(2) /* ~/= 2*/;
+                }
+                else if (!new DartInt(d).isEven) {
+                    d -= x;
+                }
+                d = new DartNumber(d).intDivide(2);
+            }
+            if (u >= v) {
+                u -= v;
+                if (ac)
+                    a -= c;
+                b -= d;
+            }
+            else {
+                v -= u;
+                if (ac)
+                    c -= a;
+                d -= b;
+            }
+        } while (u != 0);
+        if (!inv)
+            return s * v;
+        if (v != 1)
+            throw new DartError("Not coprime");
+        if (d < 0) {
+            d += x;
+            if (d < 0)
+                d += x;
+        }
+        else if (d > x) {
+            d -= x;
+            if (d > x)
+                d -= x;
+        }
+        return d;
+    }
+    // Returns 1/this % m, with m > 0.
+    modInverse(m) {
+        if (isNot(m, 'int')) {
+            throw new ArgumentError.value(m, "modulus", "not an integer");
+        }
+        if (m <= 0)
+            throw new RangeError.range(m, 1, null, "modulus");
+        if (m == 1)
+            return 0;
+        let t = this.valueOf();
+        if ((t < 0) || (t >= m))
+            t %= m;
+        if (t == 1)
+            return 1;
+        if ((t == 0) || (new DartInt(t).isEven && new DartInt(m).isEven)) {
+            throw new DartError("Not coprime");
+        }
+        return JSInt_1._binaryGcd(m, t, true);
+    }
+    // Returns gcd of abs(this) and abs(other).
+    gcd(other) {
+        if (isNot(other, 'int')) {
+            throw new ArgumentError.value(other, "other", "not an integer");
+        }
+        let x = this.abs();
+        let y = new DartNumber(other).abs();
+        if (x == 0)
+            return y;
+        if (y == 0)
+            return x;
+        if ((x == 1) || (y == 1))
+            return 1;
+        return JSInt_1._binaryGcd(x, y, false);
+    }
+    // Assumes i is <= 32-bit and unsigned.
+    static _bitCount(i) {
+        // See "Hacker's Delight", section 5-1, "Counting 1-Bits".
+        // The basic strategy is to use "divide and conquer" to
+        // add pairs (then quads, etc.) of bits together to obtain
+        // sub-counts.
+        //
+        // A straightforward approach would look like:
+        //
+        // i = (i & 0x55555555) + ((i >>  1) & 0x55555555);
+        // i = (i & 0x33333333) + ((i >>  2) & 0x33333333);
+        // i = (i & 0x0F0F0F0F) + ((i >>  4) & 0x0F0F0F0F);
+        // i = (i & 0x00FF00FF) + ((i >>  8) & 0x00FF00FF);
+        // i = (i & 0x0000FFFF) + ((i >> 16) & 0x0000FFFF);
+        //
+        // The code below removes unnecessary &'s and uses a
+        // trick to remove one instruction in the first line.
+        i = JSInt_1._shru(i, 0) - (JSInt_1._shru(i, 1) & 0x55555555);
+        i = (i & 0x33333333) + (JSInt_1._shru(i, 2) & 0x33333333);
+        i = 0x0F0F0F0F & (i + JSInt_1._shru(i, 4));
+        i += JSInt_1._shru(i, 8);
+        i += JSInt_1._shru(i, 16);
+        return (i & 0x0000003F);
+    }
+    static _shru(value, shift) {
+        return value >>> shift /* JS('int', '# >>> #', value, shift)*/;
+    }
+    static _shrs(value, shift) {
+        return value >> shift /* JS('int', '# >> #', value, shift)*/;
+    }
+    static _ors(a, b) {
+        return a | b /* JS('int', '# | #', a, b)*/;
+    }
+    // Assumes i is <= 32-bit
+    static _spread(i) {
+        i = JSInt_1._ors(i, JSInt_1._shrs(i, 1));
+        i = JSInt_1._ors(i, JSInt_1._shrs(i, 2));
+        i = JSInt_1._ors(i, JSInt_1._shrs(i, 4));
+        i = JSInt_1._ors(i, JSInt_1._shrs(i, 8));
+        i = JSInt_1._shru(JSInt_1._ors(i, JSInt_1._shrs(i, 16)), 0);
+        return i;
+    }
+    //Type get runtimeType => int;
+    bitneg() {
+        return (~this.valueOf()) >>> 0 /* JS('JSUInt32', r'(~#) >>> 0', this)*/;
+    }
+};
+__decorate([
+    Operator(Op.BITNEG)
+], JSInt.prototype, "bitneg", null);
+JSInt = JSInt_1 = __decorate([
+    DartClass,
+    Implements(DartInt)
+], JSInt);
+// Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+//part of dart.core;
+// TODO: Convert this abstract class into a concrete class double
+// that uses the patch class functionality to account for the
+// different platform implementations.
+/**
+ * A double-precision floating point number.
+ *
+ * Representation of Dart doubles containing double specific constants
+ * and operations and specializations of operations inherited from
+ * [num]. Dart doubles are 64-bit floating-point numbers as specified in the
+ * IEEE 754 standard.
+ *
+ * The [double] type is contagious. Operations on [double]s return
+ * [double] results.
+ *
+ * It is a compile-time error for a class to attempt to extend or implement
+ * double.
+ */
+let DartDouble = DartDouble_1 = class DartDouble extends DartNumber {
+    constructor(d) {
+        super(d);
+    }
+    static _create(d) {
+        return new JSDouble(d);
+    }
+    //double remainder(num other);
+    /** Addition operator. */
+    //double operator +(num other);
+    /** Subtraction operator. */
+    //double operator -(num other);
+    /** Multiplication operator. */
+    //double operator *(num other);
+    //double operator %(num other);
+    /** Division operator. */
+    //double operator /(num other);
+    /**
+     * Truncating division operator.
+     *
+     * The result of the truncating division `a ~/ b` is equivalent to
+     * `(a / b).truncate()`.
+     */
+    //int operator ~/(num other);
+    /** Negate operator. */
+    //double operator -();
+    /** Returns the absolute value of this [double]. */
+    //double abs();
+    /**
+     * Returns the sign of the double's numerical value.
+     *
+     * Returns -1.0 if the value is less than zero,
+     * +1.0 if the value is greater than zero,
+     * and the value itself if it is -0.0, 0.0 or NaN.
+     */
+    //double get sign;
+    /**
+     * Returns the integer closest to `this`.
+     *
+     * Rounds away from zero when there is no closest integer:
+     *  `(3.5).round() == 4` and `(-3.5).round() == -4`.
+     *
+     * If `this` is not finite (`NaN` or infinity), throws an [UnsupportedError].
+     */
+    //int round();
+    /**
+     * Returns the greatest integer no greater than `this`.
+     *
+     * If `this` is not finite (`NaN` or infinity), throws an [UnsupportedError].
+     */
+    //int floor();
+    /**
+     * Returns the least integer no smaller than `this`.
+     *
+     * If `this` is not finite (`NaN` or infinity), throws an [UnsupportedError].
+     */
+    //int ceil();
+    /**
+     * Returns the integer obtained by discarding any fractional
+     * digits from `this`.
+     *
+     * If `this` is not finite (`NaN` or infinity), throws an [UnsupportedError].
+     */
+    //int truncate();
+    /**
+     * Returns the integer double value closest to `this`.
+     *
+     * Rounds away from zero when there is no closest integer:
+     *  `(3.5).roundToDouble() == 4` and `(-3.5).roundToDouble() == -4`.
+     *
+     * If this is already an integer valued double, including `-0.0`, or it is not
+     * a finite value, the value is returned unmodified.
+     *
+     * For the purpose of rounding, `-0.0` is considered to be below `0.0`,
+     * and `-0.0` is therefore considered closer to negative numbers than `0.0`.
+     * This means that for a value, `d` in the range `-0.5 < d < 0.0`,
+     * the result is `-0.0`.
+     */
+    //double roundToDouble();
+    /**
+     * Returns the greatest integer double value no greater than `this`.
+     *
+     * If this is already an integer valued double, including `-0.0`, or it is not
+     * a finite value, the value is returned unmodified.
+     *
+     * For the purpose of rounding, `-0.0` is considered to be below `0.0`.
+     * A number `d` in the range `0.0 < d < 1.0` will return `0.0`.
+     */
+    //double floorToDouble();
+    /**
+     * Returns the least integer double value no smaller than `this`.
+     *
+     * If this is already an integer valued double, including `-0.0`, or it is not
+     * a finite value, the value is returned unmodified.
+     *
+     * For the purpose of rounding, `-0.0` is considered to be below `0.0`.
+     * A number `d` in the range `-1.0 < d < 0.0` will return `-0.0`.
+     */
+    //double ceilToDouble();
+    /**
+     * Returns the integer double value obtained by discarding any fractional
+     * digits from `this`.
+     *
+     * If this is already an integer valued double, including `-0.0`, or it is not
+     * a finite value, the value is returned unmodified.
+     *
+     * For the purpose of rounding, `-0.0` is considered to be below `0.0`.
+     * A number `d` in the range `-1.0 < d < 0.0` will return `-0.0`, and
+     * in the range `0.0 < d < 1.0` it will return 0.0.
+     */
+    //double truncateToDouble();
+    /**
+     * Provide a representation of this [double] value.
+     *
+     * The representation is a number literal such that the closest double value
+     * to the representation's mathematical value is this [double].
+     *
+     * Returns "NaN" for the Not-a-Number value.
+     * Returns "Infinity" and "-Infinity" for positive and negative Infinity.
+     * Returns "-0.0" for negative zero.
+     *
+     * For all doubles, `d`, converting to a string and parsing the string back
+     * gives the same value again: `d == double.parse(d.toString())` (except when
+     * `d` is NaN).
+     */
+    //String toString();
+    /**
+     * Parse [source] as an double literal and return its value.
+     *
+     * Accepts an optional sign (`+` or `-`) followed by either the characters
+     * "Infinity", the characters "NaN" or a floating-point representation.
+     * A floating-point representation is composed of a mantissa and an optional
+     * exponent part. The mantissa is either a decimal point (`.`) followed by a
+     * sequence of (decimal) digits, or a sequence of digits
+     * optionally followed by a decimal point and optionally more digits. The
+     * (optional) exponent part consists of the character "e" or "E", an optional
+     * sign, and one or more digits.
+     *
+     * Leading and trailing whitespace is ignored.
+     *
+     * If the [source] is not a valid double literal, the [onError]
+     * is called with the [source] as argument, and its return value is
+     * used instead. If no `onError` is provided, a [FormatException]
+     * is thrown instead.
+     *
+     * The [onError] function is only invoked if [source] is a [String] with an
+     * invalid format. It is not invoked if the [source] is invalid for some
+     * other reason, for example by being `null`.
+     *
+     * Examples of accepted strings:
+     *
+     *     "3.14"
+     *     "  3.14 \xA0"
+     *     "0."
+     *     ".0"
+     *     "-1.e3"
+     *     "1234E+7"
+     *     "+.12e-9"
+     *     "-NaN"
+     */
+    static parse(source, onError) {
+        throw 'external';
+    }
+};
+DartDouble.NAN = 0.0 / 0.0;
+DartDouble.INFINITY = 1.0 / 0.0;
+DartDouble.NEGATIVE_INFINITY = -DartDouble_1.INFINITY;
+DartDouble.MIN_POSITIVE = 5e-324;
+DartDouble.MAX_FINITE = 1.7976931348623157e+308;
+__decorate([
+    defaultFactory
+], DartDouble, "_create", null);
+DartDouble = DartDouble_1 = __decorate([
+    DartClass
+], DartDouble);
+let JSDouble = class JSDouble extends JSNumber {
+    constructor(n) {
+        super(n);
+    }
+};
+JSDouble = __decorate([
+    DartClass,
+    Implements(DartDouble)
+], JSDouble);
+class JSPositiveInt extends JSInt {
+}
+class JSUInt32 extends JSPositiveInt {
+}
+class JSUInt31 extends JSUInt32 {
+}
 export { DartIterable, DartEfficientLengthIterable, DartSetMixin, AbstractDartMap, DartConstantMap, DartHashMap, DartHashSet, DartLinkedHashSet, DartList, DartLinkedHashMap, DartMap, DartSet, DartStringBuffer, ArgumentError, ConcurrentModificationError, DartArrayIterator, DartConstantMapView, DartEfficientLengthMappedIterable, DartError, DartEs6LinkedHashMap, DartExpandIterable, DartExpandIterator, DartIterableBase, DartIterableMixin, DartJsLinkedHashMap, DartLinkedHashMapKeyIterable, DartLinkedHashMapKeyIterator, DartListBase, DartListIterator, DartListMapView, DartListMixin, DartMapBase, DartMapMixin, DartMappedIterable, DartMappedListIterable, DartPrimitives, DartRandom, DartReversedListIterable, DartSetBase, DartSkipIterable, DartSkipWhileIterable, DartSort, DartSubListIterable, DartTakeIterable, DartTakeWhileIterable, DartUnmodifiableListBase, DartUnmodifiableListMixin, DartUnmodifiableMapView, DartWhereIterable, DartWhereIterator, FixedLengthListBase, IndexError, JSFixedArray, JSMutableArray, JSUnmodifiableArray, LinkedHashMapCell, RangeError, StateError, UnmodifiableMapBase, UnsupportedError, DartObject, DartStackTrace, DartDuration, DartIntegerDivisionByZeroException, NullThrownError, DartStopwatch, DartDateTime, FormatException, DartPattern, DartRegExp, 
 //JSSyntaxRegExp, regExpCaptureCount, regExpGetNative, regExpGetGlobalNative, firstMatchAfter,
-DartString, DartStringMatch, DartRunes, DartRuneIterator, DartCodeUnits, };
+DartString, DartStringMatch, DartRunes, DartRuneIterator, DartCodeUnits, JSNumber, JSInt, JSDouble, DartNumber, DartInt, DartDouble };
 //# sourceMappingURL=core.js.map

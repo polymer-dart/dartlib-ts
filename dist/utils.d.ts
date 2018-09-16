@@ -11,6 +11,14 @@ export declare const OPERATOR_GT: unique symbol;
 export declare const OPERATOR_LEQ: unique symbol;
 export declare const OPERATOR_GEQ: unique symbol;
 export declare const OPERATOR_NEG: unique symbol;
+export declare const OPERATOR_BITNEG: unique symbol;
+export declare const OPERATOR_XOR: unique symbol;
+export declare const OPERATOR_BITOR: unique symbol;
+export declare const OPERATOR_BITAND: unique symbol;
+export declare const OPERATOR_SHIFTRIGHT: unique symbol;
+export declare const OPERATOR_SHIFTLEFT: unique symbol;
+export declare const OPERATOR_INTDIVIDE: unique symbol;
+export declare const OPERATOR_MODULE: unique symbol;
 export declare enum Op {
     PLUS = 0,
     MINUS = 1,
@@ -24,7 +32,15 @@ export declare enum Op {
     GT = 9,
     LEQ = 10,
     GEQ = 11,
-    NEG = 12
+    NEG = 12,
+    BITNEG = 13,
+    XOR = 14,
+    BITOR = 15,
+    BITAND = 16,
+    SHIFTRIGHT = 17,
+    SHIFTLEFT = 18,
+    INTDIVIDE = 19,
+    MODULE = 20
 }
 export declare type int = number;
 export declare type long = number;
