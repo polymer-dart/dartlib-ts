@@ -17895,8 +17895,9 @@ class DartInt extends DartNumber {
    * not invoked if the [source] is, for example, `null`.
    */
     static parse(source: string,
-        _?: { radix?: int, onError?: (source: string) => int }|((input:string)=> num)): int {
-        throw 'external';
+        _?: { radix?: int, onError?: (source: string) => int } | ((input: string) => num)): int {
+        let { radix, onError } = Object.assign({}, _ as any);
+        return DartPrimitives.parseInt(source, radix, onError);
     }
 }
 
