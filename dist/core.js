@@ -12,6 +12,7 @@ var DartJsLinkedHashMap_1, _LinkedIdentityHashMap_1, DartConstantMap_1, DartHash
 import { Abstract, AbstractMethods, DartClass, defaultConstructor, defaultFactory, Implements, namedConstructor, namedFactory, Op, Operator, With, AbstractProperty } from "./utils";
 import _dart, { divide, isNot, is, nullOr } from './_common';
 import { OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN } from "./utils";
+import { printToConsole, printToZone } from "./_internal";
 const _USE_ES6_MAPS = true;
 class _HashMap {
     constructor() {
@@ -16670,7 +16671,61 @@ class JSUInt32 extends JSPositiveInt {
 }
 class JSUInt31 extends JSUInt32 {
 }
+function iter(generator) {
+    return toDartIterable({
+        [Symbol.iterator]: generator
+    });
+}
+function toDartIterable(x) {
+    return new JSIterable(x);
+}
+class JSIterable extends DartIterableBase {
+    constructor(i) {
+        super();
+        this.iterable = i;
+    }
+    get iterator() {
+        return new JSIterator(this.iterable[Symbol.iterator]());
+    }
+    [Symbol.iterator]() {
+        return this.iterable[Symbol.iterator]();
+    }
+}
+class JSIterator {
+    constructor(i) {
+        this.iterator = i;
+    }
+    get current() {
+        return this.lastResult.value;
+    }
+    moveNext() {
+        this.lastResult = this.iterator.next();
+        return !this.lastResult.done;
+    }
+    next(value) {
+        return {
+            done: !this.moveNext(),
+            value: this.current
+        };
+    }
+    return(value) {
+        return this.iterator.return(value);
+    }
+    throw(e) {
+        return this.iterator.throw(e);
+    }
+}
+/// Prints a string representation of the object to the console.
+function print(object) {
+    let line = `${object}`;
+    if (printToZone.value == null) {
+        printToConsole(line);
+    }
+    else {
+        printToZone.value(line);
+    }
+}
 export { DartIterable, DartEfficientLengthIterable, DartSetMixin, AbstractDartMap, DartConstantMap, DartHashMap, DartHashSet, DartLinkedHashSet, DartList, DartLinkedHashMap, DartMap, DartSet, DartStringBuffer, ArgumentError, ConcurrentModificationError, DartArrayIterator, DartConstantMapView, DartEfficientLengthMappedIterable, DartError, DartEs6LinkedHashMap, DartExpandIterable, DartExpandIterator, DartIterableBase, DartIterableMixin, DartJsLinkedHashMap, DartLinkedHashMapKeyIterable, DartLinkedHashMapKeyIterator, DartListBase, DartListIterator, DartListMapView, DartListMixin, DartMapBase, DartMapMixin, DartMappedIterable, DartMappedListIterable, DartPrimitives, DartRandom, DartReversedListIterable, DartSetBase, DartSkipIterable, DartSkipWhileIterable, DartSort, DartSubListIterable, DartTakeIterable, DartTakeWhileIterable, DartUnmodifiableListBase, DartUnmodifiableListMixin, DartUnmodifiableMapView, DartWhereIterable, DartWhereIterator, FixedLengthListBase, IndexError, JSFixedArray, JSMutableArray, JSUnmodifiableArray, LinkedHashMapCell, RangeError, StateError, UnmodifiableMapBase, UnsupportedError, DartObject, DartStackTrace, DartDuration, DartIntegerDivisionByZeroException, NullThrownError, DartStopwatch, DartDateTime, FormatException, DartPattern, DartRegExp, 
 //JSSyntaxRegExp, regExpCaptureCount, regExpGetNative, regExpGetGlobalNative, firstMatchAfter,
-DartString, DartStringMatch, DartRunes, DartRuneIterator, DartCodeUnits, JSNumber, JSInt, JSDouble, DartNumber, DartInt, DartDouble };
+DartString, DartStringMatch, DartRunes, DartRuneIterator, DartCodeUnits, JSNumber, JSInt, JSDouble, DartNumber, DartInt, DartDouble, iter, toDartIterable, JSIterable, JSIterator, print };
 //# sourceMappingURL=core.js.map

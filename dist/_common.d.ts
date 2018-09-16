@@ -19,4 +19,9 @@ declare const _default: {
     nullOr: <X>(a: X, def: X) => X;
 };
 export default _default;
+export declare class RootProperty<X> {
+    _value: X;
+    value: X;
+    constructor(x?: X);
+}
 export { _is as is, _equals as equals, _isNot as isNot, _divide as divide, _assert as assert, _nullOr as nullOr, };

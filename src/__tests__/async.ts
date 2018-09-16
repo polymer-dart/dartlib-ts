@@ -1,5 +1,5 @@
-import {DartDuration, DartIterable, DartList} from "../core";
-import {dartAsync, DartStream, Future} from "../async";
+import {DartDateTime, DartDuration, DartIterable, DartList} from "../core";
+import {dartAsync, DartStream, Future, stream} from "../async";
 import {$with} from "../utils";
 
 describe("async", () => {
@@ -94,6 +94,25 @@ describe("async", () => {
             }
 
             expect(n).toEqual(10);
+
+        });
+
+        it('works with async gen', async () => {
+
+            let gen: DartStream<number> = stream(async function* () {
+                for (let i = 0; i < 3; i++) {
+                    await new Future.delayed(new DartDuration({milliseconds: 500}));
+                    yield i;
+                }
+            });
+
+
+            let start = new DartDateTime.now();
+            expect(await gen.join(',')).toEqual('0,1,2');
+            let end = new DartDateTime.now();
+            let dur = end.difference(start);
+            expect(Math.floor(dur.inMilliseconds / 100)).toBeCloseTo(15);
+            expect(() => gen.join(',')).toThrow();
 
         });
 

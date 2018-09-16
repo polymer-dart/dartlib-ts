@@ -43,5 +43,16 @@ export default {
     assert: _assert,
     nullOr: _nullOr
 };
+export class RootProperty {
+    constructor(x) {
+        this._value = x;
+    }
+    get value() {
+        return this._value;
+    }
+    set value(x) {
+        this._value = x;
+    }
+}
 export { _is as is, _equals as equals, _isNot as isNot, _divide as divide, _assert as assert, _nullOr as nullOr, };
 //# sourceMappingURL=_common.js.map

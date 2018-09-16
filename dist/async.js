@@ -52,6 +52,7 @@ var Future_1, _RootZone_1, DartZone_1, _Future_1, DartTimer_1, DartZoneSpecifica
 import { ArgumentError, DartDuration, DartHashMap, DartIterableElementError, DartList, DartSet, DartStackTrace, DartStringBuffer, identical, NullThrownError, StateError, UnsupportedError, RangeError, DartObject, DartStopwatch } from "./core";
 import { $with, Abstract, AbstractProperty, DartClass, defaultConstructor, defaultFactory, Implements, namedConstructor, namedFactory, Op, Operator, OPERATOR_INDEX_ASSIGN, With } from "./utils";
 import { is, equals, isNot } from './_common';
+import { printToZone, printToConsole } from "./_internal";
 // @ts-ignore
 let self = global;
 /**
@@ -3707,7 +3708,7 @@ function _rootFork(self, parent, zone, specification, zoneValues) {
     // TODO(floitsch): it would be nice if we could get rid of this hack.
     // Change the static zoneOrDirectPrint function to go through zones
     // from now on.
-    printToZone = _printToZone;
+    printToZone.value = _printToZone;
     if (specification == null) {
         specification = new DartZoneSpecification();
     }
@@ -3793,54 +3794,6 @@ function runZoned(body, _) {
     else {
         return zone.run(body);
     }
-}
-/**
- * This function is set by the first allocation of a Zone.
- *
- * Once the function is set the core `print` function calls this closure instead
- * of [printToConsole].
- *
- * This decouples the core library from the async library.
- */
-let printToZone = null;
-//@patch
-function printToConsole(line) {
-    printString(`${line}`);
-}
-/**
- * This is the low-level method that is used to implement [print].  It is
- * possible to override this function from JavaScript by defining a function in
- * JavaScript called "dartPrint".
- *
- * Notice that it is also possible to intercept calls to [print] from within a
- * Dart program using zones. This means that there is no guarantee that a call
- * to print ends in this method.
- */
-// @ts-ignore
-function printString(string) {
-    // Inside browser or nodejs.
-    // @ts-ignore
-    if ((typeof console == "object") &&
-        (typeof console.log != "undefined")) {
-        // @ts-ignore
-        console.log(string);
-    }
-    // Don't throw inside IE, the console is only defined if dev tools is open.
-    // @ts-ignore
-    if (typeof window == "object") {
-        return;
-    }
-    // Running in d8, the V8 developer shell, or in Firefox' js-shell.
-    // @ts-ignore
-    if (typeof print == "function") {
-        // @ts-ignore
-        print(string);
-        return;
-    }
-    // This is somewhat nasty, but we don't want to drag in a bunch of
-    // dependencies to handle a situation that cannot happen. So we
-    // avoid using Dart [:throw:] and Dart [toString].
-    throw "Unable to print message: " + string;
 }
 class _AsyncCallbackEntry {
     constructor(callback) {
@@ -9135,5 +9088,85 @@ class _EventLoop {
     }
 }
 const _globalState = new _Manager();
-export { Future, DartCompleter, DartZoneSpecification, DartZone, DartTimer, runZoned, scheduleMicrotask, printToConsole, DartStream, DartStreamTransformer, DartStreamController, dartAsync };
+function stream(generator) {
+    return toDartStream({
+        [Symbol.asyncIterator]: generator
+    });
+}
+function toDartStream(x) {
+    return new JSStream(x);
+}
+class JSStreamPendingEvents extends _PendingEvents {
+    constructor(iterator) {
+        super();
+        this.iterator = iterator;
+    }
+    get isEmpty() {
+        return this.iterator == null;
+    }
+    handleNext(dispatch) {
+        this.iterator.next().then((res) => {
+            if (res.done) {
+                dispatch._sendDone();
+            }
+            else {
+                dispatch._sendData(res.value);
+            }
+        }, (error) => {
+            dispatch._sendError(error, new DartStackTrace(error));
+        });
+    }
+    clear() {
+        if (this.isScheduled)
+            this.cancelSchedule();
+        if (this.iterator != null) {
+            this.iterator.return();
+            this.iterator = null;
+        }
+    }
+}
+class JSStream extends _GeneratedStreamImpl {
+    constructor(i) {
+        super(() => new JSStreamPendingEvents(this[Symbol.asyncIterator]()));
+        this.iterable = i;
+    }
+    get iterator() {
+        return new JSStreamIterator(this.iterable[Symbol.asyncIterator]());
+    }
+    [Symbol.asyncIterator]() {
+        return this.iterable[Symbol.asyncIterator]();
+    }
+}
+class JSStreamIterator {
+    constructor(i) {
+        this.iterator = i;
+    }
+    get current() {
+        return this.lastResult.value;
+    }
+    moveNext() {
+        return new Future.fromPromise((() => __awaiter(this, void 0, void 0, function* () {
+            this.lastResult = yield this.iterator.next();
+            return !this.lastResult.done;
+        }))());
+    }
+    next(value) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return {
+                done: !(yield this.moveNext()),
+                value: this.current
+            };
+        });
+    }
+    return(value) {
+        return this.iterator.return(value);
+    }
+    throw(e) {
+        return this.iterator.throw(e);
+    }
+    cancel() {
+        return new Future.fromPromise(this.return());
+    }
+}
+export { Future, DartCompleter, DartZoneSpecification, DartZone, DartTimer, runZoned, scheduleMicrotask, DartStream, DartStreamTransformer, DartStreamController, dartAsync, stream, toDartStream };
 //# sourceMappingURL=async.js.map

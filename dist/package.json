@@ -1,0 +1,24 @@
+{
+  "name": "typescript_dart",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "typescript": "^3.0.3",
+    "@types/jest": "^23.3.2",
+    "jest": "^23.6.0",
+    "jest-cli": "^23.6.0",
+    "jest-environment-node": "^23.4.0",
+    "jest-puppeteer": "^3.3.1",
+    "puppeteer": "^1.8.0",
+    "ts-jest": "^23.1.4"
+  }
+}

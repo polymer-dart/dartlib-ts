@@ -1376,7 +1376,6 @@ declare function runZoned<R>(body: () => R, _?: {
     zoneSpecification?: DartZoneSpecification;
     onError?: Function;
 }): R;
-declare function printToConsole(line: string): void;
 /**
  * Runs a function asynchronously.
  *
@@ -2709,4 +2708,6 @@ declare class DartStreamController<T> implements DartStreamSink<T> {
     }): Future<any>;
     readonly done: Future<any>;
 }
-export { Future, DartCompleter, DartZoneSpecification, DartZone, DartTimer, runZoned, scheduleMicrotask, printToConsole, DartStream, DartStreamTransformer, DartEventSink, DartStreamSink, DartStreamController, dartAsync };
+declare function stream<X>(generator: () => AsyncIterator<X>): DartStream<X>;
+declare function toDartStream<X>(x: AsyncIterable<X>): DartStream<X>;
+export { Future, DartCompleter, DartZoneSpecification, DartZone, DartTimer, runZoned, scheduleMicrotask, DartStream, DartStreamTransformer, DartEventSink, DartStreamSink, DartStreamController, dartAsync, stream, toDartStream };

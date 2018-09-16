@@ -1,4 +1,4 @@
-import {DartHashMap, DartList, DartMap, DartObject, DartSet} from "../core";
+import {DartHashMap, DartIterable, DartIterator, DartList, DartMap, DartObject, DartSet, DartStringBuffer, iter} from "../core";
 import {DartClass, EQUALS_OPERATOR, int, num, Op, Operator, OPERATOR_INDEX} from "../utils";
 
 
@@ -323,6 +323,23 @@ describe('DartMap', () => {
         // Replace works
         map.set(new MyObjBadHash(2), 100);
         expect(map.get(new MyObjBadHash(2))).toEqual(100);
+    });
+
+    it('can be used with a generator',()=>{
+        let it :DartIterable<string> = iter(function*(){
+            for (let i=0;i<5;i++) {
+                yield `String n.${i}`;
+            }
+        });
+
+        let i :DartIterator<string> = it.iterator;
+
+        let s:DartStringBuffer = new DartStringBuffer();
+        while (i.moveNext()) {
+            s.write(i.current);
+        }
+
+        expect(s.toString()).toEqual("String n.0String n.1String n.2String n.3String n.4");
     });
 
 });

@@ -27,6 +27,7 @@ import {
 } from "./utils";
 import _dart, {divide, isNot, is, nullOr} from './_common';
 import {OPERATOR_DIVIDE, OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN, OPERATOR_MINUS, OPERATOR_PLUS, OPERATOR_TIMES} from "./utils";
+import {printToConsole, printToZone} from "./_internal";
 
 
 export type PropertySetter<K, V> = (key: K, value: V) => void;
@@ -18500,6 +18501,78 @@ class JSUInt32 extends JSPositiveInt {
 class JSUInt31 extends JSUInt32 {
 }
 
+
+function iter<X>(generator: () => Iterator<X>) {
+    return toDartIterable({
+        [Symbol.iterator]: generator
+    });
+}
+
+function toDartIterable<X>(x: Iterable<X>): DartIterable<X> {
+    return new JSIterable(x);
+}
+
+class JSIterable<X> extends DartIterableBase<X> {
+    iterable: Iterable<X>;
+
+    constructor(i: Iterable<X>) {
+        super();
+        this.iterable = i;
+    }
+
+    get iterator(): DartIterator<X> {
+        return new JSIterator(this.iterable[Symbol.iterator]());
+    }
+
+    [Symbol.iterator](): Iterator<X> {
+        return this.iterable[Symbol.iterator]();
+    }
+}
+
+class JSIterator<X> implements DartIterator<X> {
+    iterator: Iterator<X>;
+    lastResult: IteratorResult<X>;
+
+    constructor(i: Iterator<X>) {
+        this.iterator = i;
+    }
+
+    get current(): X {
+        return this.lastResult.value;
+    }
+
+    moveNext(): boolean {
+        this.lastResult = this.iterator.next();
+        return !this.lastResult.done;
+    }
+
+    next(value?: any): IteratorResult<X> {
+        return {
+            done: !this.moveNext(),
+            value: this.current
+        };
+    }
+
+    return(value?: any): IteratorResult<X> {
+        return this.iterator.return(value);
+    }
+
+    throw(e?: any): IteratorResult<X> {
+        return this.iterator.throw(e);
+    }
+}
+
+/// Prints a string representation of the object to the console.
+function print(object: any): void {
+    let line = `${object}`;
+    if (printToZone.value == null) {
+        printToConsole(line);
+    } else {
+        printToZone.value(line);
+    }
+}
+
+
 export {
     DartIterable,
     DartEfficientLengthIterable,
@@ -18585,5 +18658,10 @@ export {
     JSDouble,
     DartNumber,
     DartInt,
-    DartDouble
+    DartDouble,
+    iter,
+    toDartIterable,
+    JSIterable,
+    JSIterator,
+    print
 }

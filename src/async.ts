@@ -52,10 +52,11 @@ import {
     StateError,
     UnsupportedError,
     RangeError,
-    DartSink, DartIterator, DartError, DartObject, DartStopwatch
+    DartSink, DartIterator, DartError, DartObject, DartStopwatch, DartIterableBase, JSIterator
 } from "./core";
 import {$with, Abstract, AbstractProperty, bool, DartClass, defaultConstructor, defaultFactory, Implements, int, namedConstructor, namedFactory, Op, Operator, OPERATOR_INDEX_ASSIGN, OPERATOR_MINUS, With} from "./utils";
 import {is, equals, isNot} from './_common';
+import {printToZone, printToConsole} from "./_internal";
 /*
 abstract class FutureOr<T> {
     // Private generative constructor, so that it is not subclassable, mixable, or
@@ -4151,7 +4152,7 @@ function _rootFork(self: DartZone, parent: DartZoneDelegate, zone: DartZone,
     // TODO(floitsch): it would be nice if we could get rid of this hack.
     // Change the static zoneOrDirectPrint function to go through zones
     // from now on.
-    printToZone = _printToZone;
+    printToZone.value = _printToZone;
 
     if (specification == null) {
         specification = new DartZoneSpecification();
@@ -4239,61 +4240,8 @@ function runZoned<R>(body: () => R,
 }
 
 
-/**
- * This function is set by the first allocation of a Zone.
- *
- * Once the function is set the core `print` function calls this closure instead
- * of [printToConsole].
- *
- * This decouples the core library from the async library.
- */
-let printToZone: Function = null;
 
 
-//@patch
-function printToConsole(line: string) {
-    printString(`${line}`);
-}
-
-/**
- * This is the low-level method that is used to implement [print].  It is
- * possible to override this function from JavaScript by defining a function in
- * JavaScript called "dartPrint".
- *
- * Notice that it is also possible to intercept calls to [print] from within a
- * Dart program using zones. This means that there is no guarantee that a call
- * to print ends in this method.
- */
-// @ts-ignore
-function printString(string: string): void {
-
-    // Inside browser or nodejs.
-    // @ts-ignore
-    if ((typeof console == "object") &&
-        (typeof console.log != "undefined")) {
-        // @ts-ignore
-        console.log(string);
-    }
-
-    // Don't throw inside IE, the console is only defined if dev tools is open.
-    // @ts-ignore
-    if (typeof window == "object") {
-        return;
-    }
-
-    // Running in d8, the V8 developer shell, or in Firefox' js-shell.
-    // @ts-ignore
-    if (typeof print == "function") {
-        // @ts-ignore
-        print(string);
-        return;
-    }
-
-    // This is somewhat nasty, but we don't want to drag in a bunch of
-    // dependencies to handle a situation that cannot happen. So we
-    // avoid using Dart [:throw:] and Dart [toString].
-    throw "Unable to print message: " + string;
-}
 
 // Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
@@ -6547,12 +6495,12 @@ class DartStreamIterator<T> implements AsyncIterator<T> {
         }
     }
 
-    async throw(e?:any):Promise<IteratorResult<T>> {
+    async throw(e?: any): Promise<IteratorResult<T>> {
         this.cancel();
-       
+
         return {
             done: true,
-            value:this.current
+            value: this.current
         }
     }
 }
@@ -7773,12 +7721,12 @@ class _StreamIterator<T> implements DartStreamIterator<T> {
         }
     }
 
-    async throw(e?:any):Promise<IteratorResult<T>> {
+    async throw(e?: any): Promise<IteratorResult<T>> {
         this.cancel();
-       
+
         return {
             done: true,
-            value:this.current
+            value: this.current
         }
     }
 }
@@ -10605,6 +10553,110 @@ class _EventLoop {
 
 const _globalState = new _Manager();
 
+
+function stream<X>(generator: () => AsyncIterator<X>): DartStream<X> {
+    return toDartStream({
+        [Symbol.asyncIterator]: generator
+    });
+}
+
+function toDartStream<X>(x: AsyncIterable<X>): DartStream<X> {
+    return new JSStream(x);
+}
+
+class JSStreamPendingEvents<X> extends _PendingEvents<X> {
+    iterator: AsyncIterator<X>;
+
+    constructor(iterator: AsyncIterator<X>) {
+        super();
+        this.iterator = iterator;
+
+    }
+
+    get isEmpty(): bool {
+        return this.iterator == null;
+    }
+
+    handleNext(dispatch: _EventDispatch<X>): void {
+        this.iterator.next().then((res) => {
+            if (res.done) {
+                dispatch._sendDone();
+            } else {
+                dispatch._sendData(res.value);
+            }
+        }, (error) => {
+            dispatch._sendError(error, new DartStackTrace(error));
+        });
+
+    }
+
+    clear(): void {
+        if (this.isScheduled) this.cancelSchedule();
+        if (this.iterator != null) {
+            this.iterator.return();
+            this.iterator = null;
+        }
+    }
+}
+
+class JSStream<X> extends _GeneratedStreamImpl<X> {
+    iterable: AsyncIterable<X>;
+
+    constructor(i: AsyncIterable<X>) {
+        super(() => new JSStreamPendingEvents(this[Symbol.asyncIterator]()));
+        this.iterable = i;
+    }
+
+    get iterator(): DartStreamIterator<X> {
+        return new JSStreamIterator(this.iterable[Symbol.asyncIterator]());
+    }
+
+    [Symbol.asyncIterator](): AsyncIterator<X> {
+        return this.iterable[Symbol.asyncIterator]();
+    }
+}
+
+
+class JSStreamIterator<X> implements DartStreamIterator<X> {
+    iterator: AsyncIterator<X>;
+    lastResult: IteratorResult<X>;
+
+    constructor(i: AsyncIterator<X>) {
+        this.iterator = i;
+    }
+
+    get current(): X {
+        return this.lastResult.value;
+    }
+
+    moveNext(): Future<boolean> {
+        return new Future.fromPromise((async () => {
+            this.lastResult = await this.iterator.next();
+            return !this.lastResult.done;
+        })());
+    }
+
+    async next(value?: any): Promise<IteratorResult<X>> {
+        return {
+            done: !await this.moveNext(),
+            value: this.current
+        };
+    }
+
+    return(value?: any): Promise<IteratorResult<X>> {
+        return this.iterator.return(value);
+    }
+
+    throw(e?: any): Promise<IteratorResult<X>> {
+        return this.iterator.throw(e);
+    }
+
+    cancel(): Future<any> {
+        return new Future.fromPromise(this.return());
+    }
+}
+
+
 export {
     Future,
     DartCompleter,
@@ -10613,11 +10665,12 @@ export {
     DartTimer,
     runZoned,
     scheduleMicrotask,
-    printToConsole,
     DartStream,
     DartStreamTransformer,
     DartEventSink,
     DartStreamSink,
     DartStreamController,
-    dartAsync
+    dartAsync,
+    stream,
+    toDartStream
 }

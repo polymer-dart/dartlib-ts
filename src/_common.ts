@@ -1,4 +1,4 @@
-import { EQUALS_OPERATOR, int, isA } from "./utils";
+import {EQUALS_OPERATOR, int, isA} from "./utils";
 
 type BaseType<X> = X extends 'string' ? string :
     (X extends 'number' ? number :
@@ -7,6 +7,7 @@ type BaseType<X> = X extends 'string' ? string :
                 (X extends 'double' ? number :
                     (X extends 'bool' ? boolean :
                         (X extends 'boolean' ? boolean : any))))));
+
 /**
  * TODO: more complex
  * @param a
@@ -61,6 +62,21 @@ export default {
     assert: _assert,
 
     nullOr: _nullOr
+}
+
+export class RootProperty<X> {
+    _value: X;
+    get value(): X {
+        return this._value;
+    }
+
+    set value(x: X) {
+        this._value = x;
+    }
+
+    constructor(x?: X) {
+        this._value = x;
+    }
 }
 
 export {
