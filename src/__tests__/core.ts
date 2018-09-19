@@ -1,4 +1,4 @@
-import {DartDuration, DartDateTime} from "../core";
+import {DartDuration, DartDateTime,print} from "../core";
 
 describe('core', () => {
     describe('duration', () => {
@@ -24,5 +24,15 @@ describe('core', () => {
             expect(dif.inDays).toEqual(24);
             expect(dif.inMinutes).toEqual(34560);
         })
+    });
+
+
+    describe('print',()=>{
+        it('works',()=>{
+            spyOn(console,'log');
+            print('whatever');
+
+            expect(console.log).toBeCalledWith('whatever');
+        });
     });
 });
