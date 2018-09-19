@@ -39,7 +39,6 @@
 import {
     ArgumentError,
     DartDuration,
-    DartHashMap,
     DartIterable,
     DartIterableElementError,
     DartList,
@@ -52,11 +51,12 @@ import {
     StateError,
     UnsupportedError,
     RangeError,
-    DartSink, DartIterator, DartError, DartObject, DartStopwatch, DartIterableBase, JSIterator
+    DartSink, DartIterator, DartError, DartObject, DartStopwatch, JSIterator
 } from "./core";
 import {$with, Abstract, AbstractProperty, bool, DartClass, defaultConstructor, defaultFactory, Implements, int, namedConstructor, namedFactory, Op, Operator, OPERATOR_INDEX_ASSIGN, OPERATOR_MINUS, With} from "./utils";
 import {is, equals, isNot} from './_common';
 import {printToZone, printToConsole} from "./_internal";
+import {DartHashMap, DartIterableBase} from "./collection";
 /*
 abstract class FutureOr<T> {
     // Private generative constructor, so that it is not subclassable, mixable, or

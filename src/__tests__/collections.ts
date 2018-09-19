@@ -1,5 +1,6 @@
-import {DartHashMap, DartIterable, DartIterator, DartList, DartMap, DartObject, DartSet, DartStringBuffer, iter} from "../core";
+import {DartIterable, DartIterator, DartList, DartMap, DartObject, DartSet, DartStringBuffer, iter} from "../core";
 import {DartClass, EQUALS_OPERATOR, int, num, Op, Operator, OPERATOR_INDEX} from "../utils";
+import {DartHashMap} from "../collection";
 
 
 @DartClass
