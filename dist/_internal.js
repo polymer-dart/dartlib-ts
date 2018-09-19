@@ -28,6 +28,7 @@ function printString(string) {
         (typeof console.log != "undefined")) {
         // @ts-ignore
         console.log(string);
+        return;
     }
     // Don't throw inside IE, the console is only defined if dev tools is open.
     // @ts-ignore

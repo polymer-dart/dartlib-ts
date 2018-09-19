@@ -18572,6 +18572,129 @@ function print(object: any): void {
     }
 }
 
+// Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
+//part of dart.core;
+
+const _EXPANDO_PROPERTY_NAME = Symbol('expando$values');
+
+/**
+ * An [Expando] allows adding new properties to objects.
+ *
+ * Does not work on numbers, strings, booleans or null.
+ *
+ * An `Expando` does not hold on to the added property value after an object
+ * becomes inaccessible.
+ *
+ * Since you can always create a new number that is identical to an existing
+ * number, it means that an expando property on a number could never be
+ * released. To avoid this, expando properties cannot be added to numbers.
+ * The same argument applies to strings, booleans and null, which also have
+ * literals that evaluate to identical values when they occur more than once.
+ *
+ * There is no restriction on other classes, even for compile time constant
+ * objects. Be careful if adding expando properties to compile time constants,
+ * since they will stay alive forever.
+ */
+@DartClass
+class DartExpando<T> {
+    /**
+     * The name of the this [Expando] as passed to the constructor. If
+     * no name was passed to the constructor, the name is [:null:].
+     */
+    name: string;
+
+    /**
+     * Creates a new [Expando]. The optional name is only used for
+     * debugging purposes and creating two different [Expando]s with the
+     * same name yields two [Expando]s that work on different properties
+     * of the objects they are used on.
+     */
+
+    /*external*/
+    constructor(name?: string) {
+        this.name = name;
+        this._jsWeakMapOrKey = typeof WeakMap == 'function' ? new WeakMap<any, T>() : DartExpando._createKey() /*JS('bool', 'typeof WeakMap == "function"')
+                ? JS('=Object|Null', 'new WeakMap()')
+                : _createKey()*/;
+
+    }
+
+    /**
+     * Expando toString method override.
+     */
+    toString(): string {
+        return "Expando:$name";
+    }
+
+    /**
+     * Gets the value of this [Expando]'s property on the given
+     * object. If the object hasn't been expanded, the method returns
+     * [:null:].
+     *
+     * The object must not be a number, a string, a boolean or null.
+     */
+    @Operator(Op.INDEX)
+    get(object: any): T {
+        if (isNot(this._jsWeakMapOrKey, 'string')) {
+            DartExpando._checkType(object); // WeakMap doesn't check on reading, only writing.
+            return (this._jsWeakMapOrKey as WeakMap<any, T>).get(object) /*JS('', '#.get(#)', _jsWeakMapOrKey, object)*/;
+        }
+        return DartExpando._getFromObject(this._jsWeakMapOrKey as string, object);
+
+    }
+
+    /**
+     * Sets the value of this [Expando]'s property on the given
+     * object. Properties can effectively be removed again by setting
+     * their value to null.
+     *
+     * The object must not be a number, a string, a boolean or null.
+     */
+    @Operator(Op.INDEX_ASSIGN)
+    set(object: any, value: T) {
+        if (isNot(this._jsWeakMapOrKey, 'string')) {
+            (this._jsWeakMapOrKey as WeakMap<any, T>).set(object, value) /*JS('void', '#.set(#, #)', _jsWeakMapOrKey, object, value)*/;
+        } else {
+            DartExpando._setOnObject(this._jsWeakMapOrKey as string, object, value);
+        }
+    }
+
+
+    // Incremented to make unique keys.
+    static _keyCount: int = 0;
+
+    // Stores either a JS WeakMap or a "unique" string key.
+    _jsWeakMapOrKey: WeakMap<any, T> | string;
+
+    static _getFromObject<T>(key: string, object: any): T {
+        let values = object[_EXPANDO_PROPERTY_NAME];
+        return (values == null) ? null : values[key];
+    }
+
+    static _setOnObject<T>(key: string, object: any, value: T) {
+        let values = object[_EXPANDO_PROPERTY_NAME];
+        if (values == null) {
+            values = {};
+            object[_EXPANDO_PROPERTY_NAME] = values;
+        }
+        values[key] = value;
+    }
+
+    static _createKey(): string {
+        return `expando$key$${this._keyCount++}`;
+    }
+
+    static _checkType(object) {
+        if (object == null || is(object, 'bool') || is(object, 'num') || is(object, 'string')) {
+            throw new ArgumentError.value(object,
+                "Expandos are not allowed on strings, numbers, booleans or null");
+        }
+    }
+}
+
 
 export {
     DartIterable,
@@ -18663,5 +18786,6 @@ export {
     toDartIterable,
     JSIterable,
     JSIterator,
-    print
+    print,
+    DartExpando
 }

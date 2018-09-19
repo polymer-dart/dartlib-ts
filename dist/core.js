@@ -7,7 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var DartJsLinkedHashMap_1, _LinkedIdentityHashMap_1, DartConstantMap_1, DartHashMap_1, DartHashSet_1, DartLinkedHashSet_1, DartList_1, DartLinkedHashMap_1, DartListMixin_1, DartStringBuffer_1, DartMappedIterable_1, DartSkipIterable_1, DartEfficientLengthSkipIterable_1, RangeError_1, JSArray_1, DartStackTrace_1, DartDuration_1, DartDateTime_1, JSSyntaxRegExp_1, DartString_1, JSString_1, DartNumber_1, JSNumber_1, JSInt_1, DartDouble_1;
+var DartJsLinkedHashMap_1, _LinkedIdentityHashMap_1, DartConstantMap_1, DartHashMap_1, DartHashSet_1, DartLinkedHashSet_1, DartList_1, DartLinkedHashMap_1, DartListMixin_1, DartStringBuffer_1, DartMappedIterable_1, DartSkipIterable_1, DartEfficientLengthSkipIterable_1, RangeError_1, JSArray_1, DartStackTrace_1, DartDuration_1, DartDateTime_1, JSSyntaxRegExp_1, DartString_1, JSString_1, DartNumber_1, JSNumber_1, JSInt_1, DartDouble_1, DartExpando_1;
 // Patch file for dart:collection classes.
 import { Abstract, AbstractMethods, DartClass, defaultConstructor, defaultFactory, Implements, namedConstructor, namedFactory, Op, Operator, With, AbstractProperty } from "./utils";
 import _dart, { divide, isNot, is, nullOr } from './_common';
@@ -16725,7 +16725,111 @@ function print(object) {
         printToZone.value(line);
     }
 }
+// Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+//part of dart.core;
+const _EXPANDO_PROPERTY_NAME = Symbol('expando$values');
+/**
+ * An [Expando] allows adding new properties to objects.
+ *
+ * Does not work on numbers, strings, booleans or null.
+ *
+ * An `Expando` does not hold on to the added property value after an object
+ * becomes inaccessible.
+ *
+ * Since you can always create a new number that is identical to an existing
+ * number, it means that an expando property on a number could never be
+ * released. To avoid this, expando properties cannot be added to numbers.
+ * The same argument applies to strings, booleans and null, which also have
+ * literals that evaluate to identical values when they occur more than once.
+ *
+ * There is no restriction on other classes, even for compile time constant
+ * objects. Be careful if adding expando properties to compile time constants,
+ * since they will stay alive forever.
+ */
+let DartExpando = DartExpando_1 = class DartExpando {
+    /**
+     * Creates a new [Expando]. The optional name is only used for
+     * debugging purposes and creating two different [Expando]s with the
+     * same name yields two [Expando]s that work on different properties
+     * of the objects they are used on.
+     */
+    /*external*/
+    constructor(name) {
+        this.name = name;
+        this._jsWeakMapOrKey = typeof WeakMap == 'function' ? new WeakMap() : DartExpando_1._createKey() /*JS('bool', 'typeof WeakMap == "function"')
+                ? JS('=Object|Null', 'new WeakMap()')
+                : _createKey()*/;
+    }
+    /**
+     * Expando toString method override.
+     */
+    toString() {
+        return "Expando:$name";
+    }
+    /**
+     * Gets the value of this [Expando]'s property on the given
+     * object. If the object hasn't been expanded, the method returns
+     * [:null:].
+     *
+     * The object must not be a number, a string, a boolean or null.
+     */
+    get(object) {
+        if (isNot(this._jsWeakMapOrKey, 'string')) {
+            DartExpando_1._checkType(object); // WeakMap doesn't check on reading, only writing.
+            return this._jsWeakMapOrKey.get(object) /*JS('', '#.get(#)', _jsWeakMapOrKey, object)*/;
+        }
+        return DartExpando_1._getFromObject(this._jsWeakMapOrKey, object);
+    }
+    /**
+     * Sets the value of this [Expando]'s property on the given
+     * object. Properties can effectively be removed again by setting
+     * their value to null.
+     *
+     * The object must not be a number, a string, a boolean or null.
+     */
+    set(object, value) {
+        if (isNot(this._jsWeakMapOrKey, 'string')) {
+            this._jsWeakMapOrKey.set(object, value) /*JS('void', '#.set(#, #)', _jsWeakMapOrKey, object, value)*/;
+        }
+        else {
+            DartExpando_1._setOnObject(this._jsWeakMapOrKey, object, value);
+        }
+    }
+    static _getFromObject(key, object) {
+        let values = object[_EXPANDO_PROPERTY_NAME];
+        return (values == null) ? null : values[key];
+    }
+    static _setOnObject(key, object, value) {
+        let values = object[_EXPANDO_PROPERTY_NAME];
+        if (values == null) {
+            values = {};
+            object[_EXPANDO_PROPERTY_NAME] = values;
+        }
+        values[key] = value;
+    }
+    static _createKey() {
+        return `expando$key$${this._keyCount++}`;
+    }
+    static _checkType(object) {
+        if (object == null || is(object, 'bool') || is(object, 'num') || is(object, 'string')) {
+            throw new ArgumentError.value(object, "Expandos are not allowed on strings, numbers, booleans or null");
+        }
+    }
+};
+// Incremented to make unique keys.
+DartExpando._keyCount = 0;
+__decorate([
+    Operator(Op.INDEX)
+], DartExpando.prototype, "get", null);
+__decorate([
+    Operator(Op.INDEX_ASSIGN)
+], DartExpando.prototype, "set", null);
+DartExpando = DartExpando_1 = __decorate([
+    DartClass
+], DartExpando);
 export { DartIterable, DartEfficientLengthIterable, DartSetMixin, AbstractDartMap, DartConstantMap, DartHashMap, DartHashSet, DartLinkedHashSet, DartList, DartLinkedHashMap, DartMap, DartSet, DartStringBuffer, ArgumentError, ConcurrentModificationError, DartArrayIterator, DartConstantMapView, DartEfficientLengthMappedIterable, DartError, DartEs6LinkedHashMap, DartExpandIterable, DartExpandIterator, DartIterableBase, DartIterableMixin, DartJsLinkedHashMap, DartLinkedHashMapKeyIterable, DartLinkedHashMapKeyIterator, DartListBase, DartListIterator, DartListMapView, DartListMixin, DartMapBase, DartMapMixin, DartMappedIterable, DartMappedListIterable, DartPrimitives, DartRandom, DartReversedListIterable, DartSetBase, DartSkipIterable, DartSkipWhileIterable, DartSort, DartSubListIterable, DartTakeIterable, DartTakeWhileIterable, DartUnmodifiableListBase, DartUnmodifiableListMixin, DartUnmodifiableMapView, DartWhereIterable, DartWhereIterator, FixedLengthListBase, IndexError, JSFixedArray, JSMutableArray, JSUnmodifiableArray, LinkedHashMapCell, RangeError, StateError, UnmodifiableMapBase, UnsupportedError, DartObject, DartStackTrace, DartDuration, DartIntegerDivisionByZeroException, NullThrownError, DartStopwatch, DartDateTime, FormatException, DartPattern, DartRegExp, 
 //JSSyntaxRegExp, regExpCaptureCount, regExpGetNative, regExpGetGlobalNative, firstMatchAfter,
-DartString, DartStringMatch, DartRunes, DartRuneIterator, DartCodeUnits, JSNumber, JSInt, JSDouble, DartNumber, DartInt, DartDouble, iter, toDartIterable, JSIterable, JSIterator, print };
+DartString, DartStringMatch, DartRunes, DartRuneIterator, DartCodeUnits, JSNumber, JSInt, JSDouble, DartNumber, DartInt, DartDouble, iter, toDartIterable, JSIterable, JSIterator, print, DartExpando };
 //# sourceMappingURL=core.js.map

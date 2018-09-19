@@ -6622,4 +6622,62 @@ declare class JSIterator<X> implements DartIterator<X> {
     throw(e?: any): IteratorResult<X>;
 }
 declare function print(object: any): void;
-export { DartIterable, DartEfficientLengthIterable, DartSetMixin, AbstractDartMap, DartConstantMap, DartHashMap, DartHashSet, DartLinkedHashSet, DartList, DartLinkedHashMap, DartMap, DartSet, DartStringBuffer, ArgumentError, ConcurrentModificationError, DartArrayIterator, DartConstantMapView, DartEfficientLengthMappedIterable, DartError, DartEs6LinkedHashMap, DartExpandIterable, DartExpandIterator, DartIterableBase, DartIterableMixin, DartJsLinkedHashMap, DartLinkedHashMapKeyIterable, DartLinkedHashMapKeyIterator, DartListBase, DartListIterator, DartListMapView, DartListMixin, DartMapBase, DartMapMixin, DartMappedIterable, DartMappedListIterable, DartPrimitives, DartRandom, DartReversedListIterable, DartSetBase, DartSkipIterable, DartSkipWhileIterable, DartSort, DartSubListIterable, DartTakeIterable, DartTakeWhileIterable, DartUnmodifiableListBase, DartUnmodifiableListMixin, DartUnmodifiableMapView, DartWhereIterable, DartWhereIterator, FixedLengthListBase, IndexError, JSFixedArray, JSMutableArray, JSUnmodifiableArray, LinkedHashMapCell, RangeError, StateError, UnmodifiableMapBase, UnsupportedError, DartObject, DartStackTrace, DartDuration, DartIntegerDivisionByZeroException, NullThrownError, DartSink, DartStopwatch, DartDateTime, FormatException, DartPattern, DartRegExp, DartMatch, DartBidirectionalIterator, DartString, DartStringMatch, DartRunes, DartRuneIterator, DartCodeUnits, JSNumber, JSInt, JSDouble, DartNumber, DartInt, DartDouble, iter, toDartIterable, JSIterable, JSIterator, print };
+/**
+ * An [Expando] allows adding new properties to objects.
+ *
+ * Does not work on numbers, strings, booleans or null.
+ *
+ * An `Expando` does not hold on to the added property value after an object
+ * becomes inaccessible.
+ *
+ * Since you can always create a new number that is identical to an existing
+ * number, it means that an expando property on a number could never be
+ * released. To avoid this, expando properties cannot be added to numbers.
+ * The same argument applies to strings, booleans and null, which also have
+ * literals that evaluate to identical values when they occur more than once.
+ *
+ * There is no restriction on other classes, even for compile time constant
+ * objects. Be careful if adding expando properties to compile time constants,
+ * since they will stay alive forever.
+ */
+declare class DartExpando<T> {
+    /**
+     * The name of the this [Expando] as passed to the constructor. If
+     * no name was passed to the constructor, the name is [:null:].
+     */
+    name: string;
+    /**
+     * Creates a new [Expando]. The optional name is only used for
+     * debugging purposes and creating two different [Expando]s with the
+     * same name yields two [Expando]s that work on different properties
+     * of the objects they are used on.
+     */
+    constructor(name?: string);
+    /**
+     * Expando toString method override.
+     */
+    toString(): string;
+    /**
+     * Gets the value of this [Expando]'s property on the given
+     * object. If the object hasn't been expanded, the method returns
+     * [:null:].
+     *
+     * The object must not be a number, a string, a boolean or null.
+     */
+    get(object: any): T;
+    /**
+     * Sets the value of this [Expando]'s property on the given
+     * object. Properties can effectively be removed again by setting
+     * their value to null.
+     *
+     * The object must not be a number, a string, a boolean or null.
+     */
+    set(object: any, value: T): void;
+    static _keyCount: int;
+    _jsWeakMapOrKey: WeakMap<any, T> | string;
+    static _getFromObject<T>(key: string, object: any): T;
+    static _setOnObject<T>(key: string, object: any, value: T): void;
+    static _createKey(): string;
+    static _checkType(object: any): void;
+}
+export { DartIterable, DartEfficientLengthIterable, DartSetMixin, AbstractDartMap, DartConstantMap, DartHashMap, DartHashSet, DartLinkedHashSet, DartList, DartLinkedHashMap, DartMap, DartSet, DartStringBuffer, ArgumentError, ConcurrentModificationError, DartArrayIterator, DartConstantMapView, DartEfficientLengthMappedIterable, DartError, DartEs6LinkedHashMap, DartExpandIterable, DartExpandIterator, DartIterableBase, DartIterableMixin, DartJsLinkedHashMap, DartLinkedHashMapKeyIterable, DartLinkedHashMapKeyIterator, DartListBase, DartListIterator, DartListMapView, DartListMixin, DartMapBase, DartMapMixin, DartMappedIterable, DartMappedListIterable, DartPrimitives, DartRandom, DartReversedListIterable, DartSetBase, DartSkipIterable, DartSkipWhileIterable, DartSort, DartSubListIterable, DartTakeIterable, DartTakeWhileIterable, DartUnmodifiableListBase, DartUnmodifiableListMixin, DartUnmodifiableMapView, DartWhereIterable, DartWhereIterator, FixedLengthListBase, IndexError, JSFixedArray, JSMutableArray, JSUnmodifiableArray, LinkedHashMapCell, RangeError, StateError, UnmodifiableMapBase, UnsupportedError, DartObject, DartStackTrace, DartDuration, DartIntegerDivisionByZeroException, NullThrownError, DartSink, DartStopwatch, DartDateTime, FormatException, DartPattern, DartRegExp, DartMatch, DartBidirectionalIterator, DartString, DartStringMatch, DartRunes, DartRuneIterator, DartCodeUnits, JSNumber, JSInt, JSDouble, DartNumber, DartInt, DartDouble, iter, toDartIterable, JSIterable, JSIterator, print, DartExpando };
