@@ -1140,6 +1140,8 @@ class DartEfficientLengthIterable<T> extends DartIterable<T> {
     }
 }
 
+
+
 class _HashMapKeyIterable<E> extends DartEfficientLengthIterable<E> {
     protected _map: any;
 
@@ -7320,6 +7322,7 @@ class DartLinkedHashMap<K, V> implements DartHashMap<K, V> {
     }
 }
 
+
 // Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
@@ -7735,7 +7738,7 @@ class DartListMixin<E> implements DartList<E> {
     replaceRange(start: int, end: int, newContents: DartIterable<E>): void {
         RangeError.checkValidRange(start, end, this.length);
         if (!_dart.is(newContents, DartEfficientLengthIterable)) {
-            newContents = newContents.toList();
+            newContents = (newContents as DartEfficientLengthIterable<E>).toList();
         }
         let removeLength = end - start;
         let insertLength = newContents.length;
@@ -11556,7 +11559,7 @@ class JSArray<E> extends Array implements DartList<E>, JSIndexable<E> {
         this.checkGrowable('insertAll');
         RangeError.checkValueInInterval(index, 0, this.length, 'index');
         if (!_dart.is(iterable, DartEfficientLengthIterable)) {
-            iterable = iterable.toList();
+            iterable = (iterable  as DartEfficientLengthIterable<E>).toList();
         }
         let insertionLength = iterable.length;
         this.length += insertionLength;
@@ -11891,7 +11894,7 @@ class JSArray<E> extends Array implements DartList<E>, JSIndexable<E> {
         this.checkGrowable('replaceRange');
         RangeError.checkValidRange(start, end, this.length);
         if (!_dart.is(replacement, DartEfficientLengthIterable)) {
-            replacement = replacement.toList();
+            replacement = (replacement as DartEfficientLengthIterable<E>).toList();
         }
         let removeLength = end - start;
         let insertLength = replacement.length;

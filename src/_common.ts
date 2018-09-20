@@ -1,19 +1,22 @@
 import {EQUALS_OPERATOR, int, isA} from "./utils";
+import any = jasmine.any;
 
 type BaseType<X> = X extends 'string' ? string :
     (X extends 'number' ? number :
-        (X extends 'num' ? number :
-            (X extends 'float' ? number :
-                (X extends 'double' ? number :
-                    (X extends 'bool' ? boolean :
-                        (X extends 'boolean' ? boolean : any))))));
+        (X extends 'int' ? number :
+            (X extends 'num' ? number :
+                (X extends 'float' ? number :
+                    (X extends 'double' ? number :
+                        (X extends 'bool' ? boolean :
+                            (X extends (new(...args: any[]) => infer T) ? T :
+                                (X extends 'boolean' ? boolean : any))))))));
 
 /**
  * TODO: more complex
  * @param a
  * @param b
  */
-function _is<X extends ('num' | 'int' | 'float' | 'double' | 'number' | 'bool' | 'boolean' | 'string' | Function)>(a: any, b: X): boolean /* a is (BaseType<X>)*/ {
+function _is<X extends ('num' | 'int' | 'float' | 'double' | 'number' | 'bool' | 'boolean' | 'string' | Function)>(a: any, b: X): a is (BaseType<X>) {
     if (typeof b === 'string') {
         if (b === 'num' || b === 'int' || b === 'float' || b === 'double') {
             b = 'number' as any;

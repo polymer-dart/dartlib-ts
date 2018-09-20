@@ -49,13 +49,13 @@ export declare type double = number;
 export declare type num = number;
 export declare type bool = boolean;
 export declare const UNINITIALIZED: unique symbol;
-declare type Constructor<X> = {
+declare type Constructor<X extends {}> = {
     new (...args: any[]): X;
     prototype: any;
 };
 export declare function safeCallOriginal(target: any, name: string | symbol, ...args: any[]): any;
 export declare function copyProps(s: any, t: any, excludes?: Set<string | symbol>): void;
-export declare function mixin<Mixin, Base>(mixin: Constructor<Mixin>, base: Constructor<Base>): Constructor<Mixin & Base>;
+export declare function mixin<Mixin extends {}, Base extends {}>(mixin: Constructor<Mixin>, base: Constructor<Base>): Constructor<Mixin & Base>;
 /**
  * Simple decorator to apply a mixin without adding type info
  */
@@ -90,4 +90,15 @@ export declare function $with<T>(t: T, ...expressions: ((t: T) => any)[]): T;
  * @param rest
  */
 export declare function op(o: Op, first: any, ...rest: any[]): any;
+/**
+ * a better type checking operator index
+ */
+export interface IndexRead<K, V> {
+    [OPERATOR_INDEX](k: K): V;
+}
+export declare function get<K, V>(obj: IndexRead<K, V>, k: K): V;
+export interface IndexWrite<K, V> {
+    [OPERATOR_INDEX_ASSIGN](k: K, v: V): any;
+}
+export declare function set<K, V>(obj: IndexWrite<K, V>, k: K, v: V): void;
 export {};

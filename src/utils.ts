@@ -79,7 +79,7 @@ export type bool = boolean;
 export const UNINITIALIZED = Symbol('_uninitialized_');
 
 
-type Constructor<X> = {
+type Constructor<X extends {}> = {
     new(...args: any[]): X,
     prototype: any
 }
@@ -127,11 +127,8 @@ export function copyProps(s: any, t: any, excludes?: Set<string | symbol>): void
 
 }
 
-export function mixin<Mixin, Base>(mixin: Constructor<Mixin>, base: Constructor<Base>): Constructor<Mixin & Base> {
-    class Class extends (base as Constructor<any>) {
-        constructor(...args: any[]) {
-            super(...args);
-        }
+export function mixin<Mixin extends {}, Base extends {}>(mixin: Constructor<Mixin>, base: Constructor<Base>): Constructor<Mixin & Base> {
+    class Class extends (base as Constructor<{}>) {
     }
 
     copyProps(mixin.prototype, Class.prototype);
@@ -337,13 +334,11 @@ export function isA(obj, cls): boolean {
 export function Operator(op: Op): MethodDecorator {
     return (target, name, descriptor) => {
         // Add another method that's an alias to this
-
         Object.defineProperty(target, OpSymbolMap.get(op), {
             value: function () {
                 return this[name].call(this, ...arguments);
             }
         });
-
     };
 }
 
@@ -364,4 +359,24 @@ export function op(o: Op, first: any, ...rest: any[]): any {
         throw `No operator ${o} in ${first}`;
     }
     return first[OpSymbolMap.get(o)](...rest);
+}
+
+/**
+ * a better type checking operator index
+ */
+
+export interface IndexRead<K, V> {
+    [OPERATOR_INDEX](k: K): V;
+}
+
+export function get<K, V>(obj: IndexRead<K, V>, k: K): V {
+    return obj[OPERATOR_INDEX](k);
+}
+
+export interface IndexWrite<K, V> {
+    [OPERATOR_INDEX_ASSIGN](k: K, v: V);
+}
+
+export function set<K, V>(obj: IndexWrite<K, V>, k: K, v: V) {
+    obj[OPERATOR_INDEX_ASSIGN](k, v);
 }

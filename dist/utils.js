@@ -105,9 +105,6 @@ export function copyProps(s, t, excludes) {
 }
 export function mixin(mixin, base) {
     class Class extends base {
-        constructor(...args) {
-            super(...args);
-        }
     }
     copyProps(mixin.prototype, Class.prototype);
     return Class;
@@ -293,5 +290,11 @@ export function op(o, first, ...rest) {
         throw `No operator ${o} in ${first}`;
     }
     return first[OpSymbolMap.get(o)](...rest);
+}
+export function get(obj, k) {
+    return obj[OPERATOR_INDEX](k);
+}
+export function set(obj, k, v) {
+    obj[OPERATOR_INDEX_ASSIGN](k, v);
 }
 //# sourceMappingURL=utils.js.map

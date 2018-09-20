@@ -3898,10 +3898,10 @@ declare class DartArrayIterator<E> implements DartIterator<E> {
 }
 export declare function argumentErrorValue(object: any): ArgumentError;
 export declare function checkNull(object: any): any;
-export declare function checkNum(value: any): any;
-export declare function checkInt(value: any): any;
-export declare function checkBool(value: any): any;
-export declare function checkString(value: any): any;
+export declare function checkNum(value: any): number;
+export declare function checkInt(value: any): number;
+export declare function checkBool(value: any): boolean;
+export declare function checkString(value: any): string;
 export declare function diagnoseIndexError(indexable: any, index: any): DartError;
 export declare function throwConcurrentModificationError(collection: any): void;
 declare class DartPrimitives {
