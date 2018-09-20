@@ -17,7 +17,6 @@ export const OPERATOR_BITOR = Symbol('|');
 export const OPERATOR_BITAND = Symbol('&');
 export const OPERATOR_SHIFTRIGHT = Symbol('<<');
 export const OPERATOR_SHIFTLEFT = Symbol('>>');
-export const OPERATOR_INTDIVIDE = Symbol('~/');
 export const OPERATOR_MODULE = Symbol('%');
 export var Op;
 (function (Op) {
@@ -40,8 +39,7 @@ export var Op;
     Op[Op["BITAND"] = 16] = "BITAND";
     Op[Op["SHIFTRIGHT"] = 17] = "SHIFTRIGHT";
     Op[Op["SHIFTLEFT"] = 18] = "SHIFTLEFT";
-    Op[Op["INTDIVIDE"] = 19] = "INTDIVIDE";
-    Op[Op["MODULE"] = 20] = "MODULE";
+    Op[Op["MODULE"] = 19] = "MODULE";
 })(Op || (Op = {}));
 const OpSymbolMap = new Map([
     [Op.INDEX, OPERATOR_INDEX],
@@ -63,7 +61,6 @@ const OpSymbolMap = new Map([
     [Op.BITAND, OPERATOR_BITAND],
     [Op.SHIFTRIGHT, OPERATOR_SHIFTRIGHT],
     [Op.SHIFTLEFT, OPERATOR_SHIFTLEFT],
-    [Op.INTDIVIDE, OPERATOR_INTDIVIDE],
     [Op.MODULE, OPERATOR_MODULE],
 ]);
 export const UNINITIALIZED = Symbol('_uninitialized_');

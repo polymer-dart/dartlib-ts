@@ -4240,9 +4240,6 @@ function runZoned<R>(body: () => R,
 }
 
 
-
-
-
 // Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
@@ -8482,14 +8479,14 @@ class DartStreamController<T> implements DartStreamSink<T> {
      */
     @namedFactory
     protected static _broadcast<T>(
-        _?: { onListen?: () => any, onCancel?: () => any, sync: bool }): DartStreamController<T> {
+        _?: { onListen?: () => any, onCancel?: () => any, sync?: bool }): DartStreamController<T> {
         let {onListen, onCancel, sync} = Object.assign({sync: false}, _);
         return sync
             ? new _SyncBroadcastStreamController<T>(onListen, onCancel)
             : new _AsyncBroadcastStreamController<T>(onListen, onCancel);
     }
 
-    static broadcast: new<T>(_?: { onListen?: () => any, onCancel?: () => any, sync: bool }) => DartStreamController<T>;
+    static broadcast: new<T>(_?: { onListen?: () => any, onCancel?: () => any, sync?: bool }) => DartStreamController<T>;
 
     /**
      * The callback which is called when the stream is listened to.

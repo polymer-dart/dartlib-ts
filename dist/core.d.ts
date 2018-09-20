@@ -473,6 +473,62 @@ declare class DartEfficientLengthIterable<T> extends DartIterable<T> {
      */
     readonly length: int;
 }
+/**
+ * An interface for getting items, one at a time, from an object.
+ *
+ * The for-in construct transparently uses `Iterator` to test for the end
+ * of the iteration, and to get each item (or _element_).
+ *
+ * If the object iterated over is changed during the iteration, the
+ * behavior is unspecified.
+ *
+ * The `Iterator` is initially positioned before the first element.
+ * Before accessing the first element the iterator must thus be advanced using
+ * [moveNext] to point to the first element.
+ * If no element is left, then [moveNext] returns false, [current]
+ * returns `null`, and all further calls to [moveNext] will also return false.
+ *
+ * A typical usage of an Iterator looks as follows:
+ *
+ *     var it = obj.iterator;
+ *     while (it.moveNext()) {
+ *       use(it.current);
+ *     }
+ *
+ * **See also:**
+ * [Iteration](http://www.dartlang.org/docs/dart-up-and-running/contents/ch03.html#iteration)
+ * in the [library tour](http://www.dartlang.org/docs/dart-up-and-running/contents/ch03.html)
+ */
+export declare class DartIterator<E> implements Iterator<E> {
+    /**
+     * Moves to the next element.
+     *
+     * Returns true if [current] contains the next element.
+     * Returns false if no elements are left.
+     *
+     * It is safe to invoke [moveNext] even when the iterator is already
+     * positioned after the last element.
+     * In this case [moveNext] returns false again and has no effect.
+     *
+     * A call to `moveNext` may throw if iteration has been broken by
+     * changing the underlying collection.
+     */
+    moveNext(): boolean;
+    /**
+     * Returns the current element.
+     *
+     * Returns `null` if the iterator has not yet been moved to the first
+     * element, or if the iterator has been moved past the last element of the
+     * [Iterable].
+     *
+     * The `current` getter should keep its value until the next call to
+     * [moveNext], even if an underlying collection changes.
+     * After a successful call to `moveNext`, the user doesn't need to cache
+     * the current value, but can keep reading it from the iterator.
+     */
+    readonly current: E;
+    next(value?: any): IteratorResult<E>;
+}
 declare class DartJsLinkedHashMap<K, V> implements DartLinkedHashMap<K, V> {
     _length: int;
     protected _strings: any;
@@ -1968,7 +2024,7 @@ declare class DartList<E> implements DartEfficientLengthIterable<E> {
      *
      * An [UnsupportedError] occurs if the list is fixed-length.
      */
-    remove(value: DartObject): boolean;
+    remove(value: any): boolean;
     /**
      * Removes the object at position [index] from this list.
      *
@@ -2662,6 +2718,8 @@ declare class DartMap<K, V> {
     protected static _create<K, V>(): DartMap<K, V>;
     get(k: K): V;
     set(k: K, v: V): void;
+    protected static _literal<K, V>(values: Iterable<[K, V]>): DartMap<K, V>;
+    static literal: new <K, V>(values: Iterable<[K, V]>) => DartMap<K, V>;
 }
 /**
  * Mixin implementing a [Map].
@@ -2962,6 +3020,28 @@ declare class DartSet<E> extends DartEfficientLengthIterable<E> {
 declare class DartSort {
     static sort(arg0: any, arg1: any): any;
 }
+export declare class DartStringSink {
+    /**
+     * Converts [obj] to a String by invoking [Object.toString] and
+     * adds the result to `this`.
+     */
+    write(obj: DartObject): void;
+    /**
+     * Iterates over the given [objects] and [write]s them in sequence.
+     */
+    writeAll(objects: DartIterable<any>, separator?: string): void;
+    /**
+     * Converts [obj] to a String by invoking [Object.toString] and
+     * adds the result to `this`, followed by a newline.
+     */
+    writeln(obj?: DartObject): void;
+    /**
+     * Writes the [charCode] to `this`.
+     *
+     * This method is equivalent to `write(new String.fromCharCode(charCode))`.
+     */
+    writeCharCode(charCode: int): void;
+}
 /**
  * A class for concatenating strings efficiently.
  *
@@ -2999,28 +3079,6 @@ declare class DartStringBuffer implements DartStringSink {
     protected static _writeAll(string: string, objects: DartIterable<any>, separator: string): string;
     protected static _writeOne(string: string, obj: any): string;
 }
-export interface DartStringSink {
-    /**
-     * Converts [obj] to a String by invoking [Object.toString] and
-     * adds the result to `this`.
-     */
-    write(obj: DartObject): void;
-    /**
-     * Iterates over the given [objects] and [write]s them in sequence.
-     */
-    writeAll(objects: DartIterable<any>, separator?: string): void;
-    /**
-     * Converts [obj] to a String by invoking [Object.toString] and
-     * adds the result to `this`, followed by a newline.
-     */
-    writeln(obj?: DartObject): void;
-    /**
-     * Writes the [charCode] to `this`.
-     *
-     * This method is equivalent to `write(new String.fromCharCode(charCode))`.
-     */
-    writeCharCode(charCode: int): void;
-}
 /**
  * A generic destination for data.
  *
@@ -3029,7 +3087,7 @@ export interface DartStringSink {
  *
  * This is a generic interface that other data receivers can implement.
  */
-interface DartSink<T> {
+declare class DartSink<T> {
     /**
      * Adds [data] to the sink.
      *
@@ -3399,64 +3457,9 @@ export declare abstract class DartIterableElementError {
     static tooFew(): StateError;
 }
 /**
- * An interface for getting items, one at a time, from an object.
- *
- * The for-in construct transparently uses `Iterator` to test for the end
- * of the iteration, and to get each item (or _element_).
- *
- * If the object iterated over is changed during the iteration, the
- * behavior is unspecified.
- *
- * The `Iterator` is initially positioned before the first element.
- * Before accessing the first element the iterator must thus be advanced using
- * [moveNext] to point to the first element.
- * If no element is left, then [moveNext] returns false, [current]
- * returns `null`, and all further calls to [moveNext] will also return false.
- *
- * A typical usage of an Iterator looks as follows:
- *
- *     var it = obj.iterator;
- *     while (it.moveNext()) {
- *       use(it.current);
- *     }
- *
- * **See also:**
- * [Iteration](http://www.dartlang.org/docs/dart-up-and-running/contents/ch03.html#iteration)
- * in the [library tour](http://www.dartlang.org/docs/dart-up-and-running/contents/ch03.html)
- */
-export interface DartIterator<E> extends Iterator<E> {
-    /**
-     * Moves to the next element.
-     *
-     * Returns true if [current] contains the next element.
-     * Returns false if no elements are left.
-     *
-     * It is safe to invoke [moveNext] even when the iterator is already
-     * positioned after the last element.
-     * In this case [moveNext] returns false again and has no effect.
-     *
-     * A call to `moveNext` may throw if iteration has been broken by
-     * changing the underlying collection.
-     */
-    moveNext(): boolean;
-    /**
-     * Returns the current element.
-     *
-     * Returns `null` if the iterator has not yet been moved to the first
-     * element, or if the iterator has been moved past the last element of the
-     * [Iterable].
-     *
-     * The `current` getter should keep its value until the next call to
-     * [moveNext], even if an underlying collection changes.
-     * After a successful call to `moveNext`, the user doesn't need to cache
-     * the current value, but can keep reading it from the iterator.
-     */
-    readonly current: E;
-}
-/**
  * An Iterator that allows moving backwards as well as forwards.
  */
-interface DartBidirectionalIterator<E> extends DartIterator<E> {
+declare class DartBidirectionalIterator<E> extends DartIterator<E> {
     /**
      * Move back to the previous element.
      *
@@ -4755,7 +4758,7 @@ declare class DartDateTime extends DartObject implements DartComparable<DartDate
 /**
  * An interface for basic searches within strings.
  */
-interface DartPattern {
+declare class DartPattern {
     /**
      * Match this pattern against the string repeatedly.
      *
@@ -4785,12 +4788,6 @@ interface DartPattern {
      */
     matchAsPrefix(string: string, start?: int): DartMatch;
 }
-declare const DartPattern: {
-    new (): {
-        allMatches(string: string, start?: number): DartIterable<DartMatch>;
-        matchAsPrefix(string: string, start?: number): DartMatch;
-    };
-};
 /**
  * A result from searching within a string.
  *
@@ -4819,7 +4816,7 @@ declare const DartPattern: {
  * object. Some patterns may never have any groups, and their matches always
  * have zero [groupCount].
  */
-interface DartMatch {
+declare class DartMatch {
     /**
      * Returns the index in the string where the match starts.
      */

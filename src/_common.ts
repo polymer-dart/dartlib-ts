@@ -16,7 +16,7 @@ type BaseType<X> = X extends 'string' ? string :
  * @param a
  * @param b
  */
-function _is<X extends ('num' | 'int' | 'float' | 'double' | 'number' | 'bool' | 'boolean' | 'string' | Function)>(a: any, b: X): a is (BaseType<X>) {
+function _is<X extends ('num' | 'int' | 'float' | 'double' | 'number' | 'bool' | 'boolean' | 'string' | (new(...args: any[]) => {}))>(a: any, b: X): a is (BaseType<X>) {
     if (typeof b === 'string') {
         if (b === 'num' || b === 'int' || b === 'float' || b === 'double') {
             b = 'number' as any;

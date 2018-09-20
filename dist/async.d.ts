@@ -2587,12 +2587,12 @@ declare class DartStreamController<T> implements DartStreamSink<T> {
     protected static _broadcast<T>(_?: {
         onListen?: () => any;
         onCancel?: () => any;
-        sync: bool;
+        sync?: bool;
     }): DartStreamController<T>;
     static broadcast: new <T>(_?: {
         onListen?: () => any;
         onCancel?: () => any;
-        sync: bool;
+        sync?: bool;
     }) => DartStreamController<T>;
     /**
      * The callback which is called when the stream is listened to.

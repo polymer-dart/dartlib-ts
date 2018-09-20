@@ -17,7 +17,6 @@ export const OPERATOR_BITOR = Symbol('|');
 export const OPERATOR_BITAND = Symbol('&');
 export const OPERATOR_SHIFTRIGHT = Symbol('<<');
 export const OPERATOR_SHIFTLEFT = Symbol('>>');
-export const OPERATOR_INTDIVIDE = Symbol('~/');
 export const OPERATOR_MODULE = Symbol('%');
 
 export enum Op {
@@ -40,7 +39,6 @@ export enum Op {
     BITAND,
     SHIFTRIGHT,
     SHIFTLEFT,
-    INTDIVIDE,
     MODULE,
 }
 
@@ -64,7 +62,6 @@ const OpSymbolMap: Map<Op, symbol> = new Map([
     [Op.BITAND, OPERATOR_BITAND],
     [Op.SHIFTRIGHT, OPERATOR_SHIFTRIGHT],
     [Op.SHIFTLEFT, OPERATOR_SHIFTLEFT],
-    [Op.INTDIVIDE, OPERATOR_INTDIVIDE],
     [Op.MODULE, OPERATOR_MODULE],
 ]);
 

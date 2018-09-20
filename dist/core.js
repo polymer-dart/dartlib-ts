@@ -7,7 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var DartJsLinkedHashMap_1, _LinkedIdentityHashMap_1, DartConstantMap_1, DartHashMap_1, DartHashSet_1, DartLinkedHashSet_1, DartList_1, DartLinkedHashMap_1, DartListMixin_1, DartStringBuffer_1, DartMappedIterable_1, DartSkipIterable_1, DartEfficientLengthSkipIterable_1, RangeError_1, JSArray_1, DartStackTrace_1, DartDuration_1, DartDateTime_1, JSSyntaxRegExp_1, DartString_1, JSString_1, DartNumber_1, JSNumber_1, JSInt_1, DartDouble_1, DartExpando_1;
+var DartJsLinkedHashMap_1, _LinkedIdentityHashMap_1, DartConstantMap_1, DartHashMap_1, DartHashSet_1, DartLinkedHashSet_1, DartList_1, DartLinkedHashMap_1, DartListMixin_1, DartMap_1, DartStringBuffer_1, DartMappedIterable_1, DartSkipIterable_1, DartEfficientLengthSkipIterable_1, RangeError_1, JSArray_1, DartStackTrace_1, DartDuration_1, DartDateTime_1, JSSyntaxRegExp_1, DartString_1, JSString_1, DartNumber_1, JSNumber_1, JSInt_1, DartDouble_1, DartExpando_1;
 // Patch file for dart:collection classes.
 import { Abstract, AbstractMethods, DartClass, defaultConstructor, defaultFactory, Implements, namedConstructor, namedFactory, Op, Operator, With, AbstractProperty } from "./utils";
 import _dart, { divide, isNot, is, nullOr } from './_common';
@@ -1068,7 +1068,82 @@ class _HashMapKeyIterable extends DartEfficientLengthIterable {
         }
     }
 }
-class _HashMapKeyIterator {
+/**
+ * An interface for getting items, one at a time, from an object.
+ *
+ * The for-in construct transparently uses `Iterator` to test for the end
+ * of the iteration, and to get each item (or _element_).
+ *
+ * If the object iterated over is changed during the iteration, the
+ * behavior is unspecified.
+ *
+ * The `Iterator` is initially positioned before the first element.
+ * Before accessing the first element the iterator must thus be advanced using
+ * [moveNext] to point to the first element.
+ * If no element is left, then [moveNext] returns false, [current]
+ * returns `null`, and all further calls to [moveNext] will also return false.
+ *
+ * A typical usage of an Iterator looks as follows:
+ *
+ *     var it = obj.iterator;
+ *     while (it.moveNext()) {
+ *       use(it.current);
+ *     }
+ *
+ * **See also:**
+ * [Iteration](http://www.dartlang.org/docs/dart-up-and-running/contents/ch03.html#iteration)
+ * in the [library tour](http://www.dartlang.org/docs/dart-up-and-running/contents/ch03.html)
+ */
+let DartIterator = class DartIterator {
+    /**
+     * Moves to the next element.
+     *
+     * Returns true if [current] contains the next element.
+     * Returns false if no elements are left.
+     *
+     * It is safe to invoke [moveNext] even when the iterator is already
+     * positioned after the last element.
+     * In this case [moveNext] returns false again and has no effect.
+     *
+     * A call to `moveNext` may throw if iteration has been broken by
+     * changing the underlying collection.
+     */
+    moveNext() {
+        throw 'abstract';
+    }
+    /**
+     * Returns the current element.
+     *
+     * Returns `null` if the iterator has not yet been moved to the first
+     * element, or if the iterator has been moved past the last element of the
+     * [Iterable].
+     *
+     * The `current` getter should keep its value until the next call to
+     * [moveNext], even if an underlying collection changes.
+     * After a successful call to `moveNext`, the user doesn't need to cache
+     * the current value, but can keep reading it from the iterator.
+     */
+    get current() {
+        throw 'abstract';
+    }
+    next(value) {
+        return {
+            done: !this.moveNext(),
+            value: this.current
+        };
+    }
+};
+__decorate([
+    Abstract
+], DartIterator.prototype, "moveNext", null);
+__decorate([
+    AbstractProperty
+], DartIterator.prototype, "current", null);
+DartIterator = __decorate([
+    DartClass
+], DartIterator);
+export { DartIterator };
+let _HashMapKeyIterator = class _HashMapKeyIterator {
     constructor(_map, _keys) {
         this._offset = 0;
         this._map = _map;
@@ -1102,7 +1177,10 @@ class _HashMapKeyIterator {
             value: this.current
         };
     }
-}
+};
+_HashMapKeyIterator = __decorate([
+    Implements(DartIterator)
+], _HashMapKeyIterator);
 let DartJsLinkedHashMap = DartJsLinkedHashMap_1 = class DartJsLinkedHashMap {
     constructor() {
     }
@@ -1587,7 +1665,7 @@ class _Es6MapIterable extends DartEfficientLengthIterable {
         }
     }
 }
-class _Es6MapIterator {
+let _Es6MapIterator = class _Es6MapIterator {
     constructor(_map, _modifications, _isKeys) {
         this._map = _map;
         this._modifications = _modifications;
@@ -1627,7 +1705,10 @@ class _Es6MapIterator {
             value: this.current
         };
     }
-}
+};
+_Es6MapIterator = __decorate([
+    Implements(DartIterator)
+], _Es6MapIterator);
 // TODO(floitsch): use ES6 maps when available.
 class _LinkedCustomHashMap extends DartJsLinkedHashMap {
     constructor(_equals, _hashCode, validKey) {
@@ -2375,7 +2456,7 @@ class _CustomHashSet extends _HashSet {
     }
 }
 // TODO(kasperl): Share this code with _HashMapKeyIterator<E>?
-class _HashSetIterator {
+let _HashSetIterator = class _HashSetIterator {
     constructor(_set, _elements) {
         this._offset = 0;
         this._set = _set;
@@ -2409,7 +2490,10 @@ class _HashSetIterator {
             value: this.current
         };
     }
-}
+};
+_HashSetIterator = __decorate([
+    Implements(DartIterator)
+], _HashSetIterator);
 class _LinkedHashSet extends _HashSetBase {
     constructor() {
         super();
@@ -2798,7 +2882,7 @@ class _LinkedHashSetCell {
     }
 }
 // TODO(kasperl): Share this code with LinkedHashMapKeyIterator<E>?
-class _LinkedHashSetIterator {
+let _LinkedHashSetIterator = class _LinkedHashSetIterator {
     constructor(_set, _modifications) {
         this._set = _set;
         this._modifications = _modifications;
@@ -2827,7 +2911,10 @@ class _LinkedHashSetIterator {
             value: this.current
         };
     }
-}
+};
+_LinkedHashSetIterator = __decorate([
+    Implements(DartIterator)
+], _LinkedHashSetIterator);
 // Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
@@ -3919,7 +4006,7 @@ class DartLinkedHashMapKeyIterable extends DartEfficientLengthIterable {
         }
     }
 }
-class DartLinkedHashMapKeyIterator {
+let DartLinkedHashMapKeyIterator = class DartLinkedHashMapKeyIterator {
     constructor(_map, _modifications) {
         this._map = _map;
         this._modifications = _modifications;
@@ -3948,7 +4035,10 @@ class DartLinkedHashMapKeyIterator {
             value: this.current
         };
     }
-}
+};
+DartLinkedHashMapKeyIterator = __decorate([
+    Implements(DartIterator)
+], DartLinkedHashMapKeyIterator);
 // Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
@@ -5072,7 +5162,7 @@ export function identityHashCode(object) {
  *
  * All other methods are implemented in terms of `iterator`.
  */
-class DartIterableMixin {
+let DartIterableMixin = class DartIterableMixin {
     // This class has methods copied verbatim into:
     // - IterableBase
     // - SetMixin
@@ -5270,7 +5360,10 @@ class DartIterableMixin {
     get iterator() {
         throw new Error('abstract');
     }
-}
+};
+DartIterableMixin = __decorate([
+    Implements(DartIterable)
+], DartIterableMixin);
 /**
  * Base class for implementing [Iterable].
  *
@@ -7351,7 +7444,7 @@ class DartListBase extends DartListMixin {
  * Modifying the map while iterating the keys or values
  * may also break the iteration.
  */
-let DartMap = class DartMap {
+let DartMap = DartMap_1 = class DartMap {
     /**
      * Creates a Map instance with the default implementation, [LinkedHashMap].
      *
@@ -7621,6 +7714,12 @@ let DartMap = class DartMap {
     set(k, v) {
         this[OPERATOR_INDEX_ASSIGN](k, v);
     }
+    static _literal(values) {
+        return new DartMap_1.fromIterable(new JSIterable(values), {
+            key: (e) => e[0],
+            value: (e) => e[1]
+        });
+    }
 }; // Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
 __decorate([
     Abstract
@@ -7676,7 +7775,10 @@ __decorate([
 __decorate([
     defaultFactory
 ], DartMap, "_create", null);
-DartMap = __decorate([
+__decorate([
+    namedFactory
+], DartMap, "_literal", null);
+DartMap = DartMap_1 = __decorate([
     DartClass
 ], DartMap);
 // for details. All rights reserved. Use of this source code is governed by a
@@ -8321,6 +8423,52 @@ class DartSort {
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 //part of dart.core;
+let DartStringSink = class DartStringSink {
+    /**
+     * Converts [obj] to a String by invoking [Object.toString] and
+     * adds the result to `this`.
+     */
+    write(obj) {
+        throw 'abstract';
+    }
+    /**
+     * Iterates over the given [objects] and [write]s them in sequence.
+     */
+    writeAll(objects, separator /*  = "" */) {
+        throw 'abstract';
+    }
+    /**
+     * Converts [obj] to a String by invoking [Object.toString] and
+     * adds the result to `this`, followed by a newline.
+     */
+    writeln(obj /*= ""*/) {
+        throw 'abstract';
+    }
+    /**
+     * Writes the [charCode] to `this`.
+     *
+     * This method is equivalent to `write(new String.fromCharCode(charCode))`.
+     */
+    writeCharCode(charCode) {
+        throw 'abstract';
+    }
+};
+__decorate([
+    Abstract
+], DartStringSink.prototype, "write", null);
+__decorate([
+    Abstract
+], DartStringSink.prototype, "writeAll", null);
+__decorate([
+    Abstract
+], DartStringSink.prototype, "writeln", null);
+__decorate([
+    Abstract
+], DartStringSink.prototype, "writeCharCode", null);
+DartStringSink = __decorate([
+    DartClass
+], DartStringSink);
+export { DartStringSink };
 /**
  * A class for concatenating strings efficiently.
  *
@@ -8328,9 +8476,7 @@ class DartSort {
  * The strings are concatenated to a single string only when [toString] is
  * called.
  */
-let DartStringBuffer = DartStringBuffer_1 = 
-//@Implements(DartStringSink)
-class DartStringBuffer {
+let DartStringBuffer = DartStringBuffer_1 = class DartStringBuffer {
     /** Creates the string buffer with an initial content. */
     constructor(content) {
     }
@@ -8419,9 +8565,50 @@ __decorate([
     defaultConstructor
 ], DartStringBuffer.prototype, "create", null);
 DartStringBuffer = DartStringBuffer_1 = __decorate([
-    DartClass
-    //@Implements(DartStringSink)
+    DartClass,
+    Implements(DartStringSink)
 ], DartStringBuffer);
+// Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+//part of dart.core;
+/**
+ * A generic destination for data.
+ *
+ * Multiple data values can be put into a sink, and when no more data is
+ * available, the sink should be closed.
+ *
+ * This is a generic interface that other data receivers can implement.
+ */
+let DartSink = class DartSink {
+    /**
+     * Adds [data] to the sink.
+     *
+     * Must not be called after a call to [close].
+     */
+    add(data) {
+        throw 'abstract';
+    }
+    /**
+     * Closes the sink.
+     *
+     * The [add] method must not be called after this method.
+     *
+     * Calling this method more than once is allowed, but does nothing.
+     */
+    close() {
+        throw 'abstract';
+    }
+};
+__decorate([
+    Abstract
+], DartSink.prototype, "add", null);
+__decorate([
+    Abstract
+], DartSink.prototype, "close", null);
+DartSink = __decorate([
+    DartClass
+], DartSink);
 /**
  * Mixin for an unmodifiable [List] class.
  *
@@ -9669,6 +9856,30 @@ class _GeneratorIterable extends DartListIterable {
 }
 /// Helper function used as default _generator function.
 _GeneratorIterable._id = (n) => n;
+// Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+//part of dart.core;
+/**
+ * An Iterator that allows moving backwards as well as forwards.
+ */
+let DartBidirectionalIterator = class DartBidirectionalIterator extends DartIterator {
+    /**
+     * Move back to the previous element.
+     *
+     * Returns true and updates [current] if successful. Returns false
+     * and sets [current] to null if there is no previous element.
+     */
+    movePrevious() {
+        throw 'abstract';
+    }
+};
+__decorate([
+    Abstract
+], DartBidirectionalIterator.prototype, "movePrevious", null);
+DartBidirectionalIterator = __decorate([
+    DartClass
+], DartBidirectionalIterator);
 /**
  * The operation was not allowed by the object.
  *
@@ -10864,7 +11075,7 @@ class JSUnmodifiableArray extends JSArray {
 } // Already is JSIndexable.
 /// An [Iterator] that iterates a JSArray.
 ///
-class DartArrayIterator {
+let DartArrayIterator = class DartArrayIterator {
     constructor(iterable) {
         this._iterable = iterable;
         this._length = iterable.length;
@@ -10895,7 +11106,10 @@ class DartArrayIterator {
             value: this.current
         };
     }
-}
+};
+DartArrayIterator = __decorate([
+    Implements(DartIterator)
+], DartArrayIterator);
 /// 'factory' for constructing ArgumentError.value to keep the call sites small.
 export function argumentErrorValue(object) {
     return new ArgumentError.value(object);
@@ -12618,15 +12832,178 @@ __decorate([
 DartDateTime = DartDateTime_1 = __decorate([
     DartClass
 ], DartDateTime);
-// abstract impl needed for type check
-const DartPattern = class {
+// Copyright (c) 2011, the Dart project authors.  Please see the AUTHORS file
+// for details. All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+//part of dart.core;
+/**
+ * An interface for basic searches within strings.
+ */
+let DartPattern = class DartPattern {
+    // NOTE: When using "start" index from the language library, call
+    // without an argument if start is zero. This allows backwards compatibility
+    // with implementations of the older interface that didn't have the start
+    // index argument.
+    /**
+     * Match this pattern against the string repeatedly.
+     *
+     * If [start] is provided, matching will start at that index.
+     *
+     * The returned iterable lazily computes all the non-overlapping matches
+     * of the pattern on the string, ordered by start index.
+     * If a user only requests the first
+     * match, this function should not compute all possible matches.
+     *
+     * The matches are found by repeatedly finding the first match
+     * of the pattern on the string, starting from the end of the previous
+     * match, and initially starting from index zero.
+     *
+     * If the pattern matches the empty string at some point, the next
+     * match is found by starting at the previous match's end plus one.
+     */
     allMatches(string, start) {
         throw 'abstract';
     }
+    /**
+     * Match this pattern against the start of `string`.
+     *
+     * If [start] is provided, it must be an integer in the range `0` ..
+     * `string.length`. In that case, this patten is tested against the
+     * string at the [start] position. That is, a [Match] is returned if the
+     * pattern can match a part of the string starting from position [start].
+     * Returns `null` if the pattern doesn't match.
+     */
     matchAsPrefix(string, start) {
         throw 'abstract';
     }
 };
+__decorate([
+    Abstract
+], DartPattern.prototype, "allMatches", null);
+__decorate([
+    Abstract
+], DartPattern.prototype, "matchAsPrefix", null);
+DartPattern = __decorate([
+    DartClass
+], DartPattern);
+/**
+ * A result from searching within a string.
+ *
+ * A Match or an [Iterable] of Match objects is returned from [Pattern]
+ * matching methods.
+ *
+ * The following example finds all matches of a [RegExp] in a [String]
+ * and iterates through the returned iterable of Match objects.
+ *
+ *     RegExp exp = new RegExp(r"(\w+)");
+ *     String str = "Parse my string";
+ *     Iterable<Match> matches = exp.allMatches(str);
+ *     for (Match m in matches) {
+ *       String match = m.group(0);
+ *       print(match);
+ *     }
+ *
+ * The output of the example is:
+ *
+ *     Parse
+ *     my
+ *     string
+ *
+ * Some patterns, regular expressions in particular, may record substrings
+ * that were part of the matching. These are called _groups_ in the Match
+ * object. Some patterns may never have any groups, and their matches always
+ * have zero [groupCount].
+ */
+let DartMatch = class DartMatch {
+    /**
+     * Returns the index in the string where the match starts.
+     */
+    get start() {
+        throw 'abstract';
+    }
+    /**
+     * Returns the index in the string after the last character of the
+     * match.
+     */
+    get end() {
+        throw 'abstract';
+    }
+    /**
+     * Returns the string matched by the given [group].
+     *
+     * If [group] is 0, returns the match of the pattern.
+     *
+     * The result may be `null` if the pattern didn't assign a value to it
+     * as part of this match.
+     */
+    group(group) {
+        throw 'abstract';
+    }
+    /**
+     * Returns the string matched by the given [group].
+     *
+     * If [group] is 0, returns the match of the pattern.
+     *
+     * Short alias for [Match.group].
+     */
+    //String operator [](int group);
+    /**
+     * Returns a list of the groups with the given indices.
+     *
+     * The list contains the strings returned by [group] for each index in
+     * [groupIndices].
+     */
+    groups(groupIndices) {
+        throw 'abstract';
+    }
+    /**
+     * Returns the number of captured groups in the match.
+     *
+     * Some patterns may capture parts of the input that was used to
+     * compute the full match. This is the number of captured groups,
+     * which is also the maximal allowed argument to the [group] method.
+     */
+    get groupCount() {
+        throw 'abstract';
+    }
+    /**
+     * The string on which this match was computed.
+     */
+    get input() {
+        throw 'abstract';
+    }
+    /**
+     * The pattern used to search in [input].
+     */
+    get pattern() {
+        throw 'abstract';
+    }
+};
+__decorate([
+    Abstract
+], DartMatch.prototype, "start", null);
+__decorate([
+    Abstract
+], DartMatch.prototype, "end", null);
+__decorate([
+    Operator(Op.INDEX),
+    Abstract
+], DartMatch.prototype, "group", null);
+__decorate([
+    Abstract
+], DartMatch.prototype, "groups", null);
+__decorate([
+    Abstract
+], DartMatch.prototype, "groupCount", null);
+__decorate([
+    Abstract
+], DartMatch.prototype, "input", null);
+__decorate([
+    Abstract
+], DartMatch.prototype, "pattern", null);
+DartMatch = __decorate([
+    DartClass
+], DartMatch);
 // Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
@@ -12928,7 +13305,7 @@ let JSSyntaxRegExp = JSSyntaxRegExp_1 = class JSSyntaxRegExp {
 JSSyntaxRegExp = JSSyntaxRegExp_1 = __decorate([
     DartClass
 ], JSSyntaxRegExp);
-class _MatchImplementation {
+let _MatchImplementation = class _MatchImplementation {
     constructor(pattern, _match) {
         this.pattern = pattern;
         this._match = _match;
@@ -12962,11 +13339,14 @@ class _MatchImplementation {
         }
         return out;
     }
-}
+};
 __decorate([
     Operator(Op.INDEX)
 ], _MatchImplementation.prototype, "group", null);
-class _AllMatchesIterable extends DartIterableBase {
+_MatchImplementation = __decorate([
+    Implements(DartMatch)
+], _MatchImplementation);
+let _AllMatchesIterable = class _AllMatchesIterable extends DartIterableBase {
     constructor(_re, _string, _start) {
         super();
         this._re = _re;
@@ -12976,18 +13356,21 @@ class _AllMatchesIterable extends DartIterableBase {
     get iterator() {
         return new _AllMatchesIterator(this._re, this._string, this._start);
     }
-}
-class _AllMatchesIterator {
+};
+_AllMatchesIterable = __decorate([
+    Implements(DartMatch)
+], _AllMatchesIterable);
+let _AllMatchesIterator = class _AllMatchesIterator {
+    constructor(_regExp, _string, _nextIndex) {
+        this._regExp = _regExp;
+        this._string = _string;
+        this._nextIndex = _nextIndex;
+    }
     next(value) {
         return {
             done: !this.moveNext(),
             value: this.current
         };
-    }
-    constructor(_regExp, _string, _nextIndex) {
-        this._regExp = _regExp;
-        this._string = _string;
-        this._nextIndex = _nextIndex;
     }
     get current() {
         return this._current;
@@ -13011,7 +13394,10 @@ class _AllMatchesIterator {
         this._string = null; // Marks iteration as ended.
         return false;
     }
-}
+};
+_AllMatchesIterator = __decorate([
+    Implements(DartIterator)
+], _AllMatchesIterator);
 /** Find the first match of [regExp] in [string] at or after [start]. */
 const firstMatchAfter = (regExp, string, start) => {
     return regExp._execGlobal(string, start);
@@ -14020,7 +14406,8 @@ __decorate([
     namedConstructor
 ], DartRuneIterator.prototype, "at", null);
 DartRuneIterator = __decorate([
-    DartClass
+    DartClass,
+    Implements(DartBidirectionalIterator)
 ], DartRuneIterator);
 /**
  * The interceptor class for [String]. The compiler recognizes this
@@ -14528,7 +14915,7 @@ function substring2Unchecked(receiver, startIndex, endIndex) {
 function stringContainsStringUnchecked(receiver, other, startIndex) {
     return stringIndexOfStringUnchecked(receiver, other, startIndex) >= 0;
 }
-class DartStringMatch {
+let DartStringMatch = class DartStringMatch {
     constructor(start, input, pattern) {
         this.start = start;
         this.input = input;
@@ -14553,10 +14940,13 @@ class DartStringMatch {
         }
         return result;
     }
-}
+};
 __decorate([
     Operator(Op.INDEX)
 ], DartStringMatch.prototype, "group", null);
+DartStringMatch = __decorate([
+    Implements(DartMatch)
+], DartStringMatch);
 function allMatchesInStringUnchecked(pattern, string, startIndex) {
     return new _StringAllMatchesIterable(string, pattern, startIndex);
 }
@@ -14578,7 +14968,7 @@ class _StringAllMatchesIterable extends DartIterable {
         throw DartIterableElementError.noElement();
     }
 }
-class _StringAllMatchesIterator {
+let _StringAllMatchesIterator = class _StringAllMatchesIterator {
     constructor(_input, _pattern, _index) {
         this._input = _input;
         this._pattern = _pattern;
@@ -14612,7 +15002,10 @@ class _StringAllMatchesIterator {
             value: this.current
         };
     }
-}
+};
+_StringAllMatchesIterator = __decorate([
+    Implements(DartIterator)
+], _StringAllMatchesIterator);
 function stringContainsUnchecked(receiver, other, startIndex) {
     if (is(other, 'string')) {
         return stringContainsStringUnchecked(receiver, other, startIndex);
@@ -15369,7 +15762,7 @@ __decorate([
     Operator(Op.DIVIDE)
 ], DartNumber.prototype, "divide", null);
 __decorate([
-    Operator(Op.INTDIVIDE)
+    Operator(Op.QUOTIENT)
 ], DartNumber.prototype, "intDivide", null);
 __decorate([
     Operator(Op.NEG)
@@ -15839,7 +16232,7 @@ __decorate([
     Operator(Op.MODULE)
 ], JSNumber.prototype, "module", null);
 __decorate([
-    Operator(Op.INTDIVIDE)
+    Operator(Op.QUOTIENT)
 ], JSNumber.prototype, "intDivide", null);
 __decorate([
     Operator(Op.SHIFTLEFT)
@@ -16691,7 +17084,7 @@ class JSIterable extends DartIterableBase {
         return this.iterable[Symbol.iterator]();
     }
 }
-class JSIterator {
+let JSIterator = class JSIterator {
     constructor(i) {
         this.iterator = i;
     }
@@ -16714,7 +17107,10 @@ class JSIterator {
     throw(e) {
         return this.iterator.throw(e);
     }
-}
+};
+JSIterator = __decorate([
+    Implements(DartIterator)
+], JSIterator);
 /// Prints a string representation of the object to the console.
 function print(object) {
     let line = `${object}`;
@@ -16829,7 +17225,7 @@ __decorate([
 DartExpando = DartExpando_1 = __decorate([
     DartClass
 ], DartExpando);
-export { DartIterable, DartEfficientLengthIterable, DartSetMixin, AbstractDartMap, DartConstantMap, DartHashMap, DartHashSet, DartLinkedHashSet, DartList, DartLinkedHashMap, DartMap, DartSet, DartStringBuffer, ArgumentError, ConcurrentModificationError, DartArrayIterator, DartConstantMapView, DartEfficientLengthMappedIterable, DartError, DartEs6LinkedHashMap, DartExpandIterable, DartExpandIterator, DartIterableBase, DartIterableMixin, DartJsLinkedHashMap, DartLinkedHashMapKeyIterable, DartLinkedHashMapKeyIterator, DartListBase, DartListIterator, DartListMapView, DartListMixin, DartMapBase, DartMapMixin, DartMappedIterable, DartMappedListIterable, DartPrimitives, DartRandom, DartReversedListIterable, DartSetBase, DartSkipIterable, DartSkipWhileIterable, DartSort, DartSubListIterable, DartTakeIterable, DartTakeWhileIterable, DartUnmodifiableListBase, DartUnmodifiableListMixin, DartUnmodifiableMapView, DartWhereIterable, DartWhereIterator, FixedLengthListBase, IndexError, JSFixedArray, JSMutableArray, JSUnmodifiableArray, LinkedHashMapCell, RangeError, StateError, UnmodifiableMapBase, UnsupportedError, DartObject, DartStackTrace, DartDuration, DartIntegerDivisionByZeroException, NullThrownError, DartStopwatch, DartDateTime, FormatException, DartPattern, DartRegExp, 
+export { DartIterable, DartEfficientLengthIterable, DartSetMixin, AbstractDartMap, DartConstantMap, DartHashMap, DartHashSet, DartLinkedHashSet, DartList, DartLinkedHashMap, DartMap, DartSet, DartStringBuffer, ArgumentError, ConcurrentModificationError, DartArrayIterator, DartConstantMapView, DartEfficientLengthMappedIterable, DartError, DartEs6LinkedHashMap, DartExpandIterable, DartExpandIterator, DartIterableBase, DartIterableMixin, DartJsLinkedHashMap, DartLinkedHashMapKeyIterable, DartLinkedHashMapKeyIterator, DartListBase, DartListIterator, DartListMapView, DartListMixin, DartMapBase, DartMapMixin, DartMappedIterable, DartMappedListIterable, DartPrimitives, DartRandom, DartReversedListIterable, DartSetBase, DartSkipIterable, DartSkipWhileIterable, DartSort, DartSubListIterable, DartTakeIterable, DartTakeWhileIterable, DartUnmodifiableListBase, DartUnmodifiableListMixin, DartUnmodifiableMapView, DartWhereIterable, DartWhereIterator, FixedLengthListBase, IndexError, JSFixedArray, JSMutableArray, JSUnmodifiableArray, LinkedHashMapCell, RangeError, StateError, UnmodifiableMapBase, UnsupportedError, DartObject, DartStackTrace, DartDuration, DartIntegerDivisionByZeroException, NullThrownError, DartSink, DartStopwatch, DartDateTime, FormatException, DartPattern, DartRegExp, DartMatch, DartBidirectionalIterator, 
 //JSSyntaxRegExp, regExpCaptureCount, regExpGetNative, regExpGetGlobalNative, firstMatchAfter,
 DartString, DartStringMatch, DartRunes, DartRuneIterator, DartCodeUnits, JSNumber, JSInt, JSDouble, DartNumber, DartInt, DartDouble, iter, toDartIterable, JSIterable, JSIterator, print, DartExpando };
 //# sourceMappingURL=core.js.map

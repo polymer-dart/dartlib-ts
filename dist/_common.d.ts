@@ -5,7 +5,7 @@ declare type BaseType<X> = X extends 'string' ? string : (X extends 'number' ? n
  * @param a
  * @param b
  */
-declare function _is<X extends ('num' | 'int' | 'float' | 'double' | 'number' | 'bool' | 'boolean' | 'string' | Function)>(a: any, b: X): a is (BaseType<X>);
+declare function _is<X extends ('num' | 'int' | 'float' | 'double' | 'number' | 'bool' | 'boolean' | 'string' | (new (...args: any[]) => {}))>(a: any, b: X): a is (BaseType<X>);
 declare function _equals(a: any, b: any): any;
 declare function _divide(a: int, b: int): int;
 declare const _assert: (expr: any) => void;

@@ -17,7 +17,6 @@ export declare const OPERATOR_BITOR: unique symbol;
 export declare const OPERATOR_BITAND: unique symbol;
 export declare const OPERATOR_SHIFTRIGHT: unique symbol;
 export declare const OPERATOR_SHIFTLEFT: unique symbol;
-export declare const OPERATOR_INTDIVIDE: unique symbol;
 export declare const OPERATOR_MODULE: unique symbol;
 export declare enum Op {
     PLUS = 0,
@@ -39,8 +38,7 @@ export declare enum Op {
     BITAND = 16,
     SHIFTRIGHT = 17,
     SHIFTLEFT = 18,
-    INTDIVIDE = 19,
-    MODULE = 20
+    MODULE = 19
 }
 export declare type int = number;
 export declare type long = number;
