@@ -1,4 +1,4 @@
-import {mixin, DartClass, defaultConstructor, namedConstructor, DartConstructor, Abstract, With, AbstractProperty, AbstractMethods, Implements, isA, Operator, Op, EQUALS_OPERATOR, OPERATOR_PLUS, defaultFactory} from "../utils"
+import {mixin, DartClass, defaultConstructor, namedConstructor, DartConstructor, Abstract, With, AbstractProperty, AbstractMethods, Implements, isA, Operator, Op, OperatorMethods, defaultFactory} from "../utils"
 import _dart from '../_common';
 
 describe("Utils", () => {
@@ -589,18 +589,18 @@ describe("Utils", () => {
         let A = new ComplexNumber({real: 10, imaginary: 10});
         let B = new ComplexNumber({real: 5, imaginary: 5});
 
-        expect(A[OPERATOR_PLUS]).not.toBeNull();
-        expect(A[EQUALS_OPERATOR]).not.toBeNull();
+        expect(A[OperatorMethods.PLUS]).not.toBeNull();
+        expect(A[OperatorMethods.EQUALS]).not.toBeNull();
 
         let C = A.plus(B);
-        let D = A[OPERATOR_PLUS](B);
+        let D = A[OperatorMethods.PLUS](B);
         expect(_dart.equals(C, D)).toBe(true);
         expect(C.real).toEqual(15);
         expect(C.imaginary).toEqual(15);
         expect(D.imaginary).toEqual(15);
         expect(D.real).toEqual(15);
-        expect(A[EQUALS_OPERATOR](B)).toBe(false);
-        expect(C[EQUALS_OPERATOR](D)).toBe(true);
+        expect(A[OperatorMethods.EQUALS](B)).toBe(false);
+        expect(C[OperatorMethods.EQUALS](D)).toBe(true);
     });
 
     it('dart class can be extended like normal class', () => {

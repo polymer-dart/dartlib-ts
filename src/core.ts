@@ -22,11 +22,10 @@ import {
     safeCallOriginal,
     With,
     num,
-    EQUALS_OPERATOR,
+    OperatorMethods,
     AbstractProperty
 } from "./utils";
 import _dart, {divide, isNot, is, nullOr} from './_common';
-import {OPERATOR_DIVIDE, OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN, OPERATOR_MINUS, OPERATOR_PLUS, OPERATOR_TIMES} from "./utils";
 import {printToConsole, printToZone} from "./_internal";
 
 
@@ -79,7 +78,7 @@ class _HashMap<K, V> implements DartHashMap<K, V> {
     }
 
     get values(): DartIterable<V> {
-        return new DartMappedIterable<K, V>(this.keys, (each) => this[OPERATOR_INDEX](each));
+        return new DartMappedIterable<K, V>(this.keys, (each) => this[OperatorMethods.INDEX](each));
     }
 
     containsKey(key: any): bool {
@@ -102,16 +101,16 @@ class _HashMap<K, V> implements DartHashMap<K, V> {
     }
 
     containsValue(value: any): bool {
-        return this._computeKeys().any((each) => this[OPERATOR_INDEX](each) == value);
+        return this._computeKeys().any((each) => this[OperatorMethods.INDEX](each) == value);
     }
 
     addAll(other: DartMap<K, V>): void {
         other.forEach((key: K, value: V) => {
-            this[OPERATOR_INDEX_ASSIGN](key, value);
+            this[OperatorMethods.INDEX_EQ](key, value);
         });
     }
 
-    [OPERATOR_INDEX](key: any): V {
+    [OperatorMethods.INDEX](key: any): V {
         if (_HashMap._isStringKey(key)) {
             let strings = this._strings;
             return (strings == null) ? null : _HashMap._getTableEntry(strings, key);
@@ -131,7 +130,7 @@ class _HashMap<K, V> implements DartHashMap<K, V> {
         return (index < 0) ? null : bucket[index + 1] /* JS('var', '#[#]', bucket, index + 1)*/;
     }
 
-    [OPERATOR_INDEX_ASSIGN](key: K, value: V): void {
+    [OperatorMethods.INDEX_EQ](key: K, value: V): void {
         if (_HashMap._isStringKey(key)) {
             let strings = this._strings;
             if (strings == null) this._strings = strings = _HashMap._newHashTable();
@@ -169,9 +168,9 @@ class _HashMap<K, V> implements DartHashMap<K, V> {
     }
 
     putIfAbsent(key: K, ifAbsent: () => V): V {
-        if (this.containsKey(key)) return this[OPERATOR_INDEX](key);
+        if (this.containsKey(key)) return this[OperatorMethods.INDEX](key);
         let value: V = ifAbsent();
-        this[OPERATOR_INDEX_ASSIGN](key, value);
+        this[OperatorMethods.INDEX_EQ](key, value);
         return value;
     }
 
@@ -211,7 +210,7 @@ class _HashMap<K, V> implements DartHashMap<K, V> {
         let keys: DartList<any> = this._computeKeys();
         for (let i = 0, length = keys.length; i < length; i++) {
             let key = keys[i] /* JS('var', '#[#]', keys, i)*/;
-            action(key, this[OPERATOR_INDEX](key));
+            action(key, this[OperatorMethods.INDEX](key));
             if (keys !== this._keys /* JS('bool', '# !== #', keys, _keys)*/) {
                 throw new ConcurrentModificationError(this);
             }
@@ -230,7 +229,7 @@ class _HashMap<K, V> implements DartHashMap<K, V> {
             let entries: int = names.length /* JS('int', '#.length', names)*/;
             for (let i = 0; i < entries; i++) {
                 let key: string = names[i] /* JS('String', '#[#]', names, i)*/;
-                result[OPERATOR_INDEX_ASSIGN](index, key);
+                result[OperatorMethods.INDEX_EQ](index, key);
                 /* JS('void', '#[#] = #', result, index, key);*/
                 index++;
             }
@@ -245,7 +244,7 @@ class _HashMap<K, V> implements DartHashMap<K, V> {
                 // Object.getOwnPropertyNames returns a list of strings, so we
                 // have to convert the keys back to numbers (+).
                 let key: int = +names[i] /* JS('num', '+#[#]', names, i)*/;
-                result[OPERATOR_INDEX_ASSIGN](index, key);
+                result[OperatorMethods.INDEX_EQ](index, key);
                 /* JS('void', '#[#] = #', result, index, key);*/
                 index++;
             }
@@ -262,7 +261,7 @@ class _HashMap<K, V> implements DartHashMap<K, V> {
                 let length: int = bucket.length /* JS('int', '#.length', bucket)*/;
                 for (let i = 0; i < length; i += 2) {
                     let key = bucket[i] /* JS('var', '#[#]', bucket, i)*/;
-                    result[OPERATOR_INDEX_ASSIGN](index, key);
+                    result[OperatorMethods.INDEX_EQ](index, key);
                     /* JS('void', '#[#] = #', result, index, key); */
                     index++;
                 }
@@ -374,11 +373,11 @@ class _HashMap<K, V> implements DartHashMap<K, V> {
     }
 
     get(k: K): V {
-        return this[OPERATOR_INDEX](k);
+        return this[OperatorMethods.INDEX](k);
     }
 
     set(k: K, v: V) {
-        this[OPERATOR_INDEX_ASSIGN](k, v);
+        this[OperatorMethods.INDEX_EQ](k, v);
     }
 }
 
@@ -413,12 +412,12 @@ class _CustomHashMap<K, V> extends _HashMap<K, V> {
         this._validKey = (validKey != null) ? validKey : ((_: any) => true /*v is K*/);
     }
 
-    [OPERATOR_INDEX](key: any): V {
+    [OperatorMethods.INDEX](key: any): V {
         if (!this._validKey(key)) return null;
         return super._get(key);
     }
 
-    [OPERATOR_INDEX_ASSIGN](key: K, value: V): void {
+    [OperatorMethods.INDEX_EQ](key: K, value: V): void {
         super._set(key, value);
     }
 
@@ -1168,7 +1167,7 @@ class _HashMapKeyIterable<E> extends DartEfficientLengthIterable<E> {
     forEach(f: (element: E) => any): void {
         let keys: DartList<any> = this._map._computeKeys();
         for (let i = 0, length = keys.length /* JS('int', '#.length', keys)*/; i < length; i++) { // TODO: investigate why this was using the js length property
-            f(keys[OPERATOR_INDEX](i)/*JS('var', '#[#]', keys, i)*/); // <- TODO :Investigate why this was using the js square operator, it can be because of optimization reasons ? like we are sure here it is the native implementation of list and thus the square operator works ?
+            f(keys[OperatorMethods.INDEX](i)/*JS('var', '#[#]', keys, i)*/); // <- TODO :Investigate why this was using the js square operator, it can be because of optimization reasons ? like we are sure here it is the native implementation of list and thus the square operator works ?
             if (keys !== this._map._keys /* JS('bool', '# !== #', keys, _map._keys)*/) {
                 throw new ConcurrentModificationError(this._map);
             }
@@ -1274,7 +1273,7 @@ class _HashMapKeyIterator<E> implements DartIterator<E> {
             this._current = null;
             return false;
         } else {
-            this._current = keys[OPERATOR_INDEX](offset) /* JS('var', '#[#]', keys, offset)*/;
+            this._current = keys[OperatorMethods.INDEX](offset) /* JS('var', '#[#]', keys, offset)*/;
             // TODO(kasperl): For now, we have to tell the type inferrer to
             // treat the result of doing offset + 1 as an int. Otherwise, we
             // get unnecessary bailout code.
@@ -1360,7 +1359,7 @@ class DartJsLinkedHashMap<K, V> implements DartLinkedHashMap<K, V> {
     }
 
     get values(): DartIterable<V> {
-        return new DartMappedIterable<K, V>(this.keys, (each) => this[OPERATOR_INDEX](each));
+        return new DartMappedIterable<K, V>(this.keys, (each) => this[OperatorMethods.INDEX](each));
     }
 
     containsKey(key: any): bool {
@@ -1385,16 +1384,16 @@ class DartJsLinkedHashMap<K, V> implements DartLinkedHashMap<K, V> {
     }
 
     containsValue(value: any): bool {
-        return this.keys.any((each) => _dart.equals(this[OPERATOR_INDEX](each), value));
+        return this.keys.any((each) => _dart.equals(this[OperatorMethods.INDEX](each), value));
     }
 
     addAll(other: DartMap<K, V>): void {
         other.forEach((key: K, value: V) => {
-            this[OPERATOR_INDEX_ASSIGN](key, value);
+            this[OperatorMethods.INDEX_EQ](key, value);
         });
     }
 
-    [OPERATOR_INDEX](key: any): V {
+    [OperatorMethods.INDEX](key: any): V {
         if (_isStringKey(key)) {
             let strings = this._strings;
             if (strings == null) return null;
@@ -1420,7 +1419,7 @@ class DartJsLinkedHashMap<K, V> implements DartLinkedHashMap<K, V> {
         return cell.hashMapCellValue;
     }
 
-    [OPERATOR_INDEX_ASSIGN](key: K, value: V) {
+    [OperatorMethods.INDEX_EQ](key: K, value: V) {
         if (_isStringKey(key)) {
             let strings = this._strings;
             if (strings == null) this._strings = strings = this._newHashTable();
@@ -1456,9 +1455,9 @@ class DartJsLinkedHashMap<K, V> implements DartLinkedHashMap<K, V> {
     }
 
     putIfAbsent(key: K, ifAbsent: () => V): V {
-        if (this.containsKey(key)) return this[OPERATOR_INDEX](key);
+        if (this.containsKey(key)) return this[OperatorMethods.INDEX](key);
         let value: V = ifAbsent();
-        this[OPERATOR_INDEX_ASSIGN](key, value);
+        this[OperatorMethods.INDEX_EQ](key, value);
         return value;
     }
 
@@ -1635,11 +1634,11 @@ class DartJsLinkedHashMap<K, V> implements DartLinkedHashMap<K, V> {
     }
 
     get(k: K): V {
-        return this[OPERATOR_INDEX](k);
+        return this[OperatorMethods.INDEX](k);
     }
 
     set(k: K, v: V) {
-        this[OPERATOR_INDEX_ASSIGN](k, v);
+        this[OperatorMethods.INDEX_EQ](k, v);
     }
 }
 
@@ -1721,29 +1720,29 @@ class _Es6LinkedIdentityHashMap<K, V> extends _LinkedIdentityHashMap<K, V> {
 
     addAll(other: DartMap<K, V>): void {
         other.forEach((key, value) => {
-            this[OPERATOR_INDEX_ASSIGN](key, value);
+            this[OperatorMethods.INDEX_EQ](key, value);
         });
     }
 
-    [OPERATOR_INDEX](key: any): V {
+    [OperatorMethods.INDEX](key: any): V {
         return this._map.get(key) /*JS('var', '#.get(#)', _map, key)*/;
     }
 
-    [OPERATOR_INDEX_ASSIGN](key: K, value: V): void {
+    [OperatorMethods.INDEX_EQ](key: K, value: V): void {
         /*JS('var', '#.set(#, #)', _map, key, value);*/
         this._map.set(key, value);
         this._modified();
     }
 
     putIfAbsent(key: K, ifAbsent: () => V): V {
-        if (this.containsKey(key)) return this[OPERATOR_INDEX](key);
+        if (this.containsKey(key)) return this[OperatorMethods.INDEX](key);
         let value = ifAbsent();
-        this[OPERATOR_INDEX_ASSIGN](key, value);
+        this[OperatorMethods.INDEX_EQ](key, value);
         return value;
     }
 
     remove(key: any): V {
-        let value = this[OPERATOR_INDEX](key);
+        let value = this[OperatorMethods.INDEX](key);
         /* JS('bool', '#.delete(#)', _map, key);*/
         this._map.delete(key);
         this._modified();
@@ -1901,12 +1900,12 @@ class _LinkedCustomHashMap<K, V> extends DartJsLinkedHashMap<K, V> {
         this._validKey = (validKey != null) ? validKey : ((v) => true);
     }
 
-    [OPERATOR_INDEX](key) {
+    [OperatorMethods.INDEX](key) {
         if (!this._validKey(key)) return null;
         return super.internalGet(key);
     }
 
-    [OPERATOR_INDEX_ASSIGN](key: K, value: V) {
+    [OperatorMethods.INDEX_EQ](key: K, value: V) {
         super.internalSet(key, value);
     }
 
@@ -2080,7 +2079,7 @@ class DartSetMixin<E> implements DartSet<E> {
                 return l
             })() : new DartList<E>(this.length);
         let i = 0;
-        for (let element of this) result[OPERATOR_INDEX_ASSIGN](i++, element);
+        for (let element of this) result[OperatorMethods.INDEX_EQ](i++, element);
         return result;
     }
 
@@ -3217,7 +3216,7 @@ class _LinkedHashSetIterator<E> implements DartIterator<E> {
  */
 class _UnmodifiableMapMixin<K, V> {
     /** This operation is not supported by an unmodifiable map. */
-    [OPERATOR_INDEX_ASSIGN](key: K, value: V) {
+    [OperatorMethods.INDEX_EQ](key: K, value: V) {
         throw new UnsupportedError("Cannot modify unmodifiable map");
     }
 
@@ -3258,20 +3257,20 @@ class DartMapView<K, V> implements DartMap<K, V> {
         this._map = map;
     }
 
-    [OPERATOR_INDEX](key: any): V {
+    [OperatorMethods.INDEX](key: any): V {
         return this._map[key];
     }
 
-    [OPERATOR_INDEX_ASSIGN](key: K, value: V) {
-        this._map[OPERATOR_INDEX_ASSIGN](key, value);
+    [OperatorMethods.INDEX_EQ](key: K, value: V) {
+        this._map[OperatorMethods.INDEX_EQ](key, value);
     }
 
     get(k: K): V {
-        return this[OPERATOR_INDEX](k);
+        return this[OperatorMethods.INDEX](k);
     }
 
     set(k: K, v: V) {
-        this[OPERATOR_INDEX_ASSIGN](k, v);
+        this[OperatorMethods.INDEX_EQ](k, v);
     }
 
     addAll(other: DartMap<K, V>): void {
@@ -3353,24 +3352,24 @@ class DartConstantMapView<K, V> extends DartUnmodifiableMapView<K, V> implements
 }
 
 @DartClass
-@AbstractMethods(OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN)
+@AbstractMethods(OperatorMethods.INDEX, OperatorMethods.INDEX_EQ)
 class AbstractDartMap<K, V> {
 
 
-    [OPERATOR_INDEX](key: K): V {
+    [OperatorMethods.INDEX](key: K): V {
         throw 'abstract';
     }
 
-    [OPERATOR_INDEX_ASSIGN](key: K, value: V): void {
+    [OperatorMethods.INDEX_EQ](key: K, value: V): void {
         throw 'abstract';
     }
 
     get(k: K): V {
-        return this[OPERATOR_INDEX](k);
+        return this[OperatorMethods.INDEX](k);
     }
 
     set(k: K, v: V) {
-        this[OPERATOR_INDEX_ASSIGN](k, v);
+        this[OperatorMethods.INDEX_EQ](k, v);
     }
 
     @Abstract
@@ -3500,7 +3499,7 @@ class DartConstantMap<K, V> extends AbstractDartMap<K, V> implements DartMap<K, 
         return new UnsupportedError("Cannot modify unmodifiable Map");
     }
 
-    [OPERATOR_INDEX_ASSIGN](key: K, val: V) {
+    [OperatorMethods.INDEX_EQ](key: K, val: V) {
         DartConstantMap._throwUnmodifiable();
     }
 
@@ -3562,7 +3561,7 @@ class DartConstantStringMap<K, V> extends DartConstantMap<K, V> {
         return this._jsObject.hasOwnProperty(key);
     }
 
-    [OPERATOR_INDEX](key: any): V {
+    [OperatorMethods.INDEX](key: any): V {
         if (!this.containsKey(key)) return null;
         return this._fetch(key);
     }
@@ -3684,8 +3683,8 @@ class DartGeneralConstantMap<K, V> extends DartConstantMap<K, V> {
     }
 
 
-    [OPERATOR_INDEX](key: any): V {
-        return this._getMap()[OPERATOR_INDEX](key);
+    [OperatorMethods.INDEX](key: any): V {
+        return this._getMap()[OperatorMethods.INDEX](key);
     }
 
     forEach(f: (key: K, value: V) => any) {
@@ -3826,7 +3825,7 @@ class DartHashMap<K, V> extends AbstractDartMap<K, V> implements DartMap<K, V> {
     protected static _from<K, V>(other: DartMap<any, any>): DartHashMap<K, V> {
         let result: DartHashMap<K, V> = new DartHashMap<K, V>();
         other.forEach((k, v) => {
-            result[OPERATOR_INDEX_ASSIGN](k, v);
+            result[OperatorMethods.INDEX_EQ](k, v);
         });
         return result;
     }
@@ -6465,7 +6464,7 @@ class DartList<E> implements DartEfficientLengthIterable<E> {
             result = new DartList<E>(length);
         }
         for (let i: int = 0; i < length; i++) {
-            result[OPERATOR_INDEX_ASSIGN](i, generator(i));
+            result[OperatorMethods.INDEX_EQ](i, generator(i));
         }
         return result;
     }
@@ -6491,7 +6490,7 @@ class DartList<E> implements DartEfficientLengthIterable<E> {
      */
 
     //@Abstract
-    [OPERATOR_INDEX](index: int): E {
+    [OperatorMethods.INDEX](index: int): E {
         throw new Error('abstract');
     }
 
@@ -6500,7 +6499,7 @@ class DartList<E> implements DartEfficientLengthIterable<E> {
      * or throws a [RangeError] if [index] is out of bounds.
      */
     //@Abstract
-    [OPERATOR_INDEX_ASSIGN](index: int, value: E): void {
+    [OperatorMethods.INDEX_EQ](index: int, value: E): void {
         throw new Error('abstract');
     }
 
@@ -7117,23 +7116,23 @@ function _iterablePartsToStrings(iterable: DartIterable<any>, parts: DartList<an
  * The map allows `null` as a key.
  */
 @DartClass
-@AbstractMethods(OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN)
+@AbstractMethods(OperatorMethods.INDEX, OperatorMethods.INDEX_EQ)
 @Implements(DartHashMap)
 class DartLinkedHashMap<K, V> implements DartHashMap<K, V> {
-    [OPERATOR_INDEX](key: K): V {
+    [OperatorMethods.INDEX](key: K): V {
         throw 'abstract';
     }
 
-    [OPERATOR_INDEX_ASSIGN](key: K, value: V): void {
+    [OperatorMethods.INDEX_EQ](key: K, value: V): void {
         throw 'abstract';
     }
 
     get(k: K): V {
-        return this[OPERATOR_INDEX](k);
+        return this[OperatorMethods.INDEX](k);
     }
 
     set(k: K, v: V) {
-        this[OPERATOR_INDEX_ASSIGN](k, v);
+        this[OperatorMethods.INDEX_EQ](k, v);
     }
 
 
@@ -7213,7 +7212,7 @@ class DartLinkedHashMap<K, V> implements DartHashMap<K, V> {
     protected static _from<K, V>(other: DartMap<K, V>): DartLinkedHashMap<K, V> {
         let result = new DartLinkedHashMap<K, V>();
         other.forEach((k, v) => {
-            result[OPERATOR_INDEX_ASSIGN](k/*=K*/, v/*=V*/);
+            result[OperatorMethods.INDEX_EQ](k/*=K*/, v/*=V*/);
         });
         return result;
     }
@@ -7441,11 +7440,11 @@ class DartListMixin<E> implements DartList<E> {
         throw new Error('abstract');
     }
 
-    [OPERATOR_INDEX](index: number): E {
+    [OperatorMethods.INDEX](index: number): E {
         throw new Error("Method not implemented.");
     }
 
-    [OPERATOR_INDEX_ASSIGN](index: number, value: E): void {
+    [OperatorMethods.INDEX_EQ](index: number, value: E): void {
         throw new Error("Method not implemented.");
     }
 
@@ -7455,13 +7454,13 @@ class DartListMixin<E> implements DartList<E> {
     }
 
     elementAt(index: int): E {
-        return this[OPERATOR_INDEX](index);
+        return this[OperatorMethods.INDEX](index);
     }
 
     forEach(action: (element: E) => void): void {
         let length = this.length;
         for (let i = 0; i < length; i++) {
-            action(this[OPERATOR_INDEX](i));
+            action(this[OperatorMethods.INDEX](i));
             if (length != this.length) {
                 throw new ConcurrentModificationError(this);
             }
@@ -7478,24 +7477,24 @@ class DartListMixin<E> implements DartList<E> {
 
     get first(): E {
         if (this.length == 0) throw DartIterableElementError.noElement();
-        return this[OPERATOR_INDEX](0);
+        return this[OperatorMethods.INDEX](0);
     }
 
     get last(): E {
         if (this.length == 0) throw DartIterableElementError.noElement();
-        return this[OPERATOR_INDEX](this.length - 1);
+        return this[OperatorMethods.INDEX](this.length - 1);
     }
 
     get single(): E {
         if (this.length == 0) throw DartIterableElementError.noElement();
         if (this.length > 1) throw DartIterableElementError.tooMany();
-        return this[OPERATOR_INDEX](0);
+        return this[OperatorMethods.INDEX](0);
     }
 
     contains(element: any): bool {
         let length = this.length;
         for (let i = 0; i < this.length; i++) {
-            if (this[OPERATOR_INDEX](i) == element) return true;
+            if (this[OperatorMethods.INDEX](i) == element) return true;
             if (length != this.length) {
                 throw new ConcurrentModificationError(this);
             }
@@ -7506,7 +7505,7 @@ class DartListMixin<E> implements DartList<E> {
     every(test: (element: E) => bool): bool {
         let length = this.length;
         for (let i = 0; i < length; i++) {
-            if (!test(this[OPERATOR_INDEX](i))) return false;
+            if (!test(this[OperatorMethods.INDEX](i))) return false;
             if (length != this.length) {
                 throw new ConcurrentModificationError(this);
             }
@@ -7517,7 +7516,7 @@ class DartListMixin<E> implements DartList<E> {
     any(test: (element: E) => bool): bool {
         let length = this.length;
         for (let i = 0; i < length; i++) {
-            if (test(this[OPERATOR_INDEX](i))) return true;
+            if (test(this[OperatorMethods.INDEX](i))) return true;
             if (length != this.length) {
                 throw new ConcurrentModificationError(this);
             }
@@ -7529,7 +7528,7 @@ class DartListMixin<E> implements DartList<E> {
         let {orElse} = Object.assign({}, _);
         let length = this.length;
         for (let i = 0; i < length; i++) {
-            let element = this[OPERATOR_INDEX](i);
+            let element = this[OperatorMethods.INDEX](i);
             if (test(element)) return element;
             if (length != this.length) {
                 throw new ConcurrentModificationError(this);
@@ -7543,7 +7542,7 @@ class DartListMixin<E> implements DartList<E> {
         let {orElse} = Object.assign({}, _);
         let length = this.length;
         for (let i = length - 1; i >= 0; i--) {
-            let element = this[OPERATOR_INDEX](i);
+            let element = this[OperatorMethods.INDEX](i);
             if (test(element)) return element;
             if (length != this.length) {
                 throw new ConcurrentModificationError(this);
@@ -7558,7 +7557,7 @@ class DartListMixin<E> implements DartList<E> {
         let match: E = null;
         let matchFound: bool = false;
         for (let i = 0; i < length; i++) {
-            let element = this[OPERATOR_INDEX](i);
+            let element = this[OperatorMethods.INDEX](i);
             if (test(element)) {
                 if (matchFound) {
                     throw DartIterableElementError.tooMany();
@@ -7596,9 +7595,9 @@ class DartListMixin<E> implements DartList<E> {
     reduce(combine: (previousValue: E, element: E) => E): E {
         let length = this.length;
         if (length == 0) throw DartIterableElementError.noElement();
-        let value = this[OPERATOR_INDEX](0);
+        let value = this[OperatorMethods.INDEX](0);
         for (let i = 1; i < length; i++) {
-            value = combine(value, this[OPERATOR_INDEX](i));
+            value = combine(value, this[OperatorMethods.INDEX](i));
             if (length != this.length) {
                 throw new ConcurrentModificationError(this);
             }
@@ -7610,7 +7609,7 @@ class DartListMixin<E> implements DartList<E> {
         let value = initialValue;
         let length = this.length;
         for (let i = 0; i < length; i++) {
-            value = combine(value, this[OPERATOR_INDEX](i));
+            value = combine(value, this[OperatorMethods.INDEX](i));
             if (length != this.length) {
                 throw new ConcurrentModificationError(this);
             }
@@ -7644,7 +7643,7 @@ class DartListMixin<E> implements DartList<E> {
             result = new DartList<E>(this.length);
         }
         for (let i = 0; i < this.length; i++) {
-            result[OPERATOR_INDEX_ASSIGN](i, this[OPERATOR_INDEX](i));
+            result[OperatorMethods.INDEX_EQ](i, this[OperatorMethods.INDEX](i));
         }
         return result;
     }
@@ -7652,14 +7651,14 @@ class DartListMixin<E> implements DartList<E> {
     toSet(): DartSet<E> {
         let result: DartSet<E> = new DartSet<E>();
         for (let i = 0; i < this.length; i++) {
-            result.add(this[OPERATOR_INDEX](i));
+            result.add(this[OperatorMethods.INDEX](i));
         }
         return result;
     }
 
     // Collection interface.
     add(element: E): void {
-        this[OPERATOR_INDEX_ASSIGN](this.length++, element);
+        this[OperatorMethods.INDEX_EQ](this.length++, element);
     }
 
     addAll(iterable: DartIterable<E>): void {
@@ -7667,14 +7666,14 @@ class DartListMixin<E> implements DartList<E> {
         for (let element of iterable) {
             //assert(this.length == i || (throw new ConcurrentModificationError(this)));
             this.length = i + 1;
-            this[OPERATOR_INDEX_ASSIGN](i, element);
+            this[OperatorMethods.INDEX_EQ](i, element);
             i++;
         }
     }
 
     remove(element: any): bool {
         for (let i = 0; i < this.length; i++) {
-            if (_dart.equals(this[OPERATOR_INDEX](i), element)) {
+            if (_dart.equals(this[OperatorMethods.INDEX](i), element)) {
                 this.setRange(i, this.length - 1, this, i + 1);
                 this.length -= 1;
                 return true;
@@ -7695,7 +7694,7 @@ class DartListMixin<E> implements DartList<E> {
         let retained: DartList<E> = new DartList<E>();
         let length = this.length;
         for (let i = 0; i < length; i++) {
-            let element = this[OPERATOR_INDEX](i);
+            let element = this[OperatorMethods.INDEX](i);
             if (test(element) == retainMatching) {
                 retained.add(element);
             }
@@ -7719,7 +7718,7 @@ class DartListMixin<E> implements DartList<E> {
         if (this.length == 0) {
             throw DartIterableElementError.noElement();
         }
-        let result = this[OPERATOR_INDEX](this.length - 1);
+        let result = this[OperatorMethods.INDEX](this.length - 1);
         this.length--;
         return result;
     }
@@ -7740,9 +7739,9 @@ class DartListMixin<E> implements DartList<E> {
         while (length > 1) {
             let pos = random.nextInt(length);
             length -= 1;
-            let tmp = this[OPERATOR_INDEX](length);
-            this[OPERATOR_INDEX_ASSIGN](length, this[OPERATOR_INDEX](pos));
-            this[OPERATOR_INDEX_ASSIGN](pos, tmp);
+            let tmp = this[OperatorMethods.INDEX](length);
+            this[OperatorMethods.INDEX_EQ](length, this[OperatorMethods.INDEX](pos));
+            this[OperatorMethods.INDEX_EQ](pos, tmp);
         }
     }
 
@@ -7758,7 +7757,7 @@ class DartListMixin<E> implements DartList<E> {
         let result: DartList<E> = new DartList<E>();
         result.length = length;
         for (let i = 0; i < length; i++) {
-            result[OPERATOR_INDEX_ASSIGN](i, this[OPERATOR_INDEX](start + i));
+            result[OperatorMethods.INDEX_EQ](i, this[OperatorMethods.INDEX](start + i));
         }
         return result;
     }
@@ -7778,7 +7777,7 @@ class DartListMixin<E> implements DartList<E> {
     fillRange(start: int, end: int, fill?: E): void {
         RangeError.checkValidRange(start, end, this.length);
         for (let i = start; i < end; i++) {
-            this[OPERATOR_INDEX_ASSIGN](i, fill);
+            this[OperatorMethods.INDEX_EQ](i, fill);
         }
     }
 
@@ -7805,11 +7804,11 @@ class DartListMixin<E> implements DartList<E> {
         if (otherStart < start) {
             // Copy backwards to ensure correct copy if [from] is this.
             for (let i = length - 1; i >= 0; i--) {
-                this[OPERATOR_INDEX_ASSIGN](start + i, otherList[OPERATOR_INDEX](otherStart + i));
+                this[OperatorMethods.INDEX_EQ](start + i, otherList[OperatorMethods.INDEX](otherStart + i));
             }
         } else {
             for (let i = 0; i < length; i++) {
-                this[OPERATOR_INDEX_ASSIGN](start + i, otherList[OPERATOR_INDEX](otherStart + i));
+                this[OperatorMethods.INDEX_EQ](start + i, otherList[OperatorMethods.INDEX](otherStart + i));
             }
         }
     }
@@ -7849,7 +7848,7 @@ class DartListMixin<E> implements DartList<E> {
             startIndex = 0;
         }
         for (let i = startIndex; i < this.length; i++) {
-            if (_dart.equals(this[OPERATOR_INDEX](i), element)) {
+            if (_dart.equals(this[OperatorMethods.INDEX](i), element)) {
                 return i;
             }
         }
@@ -7873,7 +7872,7 @@ class DartListMixin<E> implements DartList<E> {
             }
         }
         for (let i = startIndex; i >= 0; i--) {
-            if (_dart.equals(this[OPERATOR_INDEX](i), element)) {
+            if (_dart.equals(this[OperatorMethods.INDEX](i), element)) {
                 return i;
             }
         }
@@ -7892,11 +7891,11 @@ class DartListMixin<E> implements DartList<E> {
         if (!_dart.is(index, 'int')) throw new ArgumentError(index);
         this.length++;
         this.setRange(index + 1, this.length, this, index);
-        this[OPERATOR_INDEX_ASSIGN](index, element);
+        this[OperatorMethods.INDEX_EQ](index, element);
     }
 
     removeAt(index: int): E {
-        let result = this[OPERATOR_INDEX](index);
+        let result = this[OperatorMethods.INDEX](index);
         this.setRange(index, this.length - 1, this, index + 1);
         this.length--;
         return result;
@@ -7927,7 +7926,7 @@ class DartListMixin<E> implements DartList<E> {
             this.setRange(index, index + iterable.length, iterable);
         } else {
             for (let element of iterable) {
-                this[OPERATOR_INDEX_ASSIGN](index++, element);
+                this[OperatorMethods.INDEX_EQ](index++, element);
             }
         }
     }
@@ -8183,7 +8182,7 @@ class DartMap<K, V> {
      */
 
 
-    [OPERATOR_INDEX](key: K): V {
+    [OperatorMethods.INDEX](key: K): V {
         throw 'abstract';
     }
 
@@ -8194,7 +8193,7 @@ class DartMap<K, V> {
      * Otherwise the key-value pair is added to the map.
      */
 
-    [OPERATOR_INDEX_ASSIGN](key: K, value: V): void {
+    [OperatorMethods.INDEX_EQ](key: K, value: V): void {
         throw 'abstract';
     }
 
@@ -8345,11 +8344,11 @@ class DartMap<K, V> {
     // Better nameing for maps
 
     get(k: K): V {
-        return this[OPERATOR_INDEX](k);
+        return this[OperatorMethods.INDEX](k);
     }
 
     set(k: K, v: V) {
-        this[OPERATOR_INDEX_ASSIGN](k, v);
+        this[OperatorMethods.INDEX_EQ](k, v);
     }
 
     @namedFactory
@@ -8389,20 +8388,20 @@ class DartMapMixin<K, V> implements DartMap<K, V> {
         throw new Error('abstract');
     }
 
-    [OPERATOR_INDEX](key: any): V {
+    [OperatorMethods.INDEX](key: any): V {
         throw new Error('abstract');
     }
 
-    [OPERATOR_INDEX_ASSIGN](key: K, value: V) {
+    [OperatorMethods.INDEX_EQ](key: K, value: V) {
         throw new Error('abstract');
     }
 
     get(k: K): V {
-        return this[OPERATOR_INDEX](k);
+        return this[OperatorMethods.INDEX](k);
     }
 
     set(k: K, v: V) {
-        this[OPERATOR_INDEX_ASSIGN](k, v);
+        this[OperatorMethods.INDEX_EQ](k, v);
     }
 
     remove(key: any): V {
@@ -8417,29 +8416,29 @@ class DartMapMixin<K, V> implements DartMap<K, V> {
 
     forEach(action: (key: K, value: V) => any) {
         for (let key of this.keys) {
-            action(key, this[OPERATOR_INDEX](key));
+            action(key, this[OperatorMethods.INDEX](key));
         }
     }
 
     addAll(other: DartMap<K, V>): void {
         for (let key of other.keys) {
-            this[OPERATOR_INDEX_ASSIGN](key, other[OPERATOR_INDEX](key));
+            this[OperatorMethods.INDEX_EQ](key, other[OperatorMethods.INDEX](key));
         }
     }
 
     containsValue(value: any): bool {
         for (let key of this.keys) {
-            if (_dart.equals(this[OPERATOR_INDEX](key), value)) return true;
+            if (_dart.equals(this[OperatorMethods.INDEX](key), value)) return true;
         }
         return false;
     }
 
     putIfAbsent(key: K, ifAbsent: () => V): V {
         if (this.containsKey(key)) {
-            return this[OPERATOR_INDEX](key);
+            return this[OperatorMethods.INDEX](key);
         }
         let v = ifAbsent();
-        this[OPERATOR_INDEX_ASSIGN](key, v);
+        this[OperatorMethods.INDEX_EQ](key, v);
         return v;
     }
 
@@ -8517,15 +8516,15 @@ class _MapBaseValueIterable<K, V> extends DartEfficientLengthIterable<V> {
     }
 
     get first(): V {
-        return this._map[OPERATOR_INDEX](this._map.keys.first);
+        return this._map[OperatorMethods.INDEX](this._map.keys.first);
     }
 
     get single(): V {
-        return this._map[OPERATOR_INDEX](this._map.keys.single);
+        return this._map[OperatorMethods.INDEX](this._map.keys.single);
     }
 
     get last(): V {
-        return this._map[OPERATOR_INDEX](this._map.keys.last);
+        return this._map[OperatorMethods.INDEX](this._map.keys.last);
     }
 
     get iterator(): DartIterator<V> {
@@ -8553,7 +8552,7 @@ class _MapBaseValueIterator<K, V> implements DartIterator<V> {
 
     moveNext(): bool {
         if (this._keys.moveNext()) {
-            this._current = this._map[OPERATOR_INDEX](this._keys.current);
+            this._current = this._map[OperatorMethods.INDEX](this._keys.current);
             return true;
         }
         this._current = null;
@@ -8624,10 +8623,10 @@ export namespace DartMaps {
 
     export function putIfAbsent(map: DartMap<any, any>, key: any, ifAbsent: () => any): any {
         if (map.containsKey(key)) {
-            return map[OPERATOR_INDEX](key);
+            return map[OperatorMethods.INDEX](key);
         }
         let v = ifAbsent();
-        map[OPERATOR_INDEX_ASSIGN](key, v);
+        map[OperatorMethods.INDEX_EQ](key, v);
         return v;
     }
 
@@ -8639,12 +8638,12 @@ export namespace DartMaps {
 
     export function forEach(map: DartMap<any, any>, f: (key: any, value: any) => any) {
         for (let k of map.keys) {
-            f(k, map[OPERATOR_INDEX](k));
+            f(k, map[OperatorMethods.INDEX](k));
         }
     }
 
     export function getValues(map: DartMap<any, any>): DartIterable<any> {
-        return map.keys.map((key) => map[OPERATOR_INDEX](key));
+        return map.keys.map((key) => map[OperatorMethods.INDEX](key));
     }
 
     export function length(map: DartMap<any, any>): int {
@@ -8719,7 +8718,7 @@ export namespace DartMaps {
         if (value == null) value = _id;
 
         for (let element of iterable) {
-            map[OPERATOR_INDEX_ASSIGN](key(element), value(element));
+            map[OperatorMethods.INDEX_EQ](key(element), value(element));
         }
     }
 
@@ -8736,7 +8735,7 @@ export namespace DartMaps {
         let hasNextValue: bool = valueIterator.moveNext();
 
         while (hasNextKey && hasNextValue) {
-            map[OPERATOR_INDEX_ASSIGN](keyIterator.current, valueIterator.current);
+            map[OperatorMethods.INDEX_EQ](keyIterator.current, valueIterator.current);
             hasNextKey = keyIterator.moveNext();
             hasNextValue = valueIterator.moveNext();
         }
@@ -9255,7 +9254,7 @@ class DartSink<T> {
 class DartUnmodifiableListMixin<E> {
 
     /** This operation is not supported by an unmodifiable list. */
-    [OPERATOR_INDEX_ASSIGN](index: int, value: E) {
+    [OperatorMethods.INDEX_EQ](index: int, value: E) {
         throw new UnsupportedError("Cannot modify an unmodifiable list");
     }
 
@@ -9393,7 +9392,7 @@ class UnmodifiableListView<E> extends DartUnmodifiableListBase<E> {
     }
 
 
-    [OPERATOR_INDEX](index: int) {
+    [OperatorMethods.INDEX](index: int) {
         return this._source.elementAt(index);
     }
 }
@@ -9755,7 +9754,7 @@ class DartListMapView<E> implements DartMap<int, E> {
     }
 
 
-    [OPERATOR_INDEX](key: int): E {
+    [OperatorMethods.INDEX](key: int): E {
         return this.containsKey(key) ? this._values.elementAt(key) : null;
     }
 
@@ -9799,7 +9798,7 @@ class DartListMapView<E> implements DartMap<int, E> {
     }
 
     /** This operation is not supported by an unmodifiable map. */
-    [OPERATOR_INDEX_ASSIGN](key: int, value: E) {
+    [OperatorMethods.INDEX_EQ](key: int, value: E) {
         throw new UnsupportedError("Cannot modify an unmodifiable map");
     }
 
@@ -9830,11 +9829,11 @@ class DartListMapView<E> implements DartMap<int, E> {
     }
 
     get(k: int): E {
-        return this[OPERATOR_INDEX](k);
+        return this[OperatorMethods.INDEX](k);
     }
 
     set(k: int, v: E) {
-        this[OPERATOR_INDEX_ASSIGN](k, v);
+        this[OperatorMethods.INDEX_EQ](k, v);
     }
 }
 
@@ -11867,17 +11866,17 @@ class JSArray<E> extends Array implements DartList<E>, JSIndexable<E> {
     }
 
     get first(): E {
-        if (this.length > 0) return this[OPERATOR_INDEX](0);
+        if (this.length > 0) return this[OperatorMethods.INDEX](0);
         throw DartIterableElementError.noElement();
     }
 
     get last(): E {
-        if (this.length > 0) return this[OPERATOR_INDEX](this.length - 1);
+        if (this.length > 0) return this[OperatorMethods.INDEX](this.length - 1);
         throw DartIterableElementError.noElement();
     }
 
     get single(): E {
-        if (this.length == 1) return this[OPERATOR_INDEX](0);
+        if (this.length == 1) return this[OperatorMethods.INDEX](0);
         if (this.length == 0) throw DartIterableElementError.noElement();
         throw DartIterableElementError.tooMany();
     }
@@ -11920,13 +11919,13 @@ class JSArray<E> extends Array implements DartList<E>, JSIndexable<E> {
                 // Use JS to avoid bounds check (the bounds check elimination
                 // optimzation is too weak). The 'E' type annotation is a store type
                 // check - we can't rely on iterable, it could be List<dynamic>.
-                let element = otherList[OPERATOR_INDEX](otherStart + i);
+                let element = otherList[OperatorMethods.INDEX](otherStart + i);
                 //JS('', '#[#] = #', this, start + i, element);
                 this[start + i] = element;
             }
         } else {
             for (let i = 0; i < length; i++) {
-                let element = otherList[OPERATOR_INDEX](otherStart + i);
+                let element = otherList[OperatorMethods.INDEX](otherStart + i);
                 //JS('', '#[#] = #', this, start + i, element);
                 this[start + i] = element;
             }
@@ -12012,9 +12011,9 @@ class JSArray<E> extends Array implements DartList<E>, JSIndexable<E> {
         while (length > 1) {
             let pos = random.nextInt(length);
             length -= 1;
-            let tmp = this[OPERATOR_INDEX](length);
-            this[OPERATOR_INDEX_ASSIGN](length, this[OPERATOR_INDEX](pos));
-            this[OPERATOR_INDEX_ASSIGN](pos, tmp);
+            let tmp = this[OperatorMethods.INDEX](length);
+            this[OperatorMethods.INDEX_EQ](length, this[OperatorMethods.INDEX](pos));
+            this[OperatorMethods.INDEX_EQ](pos, tmp);
         }
     }
 
@@ -12027,7 +12026,7 @@ class JSArray<E> extends Array implements DartList<E>, JSIndexable<E> {
             start = 0;
         }
         for (let i = start; i < this.length; i++) {
-            if (_dart.equals(this[OPERATOR_INDEX](i), element)) {
+            if (_dart.equals(this[OperatorMethods.INDEX](i), element)) {
                 return i;
             }
         }
@@ -12046,7 +12045,7 @@ class JSArray<E> extends Array implements DartList<E>, JSIndexable<E> {
             }
         }
         for (let i = startIndex; i >= 0; i--) {
-            if (_dart.equals(this[OPERATOR_INDEX](i), element)) {
+            if (_dart.equals(this[OperatorMethods.INDEX](i), element)) {
                 return i;
             }
         }
@@ -12055,7 +12054,7 @@ class JSArray<E> extends Array implements DartList<E>, JSIndexable<E> {
 
     contains(other: any): bool {
         for (let i = 0; i < this.length; i++) {
-            if (_dart.equals(this[OPERATOR_INDEX](i), other)) return true;
+            if (_dart.equals(this[OperatorMethods.INDEX](i), other)) return true;
         }
         return false;
     }
@@ -12117,13 +12116,13 @@ class JSArray<E> extends Array implements DartList<E>, JSIndexable<E> {
         super.length = newLength
     }
 
-    [OPERATOR_INDEX](index: int): E {
+    [OperatorMethods.INDEX](index: int): E {
         if (!_dart.is(index, 'int')) throw diagnoseIndexError(this, index);
         if (index >= this.length || index < 0) throw diagnoseIndexError(this, index);
         return this[index] /* JS('var', '#[#]', this, index)*/;
     }
 
-    [OPERATOR_INDEX_ASSIGN](index: int, value: E) {
+    [OperatorMethods.INDEX_EQ](index: int, value: E) {
         this.checkMutable('indexed set');
         if (!_dart.is(index, 'int')) throw diagnoseIndexError(this, index);
         if (index >= this.length || index < 0) throw diagnoseIndexError(this, index);
@@ -12195,7 +12194,7 @@ class DartArrayIterator<E> implements DartIterator<E> {
             this._current = null;
             return false;
         }
-        this._current = this._iterable[OPERATOR_INDEX](this._index);
+        this._current = this._iterable[OperatorMethods.INDEX](this._index);
         this._index++;
         return true;
     }
@@ -12634,7 +12633,7 @@ export function fillLiteralMap(keyValuePairs, result: DartMap<any, any>) {
     while (index < length) {
         let key = getIndex(keyValuePairs, index++);
         let value = getIndex(keyValuePairs, index++);
-        result[OPERATOR_INDEX_ASSIGN](key, value);
+        result[OperatorMethods.INDEX_EQ](key, value);
     }
     return result;
 }

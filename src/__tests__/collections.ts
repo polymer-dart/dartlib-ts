@@ -1,5 +1,5 @@
 import {DartHashMap, DartIterable, DartIterator, DartList, DartMap, DartObject, DartSet, DartStringBuffer, iter} from "../core";
-import {DartClass, EQUALS_OPERATOR, int, num, Op, Operator, OPERATOR_INDEX} from "../utils";
+import {DartClass, OperatorMethods, int, num, Op, Operator} from "../utils";
 
 
 @DartClass
@@ -31,7 +31,7 @@ class MyObjBadHash extends DartObject {
         this.key = key;
     }
 
-    [EQUALS_OPERATOR](other: any) {
+    [OperatorMethods.EQUALS](other: any) {
         return (other as MyObj).key == this.key;
     }
 
@@ -55,7 +55,7 @@ describe('DartList', () => {
         list.add(10);
         expect(list.length).toEqual(1);
         expect(list[0]).toEqual(10);
-        expect(list[OPERATOR_INDEX](0)).toEqual(10);
+        expect(list[OperatorMethods.INDEX](0)).toEqual(10);
     });
 
     it('you can iterate on a list ', () => {
@@ -148,7 +148,7 @@ describe('DartList', () => {
         let l = new DartList.fromArray(['a', 'b', 'c']);
         expect(l.length).toEqual(3);
         expect(l[0]).toEqual('a');
-        expect(l[OPERATOR_INDEX](1)).toEqual('b');
+        expect(l[OperatorMethods.INDEX](1)).toEqual('b');
     });
 
     it('maps works', () => {

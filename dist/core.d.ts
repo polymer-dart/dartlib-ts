@@ -1,5 +1,4 @@
-import { bool, int, double, num } from "./utils";
-import { OPERATOR_INDEX, OPERATOR_INDEX_ASSIGN } from "./utils";
+import { bool, int, double, num, OperatorMethods } from "./utils";
 export declare type PropertySetter<K, V> = (key: K, value: V) => void;
 export declare type PropertyGetter<K, V> = (key: K) => V;
 /**
@@ -551,9 +550,9 @@ declare class DartJsLinkedHashMap<K, V> implements DartLinkedHashMap<K, V> {
     internalContainsKey(key: any): bool;
     containsValue(value: any): bool;
     addAll(other: DartMap<K, V>): void;
-    [OPERATOR_INDEX](key: any): V;
+    [OperatorMethods.INDEX](key: any): V;
     internalGet(key: any): V;
-    [OPERATOR_INDEX_ASSIGN](key: K, value: V): void;
+    [OperatorMethods.INDEX_EQ](key: K, value: V): void;
     internalSet(key: K, value: V): void;
     putIfAbsent(key: K, ifAbsent: () => V): V;
     remove(key: any): V;
@@ -682,8 +681,8 @@ declare class DartSetBase<E> extends DartSetMixin<E> {
 class DartMapView<K, V> implements DartMap<K, V> {
     protected _map: DartMap<K, V>;
     constructor(map: DartMap<K, V>);
-    [OPERATOR_INDEX](key: any): V;
-    [OPERATOR_INDEX_ASSIGN](key: K, value: V): void;
+    [OperatorMethods.INDEX](key: any): V;
+    [OperatorMethods.INDEX_EQ](key: K, value: V): void;
     get(k: K): V;
     set(k: K, v: V): void;
     addAll(other: DartMap<K, V>): void;
@@ -714,8 +713,8 @@ declare class DartConstantMapView<K, V> extends DartUnmodifiableMapView<K, V> im
     constructor(base: DartMap<K, V>);
 }
 declare class AbstractDartMap<K, V> {
-    [OPERATOR_INDEX](key: K): V;
-    [OPERATOR_INDEX_ASSIGN](key: K, value: V): void;
+    [OperatorMethods.INDEX](key: K): V;
+    [OperatorMethods.INDEX_EQ](key: K, value: V): void;
     get(k: K): V;
     set(k: K, v: V): void;
     addAll(other: DartMap<K, V>): void;
@@ -741,7 +740,7 @@ declare class DartConstantMap<K, V> extends AbstractDartMap<K, V> implements Dar
     toString(): string;
     protected static _throwUnmodifiable(): void;
     protected static _unsupportedError(): UnsupportedError;
-    [OPERATOR_INDEX_ASSIGN](key: K, val: V): void;
+    [OperatorMethods.INDEX_EQ](key: K, val: V): void;
     putIfAbsent(key: K, ifAbsent: () => V): V;
     remove(key: K): V;
     clear(): void;
@@ -1854,12 +1853,12 @@ declare class DartList<E> implements DartEfficientLengthIterable<E> {
      * Returns the object at the given [index] in the list
      * or throws a [RangeError] if [index] is out of bounds.
      */
-    [OPERATOR_INDEX](index: int): E;
+    [OperatorMethods.INDEX](index: int): E;
     /**
      * Sets the value at the given [index] in the list to [value]
      * or throws a [RangeError] if [index] is out of bounds.
      */
-    [OPERATOR_INDEX_ASSIGN](index: int, value: E): void;
+    [OperatorMethods.INDEX_EQ](index: int, value: E): void;
     /**
      * Returns the number of objects in this list.
      *
@@ -2214,8 +2213,8 @@ declare class DartList<E> implements DartEfficientLengthIterable<E> {
  * The map allows `null` as a key.
  */
 declare class DartLinkedHashMap<K, V> implements DartHashMap<K, V> {
-    [OPERATOR_INDEX](key: K): V;
-    [OPERATOR_INDEX_ASSIGN](key: K, value: V): void;
+    [OperatorMethods.INDEX](key: K): V;
+    [OperatorMethods.INDEX_EQ](key: K, value: V): void;
     get(k: K): V;
     set(k: K, v: V): void;
     /**
@@ -2364,8 +2363,8 @@ declare class DartLinkedHashMap<K, V> implements DartHashMap<K, V> {
 declare class DartListMixin<E> implements DartList<E> {
     [Symbol.iterator](): Iterator<E>;
     length: int;
-    [OPERATOR_INDEX](index: number): E;
-    [OPERATOR_INDEX_ASSIGN](index: number, value: E): void;
+    [OperatorMethods.INDEX](index: number): E;
+    [OperatorMethods.INDEX_EQ](index: number, value: E): void;
     readonly iterator: DartIterator<E>;
     elementAt(index: int): E;
     forEach(action: (element: E) => void): void;
@@ -2616,14 +2615,14 @@ declare class DartMap<K, V> {
      * Methods like [containsKey] or [putIfAbsent] can be use if the distinction
      * is important.
      */
-    [OPERATOR_INDEX](key: K): V;
+    [OperatorMethods.INDEX](key: K): V;
     /**
      * Associates the [key] with the given [value].
      *
      * If the key was already in the map, its associated value is changed.
      * Otherwise the key-value pair is added to the map.
      */
-    [OPERATOR_INDEX_ASSIGN](key: K, value: V): void;
+    [OperatorMethods.INDEX_EQ](key: K, value: V): void;
     /**
      * Look up the value of [key], or add a new value if it isn't there.
      *
@@ -2739,8 +2738,8 @@ declare class DartMap<K, V> {
  */
 declare class DartMapMixin<K, V> implements DartMap<K, V> {
     readonly keys: DartIterable<K>;
-    [OPERATOR_INDEX](key: any): V;
-    [OPERATOR_INDEX_ASSIGN](key: K, value: V): void;
+    [OperatorMethods.INDEX](key: any): V;
+    [OperatorMethods.INDEX_EQ](key: K, value: V): void;
     get(k: K): V;
     set(k: K, v: V): void;
     remove(key: any): V;
@@ -3112,7 +3111,7 @@ declare class DartSink<T> {
  */
 declare class DartUnmodifiableListMixin<E> {
     /** This operation is not supported by an unmodifiable list. */
-    [OPERATOR_INDEX_ASSIGN](index: int, value: E): void;
+    [OperatorMethods.INDEX_EQ](index: int, value: E): void;
     /** This operation is not supported by an unmodifiable list. */
     length: int;
     /** This operation is not supported by an unmodifiable list. */
@@ -3209,7 +3208,7 @@ export declare abstract class DartListIterable<E> extends DartEfficientLengthIte
 declare class DartListMapView<E> implements DartMap<int, E> {
     _values: DartList<E>;
     constructor(_values: DartList<E>);
-    [OPERATOR_INDEX](key: int): E;
+    [OperatorMethods.INDEX](key: int): E;
     readonly length: int;
     readonly values: DartIterable<E>;
     readonly keys: DartIterable<int>;
@@ -3219,7 +3218,7 @@ declare class DartListMapView<E> implements DartMap<int, E> {
     containsKey(key: int): boolean;
     forEach(f: (key: int, value: E) => any): void;
     /** This operation is not supported by an unmodifiable map. */
-    [OPERATOR_INDEX_ASSIGN](key: int, value: E): void;
+    [OperatorMethods.INDEX_EQ](key: int, value: E): void;
     /** This operation is not supported by an unmodifiable map. */
     putIfAbsent(key: int, ifAbsent: () => E): E;
     /** This operation is not supported by an unmodifiable map. */
@@ -3867,8 +3866,8 @@ declare class JSArray<E> extends Array implements DartList<E>, JSIndexable<E> {
     readonly iterator: DartIterator<E>;
     readonly hashCode: int;
     length: int;
-    [OPERATOR_INDEX](index: int): E;
-    [OPERATOR_INDEX_ASSIGN](index: int, value: E): void;
+    [OperatorMethods.INDEX](index: int): E;
+    [OperatorMethods.INDEX_EQ](index: int, value: E): void;
     asMap(): DartMap<int, E>;
 }
 export { JSArray };

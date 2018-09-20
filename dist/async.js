@@ -50,7 +50,7 @@ var Future_1, _RootZone_1, DartZone_1, _Future_1, DartTimer_1, DartZoneSpecifica
 /// `FutureOr<FutureOr<Object>>`, `FutureOr<Future<Object>> is equivalent to
 /// `Future<Object>`.
 import { ArgumentError, DartDuration, DartHashMap, DartIterableElementError, DartList, DartSet, DartStackTrace, DartStringBuffer, identical, NullThrownError, StateError, UnsupportedError, RangeError, DartObject, DartStopwatch } from "./core";
-import { $with, Abstract, AbstractProperty, DartClass, defaultConstructor, defaultFactory, Implements, namedConstructor, namedFactory, Op, Operator, OPERATOR_INDEX_ASSIGN, With } from "./utils";
+import { $with, Abstract, AbstractProperty, DartClass, defaultConstructor, defaultFactory, Implements, namedConstructor, namedFactory, Op, Operator, OperatorMethods, With } from "./utils";
 import { is, equals, isNot } from './_common';
 import { printToZone, printToConsole } from "./_internal";
 // @ts-ignore
@@ -3491,7 +3491,7 @@ class _CustomZone extends _Zone {
             // alive.
             let value = this.parent.get(key);
             if (value != null) {
-                this._map[OPERATOR_INDEX_ASSIGN](key, value);
+                this._map[OperatorMethods.INDEX_EQ](key, value);
             }
             return value;
         }

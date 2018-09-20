@@ -1,4 +1,4 @@
-import { EQUALS_OPERATOR, isA } from "./utils";
+import { OperatorMethods, isA } from "./utils";
 /**
  * TODO: more complex
  * @param a
@@ -18,11 +18,11 @@ function _is(a, b) {
     return isA(a, b);
 }
 function _equals(a, b) {
-    if (a && a[EQUALS_OPERATOR]) {
-        return a[EQUALS_OPERATOR](b);
+    if (a && a[OperatorMethods.EQUALS]) {
+        return a[OperatorMethods.EQUALS](b);
     }
-    else if (b && b[EQUALS_OPERATOR]) {
-        return b[EQUALS_OPERATOR](a);
+    else if (b && b[OperatorMethods.EQUALS]) {
+        return b[OperatorMethods.EQUALS](a);
     }
     return a === b;
 }

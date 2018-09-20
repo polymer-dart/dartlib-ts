@@ -1,23 +1,25 @@
-export declare const OPERATOR_INDEX_ASSIGN: unique symbol;
-export declare const OPERATOR_INDEX: unique symbol;
-export declare const OPERATOR_PLUS: unique symbol;
-export declare const OPERATOR_MINUS: unique symbol;
-export declare const OPERATOR_TIMES: unique symbol;
-export declare const OPERATOR_DIVIDE: unique symbol;
-export declare const OPERATOR_QUOTIENT: unique symbol;
-export declare const EQUALS_OPERATOR: unique symbol;
-export declare const OPERATOR_LT: unique symbol;
-export declare const OPERATOR_GT: unique symbol;
-export declare const OPERATOR_LEQ: unique symbol;
-export declare const OPERATOR_GEQ: unique symbol;
-export declare const OPERATOR_NEG: unique symbol;
-export declare const OPERATOR_BITNEG: unique symbol;
-export declare const OPERATOR_XOR: unique symbol;
-export declare const OPERATOR_BITOR: unique symbol;
-export declare const OPERATOR_BITAND: unique symbol;
-export declare const OPERATOR_SHIFTRIGHT: unique symbol;
-export declare const OPERATOR_SHIFTLEFT: unique symbol;
-export declare const OPERATOR_MODULE: unique symbol;
+export declare namespace OperatorMethods {
+    const INDEX_EQ: unique symbol;
+    const INDEX: unique symbol;
+    const PLUS: unique symbol;
+    const MINUS: unique symbol;
+    const MULTIPLY: unique symbol;
+    const DIVIDE: unique symbol;
+    const QUOTIENT: unique symbol;
+    const EQUALS: unique symbol;
+    const LT: unique symbol;
+    const GT: unique symbol;
+    const LEQ: unique symbol;
+    const GEQ: unique symbol;
+    const NEGATE: unique symbol;
+    const COMPLEMENT: unique symbol;
+    const XOR: unique symbol;
+    const BINARY_OR: unique symbol;
+    const BINARY_AND: unique symbol;
+    const SHIFTRIGHT: unique symbol;
+    const SHIFTLEFT: unique symbol;
+    const MODULE: unique symbol;
+}
 export declare enum Op {
     PLUS = 0,
     MINUS = 1,
@@ -92,11 +94,11 @@ export declare function op(o: Op, first: any, ...rest: any[]): any;
  * a better type checking operator index
  */
 export interface IndexRead<K, V> {
-    [OPERATOR_INDEX](k: K): V;
+    [OperatorMethods.INDEX](k: K): V;
 }
 export declare function get<K, V>(obj: IndexRead<K, V>, k: K): V;
 export interface IndexWrite<K, V> {
-    [OPERATOR_INDEX_ASSIGN](k: K, v: V): any;
+    [OperatorMethods.INDEX_EQ](k: K, v: V): any;
 }
 export declare function set<K, V>(obj: IndexWrite<K, V>, k: K, v: V): void;
 export {};

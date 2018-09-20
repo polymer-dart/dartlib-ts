@@ -54,7 +54,7 @@ import {
     RangeError,
     DartSink, DartIterator, DartError, DartObject, DartStopwatch, DartIterableBase, JSIterator
 } from "./core";
-import {$with, Abstract, AbstractProperty, bool, DartClass, defaultConstructor, defaultFactory, Implements, int, namedConstructor, namedFactory, Op, Operator, OPERATOR_INDEX_ASSIGN, OPERATOR_MINUS, With} from "./utils";
+import {$with, Abstract, AbstractProperty, bool, DartClass, defaultConstructor, defaultFactory, Implements, int, namedConstructor, namedFactory, Op, Operator, OperatorMethods, With} from "./utils";
 import {is, equals, isNot} from './_common';
 import {printToZone, printToConsole} from "./_internal";
 /*
@@ -3903,7 +3903,7 @@ class _CustomZone extends _Zone {
             // alive.
             let value = this.parent.get(key);
             if (value != null) {
-                this._map[OPERATOR_INDEX_ASSIGN](key, value);
+                this._map[OperatorMethods.INDEX_EQ](key, value);
             }
             return value;
         }

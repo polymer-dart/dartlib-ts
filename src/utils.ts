@@ -1,23 +1,25 @@
-export const OPERATOR_INDEX_ASSIGN = Symbol('[]=');
-export const OPERATOR_INDEX = Symbol('[]');
-export const OPERATOR_PLUS = Symbol('+');
-export const OPERATOR_MINUS = Symbol('-');
-export const OPERATOR_TIMES = Symbol('*');
-export const OPERATOR_DIVIDE = Symbol('/');
-export const OPERATOR_QUOTIENT = Symbol('~/');
-export const EQUALS_OPERATOR = Symbol('==');
-export const OPERATOR_LT = Symbol('<');
-export const OPERATOR_GT = Symbol('>');
-export const OPERATOR_LEQ = Symbol('<=');
-export const OPERATOR_GEQ = Symbol('>=');
-export const OPERATOR_NEG = Symbol('-');
-export const OPERATOR_BITNEG = Symbol('~');
-export const OPERATOR_XOR = Symbol('^');
-export const OPERATOR_BITOR = Symbol('|');
-export const OPERATOR_BITAND = Symbol('&');
-export const OPERATOR_SHIFTRIGHT = Symbol('<<');
-export const OPERATOR_SHIFTLEFT = Symbol('>>');
-export const OPERATOR_MODULE = Symbol('%');
+export namespace OperatorMethods {
+    export const INDEX_EQ = Symbol('[]=');
+    export const INDEX = Symbol('[]');
+    export const PLUS = Symbol('+');
+    export const MINUS = Symbol('-');
+    export const MULTIPLY = Symbol('*');
+    export const DIVIDE = Symbol('/');
+    export const QUOTIENT = Symbol('~/');
+    export const EQUALS = Symbol('==');
+    export const LT = Symbol('<');
+    export const GT = Symbol('>');
+    export const LEQ = Symbol('<=');
+    export const GEQ = Symbol('>=');
+    export const NEGATE = Symbol('-');
+    export const COMPLEMENT = Symbol('~');
+    export const XOR = Symbol('^');
+    export const BINARY_OR = Symbol('|');
+    export const BINARY_AND = Symbol('&');
+    export const SHIFTRIGHT = Symbol('<<');
+    export const SHIFTLEFT = Symbol('>>');
+    export const MODULE = Symbol('%');
+}
 
 export enum Op {
     PLUS,
@@ -43,26 +45,26 @@ export enum Op {
 }
 
 const OpSymbolMap: Map<Op, symbol> = new Map([
-    [Op.INDEX, OPERATOR_INDEX],
-    [Op.INDEX_ASSIGN, OPERATOR_INDEX_ASSIGN],
-    [Op.EQUALS, EQUALS_OPERATOR],
-    [Op.PLUS, OPERATOR_PLUS],
-    [Op.MINUS, OPERATOR_MINUS],
-    [Op.TIMES, OPERATOR_TIMES],
-    [Op.DIVIDE, OPERATOR_DIVIDE],
-    [Op.QUOTIENT, OPERATOR_QUOTIENT],
-    [Op.LT, OPERATOR_LT],
-    [Op.GT, OPERATOR_GT],
-    [Op.LEQ, OPERATOR_LEQ],
-    [Op.GEQ, OPERATOR_GEQ],
-    [Op.NEG, OPERATOR_NEG],
-    [Op.BITNEG, OPERATOR_BITNEG],
-    [Op.XOR, OPERATOR_XOR],
-    [Op.BITOR, OPERATOR_BITOR],
-    [Op.BITAND, OPERATOR_BITAND],
-    [Op.SHIFTRIGHT, OPERATOR_SHIFTRIGHT],
-    [Op.SHIFTLEFT, OPERATOR_SHIFTLEFT],
-    [Op.MODULE, OPERATOR_MODULE],
+    [Op.INDEX, OperatorMethods.INDEX],
+    [Op.INDEX_ASSIGN, OperatorMethods.INDEX_EQ],
+    [Op.EQUALS, OperatorMethods.EQUALS],
+    [Op.PLUS, OperatorMethods.PLUS],
+    [Op.MINUS, OperatorMethods.MINUS],
+    [Op.TIMES, OperatorMethods.MULTIPLY],
+    [Op.DIVIDE, OperatorMethods.DIVIDE],
+    [Op.QUOTIENT, OperatorMethods.QUOTIENT],
+    [Op.LT, OperatorMethods.LT],
+    [Op.GT, OperatorMethods.GT],
+    [Op.LEQ, OperatorMethods.LEQ],
+    [Op.GEQ, OperatorMethods.GEQ],
+    [Op.NEG, OperatorMethods.NEGATE],
+    [Op.BITNEG, OperatorMethods.COMPLEMENT],
+    [Op.XOR, OperatorMethods.XOR],
+    [Op.BITOR, OperatorMethods.BINARY_OR],
+    [Op.BITAND, OperatorMethods.BINARY_AND],
+    [Op.SHIFTRIGHT, OperatorMethods.SHIFTRIGHT],
+    [Op.SHIFTLEFT, OperatorMethods.SHIFTLEFT],
+    [Op.MODULE, OperatorMethods.MODULE],
 ]);
 
 export type int = number;
@@ -363,17 +365,17 @@ export function op(o: Op, first: any, ...rest: any[]): any {
  */
 
 export interface IndexRead<K, V> {
-    [OPERATOR_INDEX](k: K): V;
+    [OperatorMethods.INDEX](k: K): V;
 }
 
 export function get<K, V>(obj: IndexRead<K, V>, k: K): V {
-    return obj[OPERATOR_INDEX](k);
+    return obj[OperatorMethods.INDEX](k);
 }
 
 export interface IndexWrite<K, V> {
-    [OPERATOR_INDEX_ASSIGN](k: K, v: V);
+    [OperatorMethods.INDEX_EQ](k: K, v: V);
 }
 
 export function set<K, V>(obj: IndexWrite<K, V>, k: K, v: V) {
-    obj[OPERATOR_INDEX_ASSIGN](k, v);
+    obj[OperatorMethods.INDEX_EQ](k, v);
 }
