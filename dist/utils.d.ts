@@ -60,6 +60,19 @@ export declare function mixin<Mixin extends {}, Base extends {}>(mixin: Construc
  * Simple decorator to apply a mixin without adding type info
  */
 export declare function With(mixin: any): ClassDecorator;
+interface ConstructorData {
+    ctor: Function;
+    factory: boolean;
+}
+export interface Metadata {
+    annotations?: Array<IAnnotation>;
+    propertyAnnotations?: Map<string | symbol, Map<string, Array<any>>>;
+    parent?: Metadata;
+    constructors?: Map<string, ConstructorData>;
+    abstracts?: Map<string | symbol, PropertyDescriptor | string | symbol>;
+    implements?: Array<any>;
+}
+export declare function getMetadata(o: any): Metadata;
 export declare function DartConstructor(_: {
     default?: boolean;
     factory?: boolean;

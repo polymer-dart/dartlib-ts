@@ -154,19 +154,23 @@ interface ConstructorData {
     factory: boolean
 }
 
-interface Metadata {
+export interface Metadata {
+    annotations?: Array<IAnnotation>;
+    propertyAnnotations?: Map<string | symbol, Map<string, Array<any>>>;
     parent?: Metadata,
     constructors?: Map<string, ConstructorData>,
     abstracts?: Map<string | symbol, PropertyDescriptor | string | symbol>,
     implements?: Array<any>
 }
 
-function getMetadata(o: any): Metadata {
+export function getMetadata(o: any): Metadata {
     if (!o.hasOwnProperty(META_DATA)) {
         o[META_DATA] = {
             constructors: new Map(),
             abstracts: new Map(),
-            implements: []
+            implements: [],
+            annotations: [],
+            propertyAnnotations: new Map()
         }
     }
 
@@ -389,20 +393,20 @@ export interface IAnnotation {
 
 export function DartClassAnnotation(anno: IAnnotation): ClassDecorator {
     return (target) => {
-        //getDartMetadata(target).annotations.push(anno);
+        getMetadata(target).annotations.push(anno);
     }
 }
 
 
 export function DartMethodAnnotation(anno: IAnnotation): MethodDecorator {
     return (target, name, descriptor) => {
-        //registerPropAnno(anno, target, name);
+        registerPropAnno(anno, target, name);
     }
 }
 
-/*
+
 let registerPropAnno: (anno: IAnnotation, target: Object, name: string | symbol) => void = (anno: IAnnotation, target: Object, name: string | symbol) => {
-    let md: IDartMetadata = getDartMetadata(target.constructor);
+    let md: Metadata = getMetadata(target.constructor);
 
     let propAnnos: Map<string, Array<any>> = md.propertyAnnotations.get(name);
     if (propAnnos == null) {
@@ -419,9 +423,9 @@ let registerPropAnno: (anno: IAnnotation, target: Object, name: string | symbol)
 
     values.push(anno.value);
 };
-*/
+
 export function DartPropertyAnnotation(anno: IAnnotation): PropertyDecorator {
     return (target, name) => {
-        //registerPropAnno(anno, target, name);
+        registerPropAnno(anno, target, name);
     }
 }
