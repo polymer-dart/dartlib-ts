@@ -1,4 +1,4 @@
-import { int } from "./utils";
+import { int, _equals } from "./utils";
 declare type BaseType<X> = X extends 'string' ? string : (X extends 'number' ? number : (X extends 'int' ? number : (X extends 'num' ? number : (X extends 'float' ? number : (X extends 'double' ? number : (X extends 'bool' ? boolean : (X extends (new (...args: any[]) => infer T) ? T : (X extends 'boolean' ? boolean : any))))))));
 /**
  * TODO: more complex
@@ -6,7 +6,6 @@ declare type BaseType<X> = X extends 'string' ? string : (X extends 'number' ? n
  * @param b
  */
 declare function _is<X extends ('num' | 'int' | 'float' | 'double' | 'number' | 'bool' | 'boolean' | 'string' | (new (...args: any[]) => {}))>(a: any, b: X): a is (BaseType<X>);
-declare function _equals(a: any, b: any): any;
 declare function _divide(a: int, b: int): int;
 declare const _assert: (expr: any) => void;
 declare const _isNot: (a: any, b: any) => boolean;

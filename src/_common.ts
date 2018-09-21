@@ -1,4 +1,4 @@
-import {OperatorMethods, int, isA} from "./utils";
+import {OperatorMethods, int, isA,_equals} from "./utils";
 import any = jasmine.any;
 
 type BaseType<X> = X extends 'string' ? string :
@@ -31,14 +31,7 @@ function _is<X extends ('num' | 'int' | 'float' | 'double' | 'number' | 'bool' |
     return isA(a, b);
 }
 
-function _equals(a: any, b: any) {
-    if (a && a[OperatorMethods.EQUALS]) {
-        return a[OperatorMethods.EQUALS](b);
-    } else if (b && b[OperatorMethods.EQUALS]) {
-        return b[OperatorMethods.EQUALS](a);
-    }
-    return a === b;
-}
+
 
 function _divide(a: int, b: int): int {
     return Math.floor(a / b);

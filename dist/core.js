@@ -10396,6 +10396,18 @@ class _Growable {
 // const _ListConstructorSentinel =new _Growable();
 class X extends Array {
 }
+function _arrayInitArg(arg) {
+    if (!arg) {
+        return [];
+    }
+    if (_dart.is(arg, 'int')) {
+        return [];
+    }
+    if (arg instanceof Array) {
+        return arg;
+    }
+    return Array.from(arg);
+}
 /**
  * The interceptor class for [List]. The compiler recognizes this
  * class as an interceptor, and changes references to [:this:] to
@@ -10404,9 +10416,12 @@ class X extends Array {
  */
 let JSArray = JSArray_1 = class JSArray extends Array {
     constructor(len) {
-        super((_dart.isNot(len, 'int') && len != undefined ? len : []));
+        super();
         if (_dart.is(len, 'int')) {
             this.length = len;
+        }
+        else if (len) {
+            this.push(...len);
         }
     }
     // This factory constructor is the redirection target of the List() factory

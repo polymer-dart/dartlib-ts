@@ -96,6 +96,7 @@ export declare function Implements(...intf: any[]): (ctor: any) => void;
 export declare function isA(obj: any, cls: any): boolean;
 export declare function Operator(op: Op): MethodDecorator;
 export declare function $with<T>(t: T, ...expressions: ((t: T) => any)[]): T;
+export declare function _equals(a: any, b: any): any;
 /**
  * Apply operator o to arguments
  * @param o

@@ -350,6 +350,38 @@ export function $with<T>(t: T, ...expressions: ((t: T) => any)[]): T {
     return t;
 }
 
+export function _equals(a: any, b: any) {
+    if (a && a[OperatorMethods.EQUALS]) {
+        return a[OperatorMethods.EQUALS](b);
+    } else if (b && b[OperatorMethods.EQUALS]) {
+        return b[OperatorMethods.EQUALS](a);
+    }
+    return a === b;
+}
+
+const defaultOps: Map<Op, Function> = new Map([
+    [Op.INDEX, (t, i) => t[i]],
+    [Op.INDEX_ASSIGN, (t, i, v) => t[i] = v],
+    [Op.EQUALS, (l, r) => l === r],
+    [Op.PLUS, (l, r) => l + r],
+    [Op.MINUS, (l, r) => l - r],
+    [Op.TIMES, (l, r) => l * r],
+    [Op.DIVIDE, (l, r) => l / r],
+    [Op.QUOTIENT, (l, r) => Math.floor(l / r)],
+    [Op.LT, (l, r) => l < r],
+    [Op.GT, (l, r) => l > r],
+    [Op.LEQ, (l, r) => l <= r],
+    [Op.GEQ, (l, r) => l >= r],
+    [Op.NEG, (l) => -l],
+    [Op.BITNEG, (l) => ~l],
+    [Op.XOR, (l, r) => l ^ r],
+    [Op.BITOR, (l, r) => l | r],
+    [Op.BITAND, (l, r) => l & r],
+    [Op.SHIFTRIGHT, (l, r) => l >> r],
+    [Op.SHIFTLEFT, (l, r) => l << r],
+    [Op.MODULE, (l, r) => l % r],
+]);
+
 /**
  * Apply operator o to arguments
  * @param o
@@ -357,6 +389,11 @@ export function $with<T>(t: T, ...expressions: ((t: T) => any)[]): T {
  * @param rest
  */
 export function op(o: Op, first: any, ...rest: any[]): any {
+    if (typeof o == 'string' || typeof o == 'number') {
+        let _args: Array<any> = [first];
+        _args.push(...rest);
+        return defaultOps.get(o)(..._args);
+    }
     let sym = OpSymbolMap.get(o);
     if (!first[sym]) {
         throw `No operator ${o} in ${first}`;

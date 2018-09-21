@@ -11438,6 +11438,19 @@ class X extends Array {
 
 }
 
+function _arrayInitArg<E>(arg?:number | Iterable<E>):any {
+    if (!arg) {
+        return [];
+    }
+    if (_dart.is(arg,'int')) {
+        return [];
+    }
+    if (arg instanceof Array) {
+        return arg;
+    }
+    return  Array.from(arg);
+}
+
 /**
  * The interceptor class for [List]. The compiler recognizes this
  * class as an interceptor, and changes references to [:this:] to
@@ -11448,9 +11461,11 @@ class X extends Array {
 @Implements(DartList)
 class JSArray<E> extends Array implements DartList<E>, JSIndexable<E> {
     constructor(len?: number | Iterable<E>) {
-        super(((_dart.isNot(len, 'int') && len != undefined ? len : [])as any));
+        super();
         if (_dart.is(len, 'int')) {
             this.length = len as number;
+        } else if (len) {
+           this.push(... (len as any));
         }
     }
 

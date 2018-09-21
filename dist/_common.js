@@ -1,4 +1,4 @@
-import { OperatorMethods, isA } from "./utils";
+import { isA, _equals } from "./utils";
 /**
  * TODO: more complex
  * @param a
@@ -16,15 +16,6 @@ function _is(a, b) {
         return typeof a === b;
     }
     return isA(a, b);
-}
-function _equals(a, b) {
-    if (a && a[OperatorMethods.EQUALS]) {
-        return a[OperatorMethods.EQUALS](b);
-    }
-    else if (b && b[OperatorMethods.EQUALS]) {
-        return b[OperatorMethods.EQUALS](a);
-    }
-    return a === b;
 }
 function _divide(a, b) {
     return Math.floor(a / b);
