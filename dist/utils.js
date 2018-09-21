@@ -297,4 +297,39 @@ export function get(obj, k) {
 export function set(obj, k, v) {
     obj[OperatorMethods.INDEX_EQ](k, v);
 }
+export function DartClassAnnotation(anno) {
+    return (target) => {
+        //getDartMetadata(target).annotations.push(anno);
+    };
+}
+export function DartMethodAnnotation(anno) {
+    return (target, name, descriptor) => {
+        //registerPropAnno(anno, target, name);
+    };
+}
+/*
+let registerPropAnno: (anno: IAnnotation, target: Object, name: string | symbol) => void = (anno: IAnnotation, target: Object, name: string | symbol) => {
+    let md: IDartMetadata = getDartMetadata(target.constructor);
+
+    let propAnnos: Map<string, Array<any>> = md.propertyAnnotations.get(name);
+    if (propAnnos == null) {
+        propAnnos = new Map<string, Array<any>>();
+        md.propertyAnnotations.set(name, propAnnos);
+    }
+
+    let key: string = `{${anno.library}}#{${anno.type}}`;
+    let values: Array<any> = propAnnos.get(key);
+    if (values == null) {
+        values = [];
+        propAnnos.set(key, values);
+    }
+
+    values.push(anno.value);
+};
+*/
+export function DartPropertyAnnotation(anno) {
+    return (target, name) => {
+        //registerPropAnno(anno, target, name);
+    };
+}
 //# sourceMappingURL=utils.js.map

@@ -101,4 +101,12 @@ export interface IndexWrite<K, V> {
     [OperatorMethods.INDEX_EQ](k: K, v: V): any;
 }
 export declare function set<K, V>(obj: IndexWrite<K, V>, k: K, v: V): void;
+export interface IAnnotation {
+    library: string;
+    type: string;
+    value?: any;
+}
+export declare function DartClassAnnotation(anno: IAnnotation): ClassDecorator;
+export declare function DartMethodAnnotation(anno: IAnnotation): MethodDecorator;
+export declare function DartPropertyAnnotation(anno: IAnnotation): PropertyDecorator;
 export {};

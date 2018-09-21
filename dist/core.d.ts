@@ -2362,6 +2362,8 @@ declare class DartLinkedHashMap<K, V> implements DartHashMap<K, V> {
  */
 declare class DartListMixin<E> implements DartList<E> {
     [Symbol.iterator](): Iterator<E>;
+    protected DartListMixin(): void;
+    constructor();
     length: int;
     [OperatorMethods.INDEX](index: number): E;
     [OperatorMethods.INDEX_EQ](index: number, value: E): void;

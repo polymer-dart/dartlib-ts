@@ -7432,6 +7432,15 @@ class DartListMixin<E> implements DartList<E> {
         return this.iterator;
     }
 
+    @defaultConstructor
+    protected DartListMixin() {
+
+    }
+
+    constructor() {
+
+    }
+
     get length(): int {
         throw new Error('abstract');
     }

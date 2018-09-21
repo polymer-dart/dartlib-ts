@@ -6909,8 +6909,12 @@ DartLinkedHashMap = DartLinkedHashMap_1 = __decorate([
  * "package:collection/wrappers.dart" instead.
  */
 let DartListMixin = DartListMixin_1 = class DartListMixin {
+    constructor() {
+    }
     [Symbol.iterator]() {
         return this.iterator;
+    }
+    DartListMixin() {
     }
     get length() {
         throw new Error('abstract');
@@ -7387,6 +7391,9 @@ let DartListMixin = DartListMixin_1 = class DartListMixin {
         return DartIterableBase.iterableToFullString(this, '[', ']');
     }
 };
+__decorate([
+    defaultConstructor
+], DartListMixin.prototype, "DartListMixin", null);
 DartListMixin = DartListMixin_1 = __decorate([
     Implements(DartList)
 ], DartListMixin);
