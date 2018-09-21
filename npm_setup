@@ -1,0 +1,1 @@
+npm config set @dart2ts:registry http://localhost:4873
