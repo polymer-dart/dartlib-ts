@@ -67,7 +67,24 @@ abstract class FutureOr<T> {
 export type FutureOr<T> = Future<T> | T;
 
 // @ts-ignore
-let self = global;
+let self = (function(){
+    try {
+        // @ts-ignore
+        if (global) {
+            // @ts-ignore
+            return global;
+        }
+    } catch {}
+
+    try {
+        // @ts-ignore
+        if (window) {
+            // @ts-ignore
+            return window;
+        }
+    } catch {}
+
+})();
 
 /**
  * An object representing a delayed computation.

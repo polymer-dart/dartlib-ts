@@ -11448,7 +11448,7 @@ class X extends Array {
 @Implements(DartList)
 class JSArray<E> extends Array implements DartList<E>, JSIndexable<E> {
     constructor(len?: number | Iterable<E>) {
-        super(...((_dart.isNot(len, 'int') && len != undefined ? len : [])as any));
+        super(((_dart.isNot(len, 'int') && len != undefined ? len : [])as any));
         if (_dart.is(len, 'int')) {
             this.length = len as number;
         }

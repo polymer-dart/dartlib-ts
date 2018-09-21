@@ -54,7 +54,24 @@ import { $with, Abstract, AbstractProperty, DartClass, defaultConstructor, defau
 import { is, equals, isNot } from './_common';
 import { printToZone, printToConsole } from "./_internal";
 // @ts-ignore
-let self = global;
+let self = (function () {
+    try {
+        // @ts-ignore
+        if (global) {
+            // @ts-ignore
+            return global;
+        }
+    }
+    catch (_a) { }
+    try {
+        // @ts-ignore
+        if (window) {
+            // @ts-ignore
+            return window;
+        }
+    }
+    catch (_b) { }
+})();
 /**
  * An object representing a delayed computation.
  *

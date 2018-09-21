@@ -10404,7 +10404,7 @@ class X extends Array {
  */
 let JSArray = JSArray_1 = class JSArray extends Array {
     constructor(len) {
-        super(...(_dart.isNot(len, 'int') && len != undefined ? len : []));
+        super((_dart.isNot(len, 'int') && len != undefined ? len : []));
         if (_dart.is(len, 'int')) {
             this.length = len;
         }
