@@ -1,5 +1,6 @@
-import {DartDuration, DartDateTime, print} from "../core";
+import {DartDuration, DartDateTime, print, DartList} from "../core";
 import * as math from '../math';
+import {callMethod} from "../js_util";
 
 describe('core', () => {
     describe('duration', () => {
@@ -39,7 +40,15 @@ describe('core', () => {
 
     describe('math', () => {
         it('E', () => {
-            expect(math.properties.E).not.toBeNull();
+            expect(math.properties.E).toEqual(Math.E);
         });
     })
+
+    describe('js_util',()=>{
+        it('callMethod',()=>{
+            spyOn(console,'log');
+            callMethod(console,'log',new DartList.literal('hi'));
+            expect(console.log).toBeCalledWith('hi');
+        })
+    });
 });
