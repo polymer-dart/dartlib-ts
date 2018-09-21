@@ -307,7 +307,7 @@ declare class Future<T> implements Promise<T> {
      * has completed with an error then the error is reported as unhandled error.
      * See the description on [Future].
      */
-    then<S>(onValue: (value: T) => FutureOr<S>, _?: {
+    then<S, TResult2 = never>(onValue?: (value: T) => Future<S> | PromiseLike<S> | S, _?: ((reason: any) => (PromiseLike<TResult2> | TResult2)) | {
         onError?: Function;
     }): Future<S>;
     /**

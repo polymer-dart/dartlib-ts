@@ -538,7 +538,6 @@ let Future = Future_1 = class Future {
         nextIteration(true);
         return doneSignal;
     }
-    // @ts-ignore
     then(onfulfilled, onrejected) {
         throw 'abstract';
     }
@@ -688,7 +687,6 @@ let Future = Future_1 = class Future {
 };
 __decorate([
     Abstract
-    // @ts-ignore
 ], Future.prototype, "then", null);
 __decorate([
     Abstract

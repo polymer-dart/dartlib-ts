@@ -622,10 +622,9 @@ class Future<T> implements Promise<T> {
      * See the description on [Future].
      */
 
-    // @ts-ignore
-    then<S>(onValue: (value: T) => FutureOr<S>, _?: { onError?: Function }): Future<S>
+
+    then<S,TResult2 = never>(onValue?: (value: T) => Future<S>|PromiseLike<S>|S, _?: ((reason: any) => (PromiseLike<TResult2> | TResult2)) | { onError?: Function }): Future<S>
     @Abstract
-    // @ts-ignore
     then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => (PromiseLike<TResult1> | TResult1)) | null | undefined, onrejected?: ((reason: any) => (PromiseLike<TResult2> | TResult2)) | null | undefined): Promise<TResult1 | TResult2> {
         throw 'abstract';
     }
@@ -2798,7 +2797,7 @@ class _Future<T> implements Future<T> {
                         // before knowing if it's an error or we should use the result
                         // of source.
                         let originalSource = source;
-                        listenerValueOrError = completeResult.then((_) => originalSource);
+                        listenerValueOrError = (completeResult.then as Function)((_) => originalSource);
                         listenerHasError = false;
                     }
                 };

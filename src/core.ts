@@ -18878,5 +18878,6 @@ export {
     JSIterable,
     JSIterator,
     print,
-    DartExpando
+    DartExpando,
+    DartMapView
 }
