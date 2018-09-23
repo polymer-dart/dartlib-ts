@@ -1,4 +1,5 @@
 import {RootProperty} from "./_common";
+import {int} from "./utils";
 
 /**
  * This function is set by the first allocation of a Zone.
@@ -57,7 +58,33 @@ function printString(string: string): void {
 
 const printToZone = new RootProperty<Function>();
 
+// Shared hex-parsing utilities.
+
+/// Parses a single hex-digit as code unit.
+///
+/// Returns a negative value if the character is not a valid hex-digit.
+function hexDigitValue(char:int):int {
+    //assert(char >= 0 && char <= 0xFFFF);
+    const digit0 = 0x30;
+    const a = 0x61;
+    const f = 0x66;
+    let digit = char ^ digit0;
+    if (digit <= 9) return digit;
+    let letter = (char | 0x20);
+    if (a <= letter && letter <= f) return letter - (a - 10);
+    return -1;
+}
+
+function parseHexByte(source:string,  index:int):int {
+    //assert(index + 2 <= source.length);
+    let digit1 = hexDigitValue(source.charCodeAt(index));
+    let digit2 = hexDigitValue(source.charCodeAt(index + 1));
+    return digit1 * 16 + digit2 - (digit2 & 256);
+}
+
 export {
     printToZone,
-    printToConsole
+    printToConsole,
+    parseHexByte,
+    hexDigitValue
 }

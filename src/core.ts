@@ -9048,7 +9048,7 @@ export class DartStringSink {
      * adds the result to `this`.
      */
     @Abstract
-    write(obj: DartObject): void {
+    write(obj: any): void {
         throw 'abstract';
     }
 
@@ -9065,7 +9065,7 @@ export class DartStringSink {
      * adds the result to `this`, followed by a newline.
      */
     @Abstract
-    writeln(obj?: DartObject /*= ""*/): void {
+    writeln(obj?: any /*= ""*/): void {
         throw 'abstract';
     }
 
@@ -10928,7 +10928,7 @@ class NullThrownError extends DartError {
 
 // TODO : needs to be ported if we wont the same error messages here
 class FormatException extends DartError {
-    constructor(message: string, formatString?: string) {
+    constructor(message: string, formatString?: any,end?:any) {
         super(message);
     }
 }

@@ -1,9 +1,9 @@
 /** Library asset:sample_project/lib/math/math.dart */
-import {is,equals} from "../node_modules/@dart2ts/dart/_common.js";
-import {defaultConstructor,namedConstructor,namedFactory,defaultFactory,DartClass,Implements,op,Op,OperatorMethods,DartClassAnnotation,DartMethodAnnotation,DartPropertyAnnotation,Abstract,AbstractProperty} from "../node_modules/@dart2ts/dart/utils.js";
-import * as _common from "../node_modules/@dart2ts/dart/_common.js";
-import * as core from "../node_modules/@dart2ts/dart/core.js";
-import * as async from "../node_modules/@dart2ts/dart/async.js";
+import {is,equals} from "_common";
+import {defaultConstructor,namedConstructor,namedFactory,defaultFactory,DartClass,Implements,op,Op,OperatorMethods,DartClassAnnotation,DartMethodAnnotation,DartPropertyAnnotation,Abstract,AbstractProperty} from "utils";
+import * as _common from "_common";
+import * as core from "core";
+import * as async from "async";
 
 export var min : <T extends number>(a : T,b : T) => T = <T extends number>(a : T,b : T) : T =>  {
 };

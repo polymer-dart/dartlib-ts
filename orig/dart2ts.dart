@@ -14,6 +14,6 @@ overrides:
       
       '''));
   build([
-    new BuildAction(new Dart2TsBuilder(), 'sample_project', inputs: ['lib/**.dart']),
+    new BuildAction(new Dart2TsBuilder(new Config(sdkPrefix:'./')), 'sample_project', inputs: ['lib/**.dart']),
   ], deleteFilesByDefault: true);
 }

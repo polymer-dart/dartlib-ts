@@ -67,14 +67,15 @@ abstract class FutureOr<T> {
 export type FutureOr<T> = Future<T> | T;
 
 // @ts-ignore
-let self = (function(){
+let self = (function () {
     try {
         // @ts-ignore
         if (global) {
             // @ts-ignore
             return global;
         }
-    } catch {}
+    } catch {
+    }
 
     try {
         // @ts-ignore
@@ -82,7 +83,8 @@ let self = (function(){
             // @ts-ignore
             return window;
         }
-    } catch {}
+    } catch {
+    }
 
 })();
 
@@ -640,7 +642,7 @@ class Future<T> implements Promise<T> {
      */
 
 
-    then<S,TResult2 = never>(onValue?: (value: T) => Future<S>|PromiseLike<S>|S, _?: ((reason: any) => (PromiseLike<TResult2> | TResult2)) | { onError?: Function }): Future<S>
+    then<S, TResult2 = never>(onValue?: (value: T) => Future<S> | PromiseLike<S> | S, _?: ((reason: any) => (PromiseLike<TResult2> | TResult2)) | { onError?: Function }): Future<S>
     @Abstract
     then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => (PromiseLike<TResult1> | TResult1)) | null | undefined, onrejected?: ((reason: any) => (PromiseLike<TResult2> | TResult2)) | null | undefined): Promise<TResult1 | TResult2> {
         throw 'abstract';
@@ -6103,20 +6105,27 @@ interface DartStreamSubscription<T> {
  * [Stream]s. See, for example, [Stream.eventTransformed] which uses
  * `EventSink`s to transform events.
  */
-interface DartEventSink<T> extends DartSink<T> {
+@DartClass
+class DartEventSink<T> extends DartSink<T> {
     /**
      * Adds a data [event] to the sink.
      *
      * Must not be called on a closed sink.
      */
-    add(event: T): void;
+    @Abstract
+    add(event: T): void {
+        throw 'abstract';
+    }
 
     /**
      * Adds an [error] to the sink.
      *
      * Must not be called on a closed sink.
      */
-    addError(error: any, stackTrace?: DartStackTrace): void;
+    @Abstract
+    addError(error: any, stackTrace?: DartStackTrace): void {
+        throw 'abstract';
+    }
 
     /**
      * Closes the sink.
@@ -6125,7 +6134,10 @@ interface DartEventSink<T> extends DartSink<T> {
      *
      * Neither [add] nor [addError] must be called after this method.
      */
-    close(): void;
+    @Abstract
+    close(): void {
+        throw 'abstract';
+    }
 }
 
 /** [Stream] wrapper that only exposes the [Stream] interface. */
