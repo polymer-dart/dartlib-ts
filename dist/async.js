@@ -49,7 +49,7 @@ var Future_1, _RootZone_1, DartZone_1, _Future_1, DartTimer_1, DartZoneSpecifica
 /// As a corollary, `FutureOr<Object>` is equivalent to
 /// `FutureOr<FutureOr<Object>>`, `FutureOr<Future<Object>> is equivalent to
 /// `Future<Object>`.
-import { ArgumentError, DartDuration, DartHashMap, DartIterableElementError, DartList, DartSet, DartStackTrace, DartStringBuffer, identical, NullThrownError, StateError, UnsupportedError, RangeError, DartObject, DartStopwatch } from "./core";
+import { ArgumentError, DartDuration, DartHashMap, DartIterableElementError, DartList, DartSet, DartStackTrace, DartStringBuffer, identical, NullThrownError, StateError, UnsupportedError, RangeError, DartSink, DartObject, DartStopwatch } from "./core";
 import { $with, Abstract, AbstractProperty, DartClass, defaultConstructor, defaultFactory, Implements, namedConstructor, namedFactory, Op, Operator, OperatorMethods, With } from "./utils";
 import { is, equals, isNot } from './_common';
 import { printToZone, printToConsole } from "./_internal";
@@ -62,7 +62,8 @@ let self = (function () {
             return global;
         }
     }
-    catch (_a) { }
+    catch (_a) {
+    }
     try {
         // @ts-ignore
         if (window) {
@@ -70,7 +71,8 @@ let self = (function () {
             return window;
         }
     }
-    catch (_b) { }
+    catch (_b) {
+    }
 })();
 /**
  * An object representing a delayed computation.
@@ -5422,6 +5424,56 @@ __decorate([
 DartStream = __decorate([
     DartClass
 ], DartStream);
+/**
+ * A [Sink] that supports adding errors.
+ *
+ * This makes it suitable for capturing the results of asynchronous
+ * computations, which can complete with a value or an error.
+ *
+ * The [EventSink] has been designed to handle asynchronous events from
+ * [Stream]s. See, for example, [Stream.eventTransformed] which uses
+ * `EventSink`s to transform events.
+ */
+let DartEventSink = class DartEventSink extends DartSink {
+    /**
+     * Adds a data [event] to the sink.
+     *
+     * Must not be called on a closed sink.
+     */
+    add(event) {
+        throw 'abstract';
+    }
+    /**
+     * Adds an [error] to the sink.
+     *
+     * Must not be called on a closed sink.
+     */
+    addError(error, stackTrace) {
+        throw 'abstract';
+    }
+    /**
+     * Closes the sink.
+     *
+     * Calling this method more than once is allowed, but does nothing.
+     *
+     * Neither [add] nor [addError] must be called after this method.
+     */
+    close() {
+        throw 'abstract';
+    }
+};
+__decorate([
+    Abstract
+], DartEventSink.prototype, "add", null);
+__decorate([
+    Abstract
+], DartEventSink.prototype, "addError", null);
+__decorate([
+    Abstract
+], DartEventSink.prototype, "close", null);
+DartEventSink = __decorate([
+    DartClass
+], DartEventSink);
 /** [Stream] wrapper that only exposes the [Stream] interface. */
 let DartStreamView = class DartStreamView extends DartStream {
     constructor(stream) {
@@ -9183,5 +9235,5 @@ class JSStreamIterator {
         return new Future.fromPromise(this.return());
     }
 }
-export { Future, DartCompleter, DartZoneSpecification, DartZone, DartTimer, runZoned, scheduleMicrotask, DartStream, DartStreamTransformer, DartStreamController, dartAsync, stream, toDartStream };
+export { Future, DartCompleter, DartZoneSpecification, DartZone, DartTimer, runZoned, scheduleMicrotask, DartStream, DartStreamTransformer, DartEventSink, DartStreamController, dartAsync, stream, toDartStream };
 //# sourceMappingURL=async.js.map

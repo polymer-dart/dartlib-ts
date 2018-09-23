@@ -1,4 +1,5 @@
 import { RootProperty } from "./_common";
+import { int } from "./utils";
 /**
  * This function is set by the first allocation of a Zone.
  *
@@ -9,4 +10,6 @@ import { RootProperty } from "./_common";
  */
 declare function printToConsole(line: string): void;
 declare const printToZone: RootProperty<Function>;
-export { printToZone, printToConsole };
+declare function hexDigitValue(char: int): int;
+declare function parseHexByte(source: string, index: int): int;
+export { printToZone, printToConsole, parseHexByte, hexDigitValue };

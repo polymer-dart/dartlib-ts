@@ -2178,7 +2178,7 @@ interface DartStreamSubscription<T> {
  * [Stream]s. See, for example, [Stream.eventTransformed] which uses
  * `EventSink`s to transform events.
  */
-interface DartEventSink<T> extends DartSink<T> {
+declare class DartEventSink<T> extends DartSink<T> {
     /**
      * Adds a data [event] to the sink.
      *

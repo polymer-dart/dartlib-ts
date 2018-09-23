@@ -3026,7 +3026,7 @@ export declare class DartStringSink {
      * Converts [obj] to a String by invoking [Object.toString] and
      * adds the result to `this`.
      */
-    write(obj: DartObject): void;
+    write(obj: any): void;
     /**
      * Iterates over the given [objects] and [write]s them in sequence.
      */
@@ -3035,7 +3035,7 @@ export declare class DartStringSink {
      * Converts [obj] to a String by invoking [Object.toString] and
      * adds the result to `this`, followed by a newline.
      */
-    writeln(obj?: DartObject): void;
+    writeln(obj?: any): void;
     /**
      * Writes the [charCode] to `this`.
      *
@@ -3505,7 +3505,7 @@ declare class NullThrownError extends DartError {
     toString(): string;
 }
 declare class FormatException extends DartError {
-    constructor(message: string, formatString?: string);
+    constructor(message: string, formatString?: any, end?: any);
 }
 /**
  * Error thrown when a function is passed an unacceptable argument.

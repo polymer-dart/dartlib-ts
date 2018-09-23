@@ -521,7 +521,7 @@ export class ByteConversionSink extends ChunkedConversionSink<core.DartList<numb
         return new _ByteCallbackSink(callback);
     }
 
-    static withCallbackBinary: new(callback: (accumulated:any) => void) => ByteConversionSink;
+    static withCallbackBinary: new(callback: (accumulated: any) => void) => ByteConversionSink;
 
     @namedFactory
     static _from(sink: core.DartSink<core.DartList<number>>): ByteConversionSink {
@@ -691,22 +691,22 @@ export class Base64Codec extends Codec<core.DartList<number>, string> {
                 let value: number = inverseAlphabet[char];
                 if (value >= 0) {
                     char = new core.DartString(alphabet).codeUnitAt(value);
-                    if (char == originalChar)continue;
+                    if (char == originalChar) continue;
                 } else if (value == _Base64Decoder._padding) {
                     if (firstPadding < 0) {
                         firstPadding = (buffer.length || 0) + (sliceEnd - sliceStart);
                         firstPaddingSourceIndex = sliceEnd;
                     }
                     paddingCount++;
-                    if (originalChar == equals)continue;
+                    if (originalChar == equals) continue;
                 }
                 if (value != _Base64Decoder._invalid) {
                     buffer = new core.DartStringBuffer();
                     buffer.write(source.substring(sliceStart, sliceEnd));
                     buffer.writeCharCode(char);
                     sliceStart = i;
-                   continue
-                    ;
+                    continue
+                        ;
                 }
             }
             throw new core.FormatException("Invalid base64 data", source, sliceEnd);
@@ -1126,8 +1126,8 @@ export class _Base64Decoder {
                     op(Op.INDEX_ASSIGN, output, outIndex++, bits & eightBitMask);
                     bits = 0;
                 }
-               continue
-                ;
+                continue
+                    ;
             } else if (code == _Base64Decoder._padding && count > 1) {
                 if (charOr < 0 || charOr > asciiMax) break;
                 if (count == 3) {
@@ -1184,8 +1184,8 @@ export class _Base64Decoder {
             if (char == properties._paddingChar) {
                 padding++;
                 newEnd = index;
-               continue
-                ;
+                continue
+                    ;
             }
             if ((char | 32) == _Base64Decoder._char_d) {
                 if (index == start) break;
@@ -1200,8 +1200,8 @@ export class _Base64Decoder {
             if (char == _Base64Decoder._char_percent) {
                 padding++;
                 newEnd = index;
-               continue
-                ;
+                continue
+                    ;
             }
             break;
         }
@@ -1944,7 +1944,7 @@ export class JsonDecoder extends Converter<string, core.DartObject> {
     }
 
     startChunkedConversion(sink: core.DartSink<core.DartObject>): StringConversionSink {
-        throw 'external';
+        return new _JsonDecoderSink(this._reviver, sink);
     }
 
     bind(stream: async.DartStream<string>): async.DartStream<core.DartObject> {
@@ -1953,8 +1953,267 @@ export class JsonDecoder extends Converter<string, core.DartObject> {
 }
 
 export var _parseJson: (source: string, reviver: (key: any, value: any) => any) => any = (source: string, reviver: (key: any, value: any) => any) => {
-    throw 'external';
+    if (is(source, 'string')) throw core.argumentErrorValue(source);
+
+    let parsed;
+    try {
+        parsed = JSON.parse(source);
+    } catch (e) {
+        throw new core.FormatException(e.toString());
+    }
+
+    if (reviver == null) {
+        return _convertJsonToDartLazy(parsed);
+    } else {
+        return _convertJsonToDart(parsed, reviver);
+    }
 };
+
+
+export var _convertJsonToDart : (json : any,reviver : (key : any,value : any) => any) => any = (json : any,reviver : (key : any,value : any) => any) =>  {
+    /* TODO (AssertStatementImpl) : assert (reviver != null); */;
+    var walk : (e : any) => any = (e : any) =>  {
+        if (e == null/* JS('bool', '# == null', e) */ || typeof e != "object"/* JS('bool', 'typeof # != "object"', e) */) {
+            return e;
+        }
+        if (Object.getPrototypeOf(e) === Array.prototype/* JS('bool', 'Object.getPrototypeOf(#) === Array.prototype', e) */) {
+            for(let i : number = 0; i < e.length/* JS('int', '#.length', e) */; i++){
+                let item = e[i]/* JS('', '#[#]', e, i) */;
+                e[i]=reviver(i,walk(item))/* JS('', '#[#]=#', e, i, reviver(i, walk(item))) */;
+            }
+            return e;
+        }
+        let map : _JsonMap = new _JsonMap(e);
+        let processed = map._processed;
+        let keys : core.DartList<string> = map._computeKeys();
+        for(let i : number = 0; i < keys.length; i++){
+            let key : string = keys[i];
+            let revived = reviver(key,walk(e[key]/* JS('', '#[#]', e, key) */));
+            processed[key]=revived/* JS('', '#[#]=#', processed, key, revived) */;
+        }
+        map._original = processed;
+        return map;
+    };
+    return reviver(null,walk(json));
+};
+export var _convertJsonToDartLazy : (object : any) => any = (object : any) =>  {
+    if (op(Op.EQUALS,object,null)) return null;
+    if (typeof object != "object"/* JS('bool', 'typeof # != "object"', object) */) {
+        return object;
+    }
+    if (Object.getPrototypeOf(object) !== Array.prototype/* JS('bool', 'Object.getPrototypeOf(#) !== Array.prototype', object) */) {
+        return new _JsonMap(object);
+    }
+    for(let i : number = 0; i < object.length/* JS('int', '#.length', object) */; i++){
+        let item = object[i]/* JS('', '#[#]', object, i) */;
+        object[i]=_convertJsonToDartLazy(item)/* JS('', '#[#]=#', object, i, _convertJsonToDartLazy(item)) */;
+    }
+    return object;
+};
+@DartClass
+@Implements(core.DartMap)
+export class _JsonMap implements core.DartMap<string,any> {
+    _original;
+    _processed = _JsonMap._newJavaScriptObject();
+    _data = null;
+    constructor(_original : any) {
+    }
+    @defaultConstructor
+    _JsonMap(_original : any) {
+        this._original = _original;
+    }
+    [OperatorMethods.INDEX](key : any) {
+        return this.get(key);
+    }
+    get(key : any) {
+        if (this._isUpgraded) {
+            return this._upgradedMap.get(key);
+        }else if (is(key, "string")) {
+            return null;
+        }else {
+            let result = _JsonMap._getProperty(this._processed,key);
+            if (_JsonMap._isUnprocessed(result)) result = this._process(key);
+            return result;
+        }
+    }
+    get length() : number {
+        return this._isUpgraded ? this._upgradedMap.length : this._computeKeys().length;
+    }
+    get isEmpty() : boolean {
+        return this.length == 0;
+    }
+    get isNotEmpty() : boolean {
+        return this.length > 0;
+    }
+    get keys() : core.DartIterable<string> {
+        if (this._isUpgraded) return this._upgradedMap.keys;
+        return new _JsonMapKeyIterable(this);
+    }
+    get values() : core.DartIterable<any> {
+        if (this._isUpgraded) return this._upgradedMap.values;
+        return new core.DartMappedIterable(this._computeKeys(),(each : any) =>  {
+            return op(Op.INDEX,this,each);
+        });
+    }
+    [OperatorMethods.INDEX_EQ](key : any,value : any) {
+        this.set(key,value);
+    }
+    set(key : any,value : any) {
+        if (this._isUpgraded) {
+            this._upgradedMap.set(key,value);
+        }else if (this.containsKey(key)) {
+            let processed = this._processed;
+            _JsonMap._setProperty(processed,key,value);
+            let original = this._original;
+            if (!core.identical(original,processed)) {
+                _JsonMap._setProperty(original,key,null);
+            }
+        }else {
+            this._upgrade().set(key,value);
+        }
+    }
+    addAll(other : core.DartMap<any,any>) : void {
+        other.forEach((key : any,value : any) =>  {
+            op(Op.INDEX_ASSIGN,this,key,value);
+        });
+    }
+    containsValue(value : any) : boolean {
+        if (this._isUpgraded) return this._upgradedMap.containsValue(value);
+        let keys : core.DartList<string> = this._computeKeys();
+        for(let i : number = 0; i < keys.length; i++){
+            let key : string = keys[i];
+            if (op(Op.EQUALS,op(Op.INDEX,this,key),value)) return true;
+        }
+        return false;
+    }
+    containsKey(key : any) : boolean {
+        if (this._isUpgraded) return this._upgradedMap.containsKey(key);
+        if (is(key, "string")) return false;
+        return _JsonMap._hasProperty(this._original,key);
+    }
+    putIfAbsent(key : any,ifAbsent : () => any) {
+        if (this.containsKey(key)) return op(Op.INDEX,this,key);
+        let value = ifAbsent();
+        op(Op.INDEX_ASSIGN,this,key,value);
+        return value;
+    }
+    remove(key : core.DartObject) {
+        if (!this._isUpgraded && !this.containsKey(key)) return null;
+        return this._upgrade().remove(key);
+    }
+    clear() : void {
+        if (this._isUpgraded) {
+            this._upgradedMap.clear();
+        }else {
+            if (this._data != null) {
+                this._data.clear();
+            }
+            this._original = this._processed = null;
+            this._data = new core.DartMap.literal([]);
+        }
+    }
+    forEach(f : (key : any,value : any) => void) : void {
+        if (this._isUpgraded) return this._upgradedMap.forEach(f);
+        let keys : core.DartList<string> = this._computeKeys();
+        for(let i : number = 0; i < keys.length; i++){
+            let key : string = keys[i];
+            let value = _JsonMap._getProperty(this._processed,key);
+            if (_JsonMap._isUnprocessed(value)) {
+                value = _convertJsonToDartLazy(_JsonMap._getProperty(this._original,key));
+                _JsonMap._setProperty(this._processed,key,value);
+            }
+            f(key,value);
+            if (!core.identical(keys,this._data)) {
+                throw new core.ConcurrentModificationError(this);
+            }
+        }
+    }
+    toString() : string {
+        return core.DartMaps.mapToString(this);
+    }
+    get _isUpgraded() : boolean {
+        return op(Op.EQUALS,this._processed,null);
+    }
+    get _upgradedMap() : core.DartMap<any,any> {
+        /* TODO (AssertStatementImpl) : assert (_isUpgraded); */;
+        return this._data/* JS('LinkedHashMap', '#', _data) */;
+    }
+    _computeKeys() : core.DartList<string> {
+        /* TODO (AssertStatementImpl) : assert (!_isUpgraded); */;
+        let keys : core.DartList<any> = this._data;
+        if (keys == null) {
+            keys = this._data = _JsonMap._getPropertyNames(this._original);
+        }
+        return keys/* JS('JSExtendableArray', '#', keys) */;
+    }
+    _upgrade() : core.DartMap<string,any> {
+        if (this._isUpgraded) return this._upgradedMap;
+        let result : core.DartMap<any,any> = new core.DartMap.literal([]);
+        let keys : core.DartList<string> = this._computeKeys();
+        for(let i : number = 0; i < keys.length; i++){
+            let key : string = keys[i];
+            result.set(key,op(Op.INDEX,this,key));
+        }
+        if (keys.isEmpty) {
+            keys.add(null);
+        }else {
+            keys.clear();
+        }
+        this._original = this._processed = null;
+        this._data = result;
+        /* TODO (AssertStatementImpl) : assert (_isUpgraded); */;
+        return result;
+    }
+    _process(key : string) {
+        if (!_JsonMap._hasProperty(this._original,key)) return null;
+        let result = _convertJsonToDartLazy(_JsonMap._getProperty(this._original,key));
+        return _JsonMap._setProperty(this._processed,key,result);
+    }
+    static _hasProperty(object : any,key : string) : boolean {
+        return Object.prototype.hasOwnProperty.call(object,key)/* JS('bool', 'Object.prototype.hasOwnProperty.call(#,#)', object, key) */;
+    }
+    static _getProperty(object : any,key : string) {
+        return object[key]/* JS('', '#[#]', object, key) */;
+    }
+    static _setProperty(object : any,key : string,value : any) {
+        return object[key]=value/* JS('', '#[#]=#', object, key, value) */;
+    }
+    static _getPropertyNames(object : any) : core.DartList<any> {
+        return Object.keys(object)/* JS('JSExtendableArray', 'Object.keys(#)', object) */;
+    }
+    static _isUnprocessed(object : any) : boolean {
+        return typeof(object)=="undefined"/* JS('bool', 'typeof(#)=="undefined"', object) */;
+    }
+    static _newJavaScriptObject() {
+        return Object.create(null)/* JS('=Object', 'Object.create(null)') */;
+    }
+}
+
+@DartClass
+export class _JsonMapKeyIterable extends core.DartListIterable<string> {
+    _parent : _JsonMap;
+    constructor(_parent : _JsonMap) {
+        super();
+    }
+    @defaultConstructor
+    _JsonMapKeyIterable(_parent : _JsonMap) {
+        this._parent = _parent;
+    }
+    get length() : number {
+        return this._parent.length;
+    }
+    elementAt(index : number) : string {
+        return this._parent._isUpgraded ? this._parent.keys.elementAt(index) : this._parent._computeKeys()[index];
+    }
+    get iterator() : core.DartIterator<string> {
+        return this._parent._isUpgraded ? this._parent.keys.iterator : this._parent._computeKeys().iterator;
+    }
+    contains(key : core.DartObject) : boolean {
+        return this._parent.containsKey(key);
+    }
+}
+
+
 export var _defaultToEncodable: (object: any) => any = (object: any): any => {
     return object.toJson();
 };
@@ -2015,7 +2274,7 @@ export class _JsonStringifier {
         let length: number = s.length;
         for (let i: number = 0; i < length; i++) {
             let charCode: number = new core.DartString(s).codeUnitAt(i);
-            if (charCode > _JsonStringifier.BACKSLASH)continue;
+            if (charCode > _JsonStringifier.BACKSLASH) continue;
             if (charCode < 32) {
                 if (i > offset) this.writeStringSlice(s, offset, i);
                 offset = i + 1;
@@ -2369,8 +2628,8 @@ export class _JsonUtf8Stringifier extends _JsonStringifier {
                         char = 65536 + ((char & 1023) << 10) + (nextChar & 1023);
                         this.writeFourByteCharCode(char);
                         i++;
-                       continue
-                        ;
+                        continue
+                            ;
                     }
                 }
                 this.writeMultiByteCharCode(char);
@@ -2664,10 +2923,10 @@ export class LineSplitter extends Converter<string, core.DartList<string>> {
                 let previousChar: number = char;
                 char = new core.DartString(lines).codeUnitAt(i);
                 if (char != properties._CR) {
-                    if (char != properties._LF)continue;
+                    if (char != properties._LF) continue;
                     if (previousChar == properties._CR) {
                         sliceStart = i + 1;
-                       continue;
+                        continue;
                     }
                 }
                 yield lines.substring(sliceStart, i);
@@ -2688,10 +2947,10 @@ export class LineSplitter extends Converter<string, core.DartList<string>> {
             let previousChar: number = char;
             char = new core.DartString(data).codeUnitAt(i);
             if (char != properties._CR) {
-                if (char != properties._LF)continue;
+                if (char != properties._LF) continue;
                 if (previousChar == properties._CR) {
                     sliceStart = i + 1;
-                   continue;
+                    continue;
                 }
             }
             lines.add(data.substring(sliceStart, i));
@@ -2771,11 +3030,11 @@ export class _LineSplitterSink extends StringConversionSinkBase {
             let previousChar: number = char;
             char = new core.DartString(lines).codeUnitAt(i);
             if (char != properties._CR) {
-                if (char != properties._LF)continue;
+                if (char != properties._LF) continue;
                 if (previousChar == properties._CR) {
                     sliceStart = i + 1;
-                   continue
-                    ;
+                    continue
+                        ;
                 }
             }
             this._sink.add(lines.substring(sliceStart, i));
@@ -2966,6 +3225,38 @@ export class _StringSinkConversionSink extends StringConversionSinkBase {
         return new ClosableStringSink.fromStringSink(this._stringSink, this.close.bind(this));
     }
 }
+
+
+export type _Reviver = (key: any, value: any) => any;
+
+/**
+ * Implements the chunked conversion from a JSON string to its corresponding
+ * object.
+ *
+ * The sink only creates one object, but its input can be chunked.
+ */
+// TODO(floitsch): don't accumulate everything before starting to decode.
+class _JsonDecoderSink extends _StringSinkConversionSink {
+    _reviver: _Reviver;
+    _sink: core.DartSink<any>;
+
+    constructor(_reviver: _Reviver, _sink: core.DartSink<any>) {
+        super(new core.DartStringBuffer(''));
+        this._reviver = this._reviver;
+        this._sink = _sink;
+    }
+
+    close(): void {
+        super.close();
+        let buffer = this._stringSink;
+        let accumulated = buffer.toString();
+        (buffer as core.DartStringBuffer).clear();
+        let decoded = _parseJson(accumulated, this._reviver);
+        this._sink.add(decoded);
+        this._sink.close();
+    }
+}
+
 
 @DartClass
 export class _StringCallbackSink extends _StringSinkConversionSink {
@@ -3467,23 +3758,23 @@ export class _Utf8Decoder {
         };
         let i: number = startIndex;
         loop:
-            while (true){
+            while (true) {
                 multibyte:
                     if (expectedUnits > 0) {
-                        do{
+                        do {
                             if (i == endIndex) {
                                 break;
                             }
-                            let unit : number = codeUnits[i];
+                            let unit: number = codeUnits[i];
                             if ((unit & 192) != 128) {
                                 expectedUnits = 0;
                                 if (!this._allowMalformed) {
-                                    throw new core.FormatException(`Bad UTF-8 encoding 0x${new core.JSInt(unit).toRadixString(16)}`,codeUnits,i);
+                                    throw new core.FormatException(`Bad UTF-8 encoding 0x${new core.JSInt(unit).toRadixString(16)}`, codeUnits, i);
                                 }
                                 this._isFirstCharacter = false;
                                 this._stringSink.writeCharCode(properties.UNICODE_REPLACEMENT_CHARACTER_RUNE);
                                 break;
-                            }else {
+                            } else {
                                 value = (value << 6) | (unit & 63);
                                 expectedUnits--;
                                 i++;
@@ -3491,14 +3782,14 @@ export class _Utf8Decoder {
                         } while (expectedUnits > 0);
                         if (value <= _Utf8Decoder._LIMITS[extraUnits - 1]) {
                             if (!this._allowMalformed) {
-                                throw new core.FormatException(`Overlong encoding of 0x${new core.JSInt(value).toRadixString(16)}`,codeUnits,i - extraUnits - 1);
+                                throw new core.FormatException(`Overlong encoding of 0x${new core.JSInt(value).toRadixString(16)}`, codeUnits, i - extraUnits - 1);
                             }
                             expectedUnits = extraUnits = 0;
                             value = properties.UNICODE_REPLACEMENT_CHARACTER_RUNE;
                         }
                         if (value > properties._FOUR_BYTE_LIMIT) {
                             if (!this._allowMalformed) {
-                                throw new core.FormatException("Character outside valid Unicode range: " + `0x${new core.JSInt(value).toRadixString(16)}`,codeUnits,i - extraUnits - 1);
+                                throw new core.FormatException("Character outside valid Unicode range: " + `0x${new core.JSInt(value).toRadixString(16)}`, codeUnits, i - extraUnits - 1);
                             }
                             value = properties.UNICODE_REPLACEMENT_CHARACTER_RUNE;
                         }
@@ -3506,23 +3797,25 @@ export class _Utf8Decoder {
                             this._stringSink.writeCharCode(value);
                         }
                         this._isFirstCharacter = false;
-                    };
-                while (i < endIndex){
-                    let oneBytes : number = scanOneByteCharacters(codeUnits,i);
+                    }
+                ;
+                while (i < endIndex) {
+                    let oneBytes: number = scanOneByteCharacters(codeUnits, i);
                     if (oneBytes > 0) {
                         this._isFirstCharacter = false;
-                        addSingleBytes(i,i + oneBytes);
+                        addSingleBytes(i, i + oneBytes);
                         i = oneBytes;
                         if (i == endIndex) break;
                     }
-                    let unit : number = codeUnits[i++];
+                    let unit: number = codeUnits[i++];
                     if (unit < 0) {
                         if (!this._allowMalformed) {
-                            throw new core.FormatException(`Negative UTF-8 code unit: -0x${new core.JSInt(-unit).toRadixString(16)}`,codeUnits,i - 1);
+                            throw new core.FormatException(`Negative UTF-8 code unit: -0x${new core.JSInt(-unit).toRadixString(16)}`, codeUnits, i - 1);
                         }
                         this._stringSink.writeCharCode(properties.UNICODE_REPLACEMENT_CHARACTER_RUNE);
-                    }else {
-                        /* TODO (AssertStatementImpl) : assert (unit > _ONE_BYTE_LIMIT); */;
+                    } else {
+                        /* TODO (AssertStatementImpl) : assert (unit > _ONE_BYTE_LIMIT); */
+                        ;
                         if ((unit & 224) == 192) {
                             value = unit & 31;
                             expectedUnits = extraUnits = 1;
@@ -3539,7 +3832,7 @@ export class _Utf8Decoder {
                             continue;
                         }
                         if (!this._allowMalformed) {
-                            throw new core.FormatException(`Bad UTF-8 encoding 0x${new core.JSInt(unit).toRadixString(16)}`,codeUnits,i - 1);
+                            throw new core.FormatException(`Bad UTF-8 encoding 0x${new core.JSInt(unit).toRadixString(16)}`, codeUnits, i - 1);
                         }
                         value = properties.UNICODE_REPLACEMENT_CHARACTER_RUNE;
                         expectedUnits = extraUnits = 0;
@@ -3548,7 +3841,8 @@ export class _Utf8Decoder {
                     }
                 }
                 break;
-            };
+            }
+        ;
         if (expectedUnits > 0) {
             this._value = value;
             this._expectedUnits = expectedUnits;

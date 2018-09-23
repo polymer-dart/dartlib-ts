@@ -9952,7 +9952,7 @@ NullThrownError = __decorate([
 ], NullThrownError);
 // TODO : needs to be ported if we wont the same error messages here
 class FormatException extends DartError {
-    constructor(message, formatString) {
+    constructor(message, formatString, end) {
         super(message);
     }
 }
