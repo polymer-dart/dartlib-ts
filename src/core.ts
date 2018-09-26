@@ -10928,7 +10928,7 @@ class NullThrownError extends DartError {
 
 // TODO : needs to be ported if we wont the same error messages here
 class FormatException extends DartError {
-    constructor(message: string, formatString?: any,end?:any) {
+    constructor(message: string, formatString?: any, end?: any) {
         super(message);
     }
 }
@@ -11438,17 +11438,17 @@ class X extends Array {
 
 }
 
-function _arrayInitArg<E>(arg?:number | Iterable<E>):any {
+function _arrayInitArg<E>(arg?: number | Iterable<E>): any {
     if (!arg) {
         return [];
     }
-    if (_dart.is(arg,'int')) {
+    if (_dart.is(arg, 'int')) {
         return [];
     }
     if (arg instanceof Array) {
         return arg;
     }
-    return  Array.from(arg);
+    return Array.from(arg);
 }
 
 /**
@@ -11465,7 +11465,7 @@ class JSArray<E> extends Array implements DartList<E>, JSIndexable<E> {
         if (_dart.is(len, 'int')) {
             this.length = len as number;
         } else if (len) {
-           this.push(... (len as any));
+            this.push(... (len as any));
         }
     }
 
@@ -12273,6 +12273,25 @@ export function diagnoseIndexError(indexable, index): DartError {
     }
     // The above should always match, but if it does not, use the following.
     return new RangeError.value(index, 'index');
+}
+
+export function diagnoseRangeError(start, end, length): Error {
+    if (isNot(start, 'int')) {
+        return new ArgumentError.value(start, 'start');
+    }
+    if (start < 0 || start > length) {
+        return new RangeError.range(start, 0, length, 'start');
+    }
+    if (end != null) {
+        if (isNot(end, 'int')) {
+            return new ArgumentError.value(end, 'end');
+        }
+        if (end < start || end > length) {
+            return new RangeError.range(end, start, length, 'end');
+        }
+    }
+    // The above should always match, but if it does not, use the following.
+    return new ArgumentError.value(end, "end");
 }
 
 export function throwConcurrentModificationError(collection) {
@@ -18841,6 +18860,7 @@ export {
     DartPrimitives,
     DartRandom,
     DartReversedListIterable,
+    DartFixedLengthListMixin,
     DartSetBase,
     DartSkipIterable,
     DartSkipWhileIterable,

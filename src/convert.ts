@@ -1970,141 +1970,160 @@ export var _parseJson: (source: string, reviver: (key: any, value: any) => any) 
 };
 
 
-export var _convertJsonToDart : (json : any,reviver : (key : any,value : any) => any) => any = (json : any,reviver : (key : any,value : any) => any) =>  {
-    /* TODO (AssertStatementImpl) : assert (reviver != null); */;
-    var walk : (e : any) => any = (e : any) =>  {
+export var _convertJsonToDart: (json: any, reviver: (key: any, value: any) => any) => any = (json: any, reviver: (key: any, value: any) => any) => {
+    /* TODO (AssertStatementImpl) : assert (reviver != null); */
+    ;
+    var walk: (e: any) => any = (e: any) => {
         if (e == null/* JS('bool', '# == null', e) */ || typeof e != "object"/* JS('bool', 'typeof # != "object"', e) */) {
             return e;
         }
         if (Object.getPrototypeOf(e) === Array.prototype/* JS('bool', 'Object.getPrototypeOf(#) === Array.prototype', e) */) {
-            for(let i : number = 0; i < e.length/* JS('int', '#.length', e) */; i++){
+            for (let i: number = 0; i < e.length/* JS('int', '#.length', e) */; i++) {
                 let item = e[i]/* JS('', '#[#]', e, i) */;
-                e[i]=reviver(i,walk(item))/* JS('', '#[#]=#', e, i, reviver(i, walk(item))) */;
+                e[i] = reviver(i, walk(item))/* JS('', '#[#]=#', e, i, reviver(i, walk(item))) */;
             }
             return e;
         }
-        let map : _JsonMap = new _JsonMap(e);
+        let map: _JsonMap = new _JsonMap(e);
         let processed = map._processed;
-        let keys : core.DartList<string> = map._computeKeys();
-        for(let i : number = 0; i < keys.length; i++){
-            let key : string = keys[i];
-            let revived = reviver(key,walk(e[key]/* JS('', '#[#]', e, key) */));
-            processed[key]=revived/* JS('', '#[#]=#', processed, key, revived) */;
+        let keys: core.DartList<string> = map._computeKeys();
+        for (let i: number = 0; i < keys.length; i++) {
+            let key: string = keys[i];
+            let revived = reviver(key, walk(e[key]/* JS('', '#[#]', e, key) */));
+            processed[key] = revived/* JS('', '#[#]=#', processed, key, revived) */;
         }
         map._original = processed;
         return map;
     };
-    return reviver(null,walk(json));
+    return reviver(null, walk(json));
 };
-export var _convertJsonToDartLazy : (object : any) => any = (object : any) =>  {
-    if (op(Op.EQUALS,object,null)) return null;
+export var _convertJsonToDartLazy: (object: any) => any = (object: any) => {
+    if (op(Op.EQUALS, object, null)) return null;
     if (typeof object != "object"/* JS('bool', 'typeof # != "object"', object) */) {
         return object;
     }
     if (Object.getPrototypeOf(object) !== Array.prototype/* JS('bool', 'Object.getPrototypeOf(#) !== Array.prototype', object) */) {
         return new _JsonMap(object);
     }
-    for(let i : number = 0; i < object.length/* JS('int', '#.length', object) */; i++){
+    for (let i: number = 0; i < object.length/* JS('int', '#.length', object) */; i++) {
         let item = object[i]/* JS('', '#[#]', object, i) */;
-        object[i]=_convertJsonToDartLazy(item)/* JS('', '#[#]=#', object, i, _convertJsonToDartLazy(item)) */;
+        object[i] = _convertJsonToDartLazy(item)/* JS('', '#[#]=#', object, i, _convertJsonToDartLazy(item)) */;
     }
     return object;
 };
+
 @DartClass
 @Implements(core.DartMap)
-export class _JsonMap implements core.DartMap<string,any> {
+export class _JsonMap implements core.DartMap<string, any> {
     _original;
     _processed = _JsonMap._newJavaScriptObject();
     _data = null;
-    constructor(_original : any) {
+
+    constructor(_original: any) {
     }
+
     @defaultConstructor
-    _JsonMap(_original : any) {
+    _JsonMap(_original: any) {
         this._original = _original;
     }
-    [OperatorMethods.INDEX](key : any) {
+
+    [OperatorMethods.INDEX](key: any) {
         return this.get(key);
     }
-    get(key : any) {
+
+    get(key: any) {
         if (this._isUpgraded) {
             return this._upgradedMap.get(key);
-        }else if (is(key, "string")) {
+        } else if (is(key, "string")) {
             return null;
-        }else {
-            let result = _JsonMap._getProperty(this._processed,key);
+        } else {
+            let result = _JsonMap._getProperty(this._processed, key);
             if (_JsonMap._isUnprocessed(result)) result = this._process(key);
             return result;
         }
     }
-    get length() : number {
+
+    get length(): number {
         return this._isUpgraded ? this._upgradedMap.length : this._computeKeys().length;
     }
-    get isEmpty() : boolean {
+
+    get isEmpty(): boolean {
         return this.length == 0;
     }
-    get isNotEmpty() : boolean {
+
+    get isNotEmpty(): boolean {
         return this.length > 0;
     }
-    get keys() : core.DartIterable<string> {
+
+    get keys(): core.DartIterable<string> {
         if (this._isUpgraded) return this._upgradedMap.keys;
         return new _JsonMapKeyIterable(this);
     }
-    get values() : core.DartIterable<any> {
+
+    get values(): core.DartIterable<any> {
         if (this._isUpgraded) return this._upgradedMap.values;
-        return new core.DartMappedIterable(this._computeKeys(),(each : any) =>  {
-            return op(Op.INDEX,this,each);
+        return new core.DartMappedIterable(this._computeKeys(), (each: any) => {
+            return op(Op.INDEX, this, each);
         });
     }
-    [OperatorMethods.INDEX_EQ](key : any,value : any) {
-        this.set(key,value);
+
+    [OperatorMethods.INDEX_EQ](key: any, value: any) {
+        this.set(key, value);
     }
-    set(key : any,value : any) {
+
+    set(key: any, value: any) {
         if (this._isUpgraded) {
-            this._upgradedMap.set(key,value);
-        }else if (this.containsKey(key)) {
+            this._upgradedMap.set(key, value);
+        } else if (this.containsKey(key)) {
             let processed = this._processed;
-            _JsonMap._setProperty(processed,key,value);
+            _JsonMap._setProperty(processed, key, value);
             let original = this._original;
-            if (!core.identical(original,processed)) {
-                _JsonMap._setProperty(original,key,null);
+            if (!core.identical(original, processed)) {
+                _JsonMap._setProperty(original, key, null);
             }
-        }else {
-            this._upgrade().set(key,value);
+        } else {
+            this._upgrade().set(key, value);
         }
     }
-    addAll(other : core.DartMap<any,any>) : void {
-        other.forEach((key : any,value : any) =>  {
-            op(Op.INDEX_ASSIGN,this,key,value);
+
+    addAll(other: core.DartMap<any, any>): void {
+        other.forEach((key: any, value: any) => {
+            op(Op.INDEX_ASSIGN, this, key, value);
         });
     }
-    containsValue(value : any) : boolean {
+
+    containsValue(value: any): boolean {
         if (this._isUpgraded) return this._upgradedMap.containsValue(value);
-        let keys : core.DartList<string> = this._computeKeys();
-        for(let i : number = 0; i < keys.length; i++){
-            let key : string = keys[i];
-            if (op(Op.EQUALS,op(Op.INDEX,this,key),value)) return true;
+        let keys: core.DartList<string> = this._computeKeys();
+        for (let i: number = 0; i < keys.length; i++) {
+            let key: string = keys[i];
+            if (op(Op.EQUALS, op(Op.INDEX, this, key), value)) return true;
         }
         return false;
     }
-    containsKey(key : any) : boolean {
+
+    containsKey(key: any): boolean {
         if (this._isUpgraded) return this._upgradedMap.containsKey(key);
         if (is(key, "string")) return false;
-        return _JsonMap._hasProperty(this._original,key);
+        return _JsonMap._hasProperty(this._original, key);
     }
-    putIfAbsent(key : any,ifAbsent : () => any) {
-        if (this.containsKey(key)) return op(Op.INDEX,this,key);
+
+    putIfAbsent(key: any, ifAbsent: () => any) {
+        if (this.containsKey(key)) return op(Op.INDEX, this, key);
         let value = ifAbsent();
-        op(Op.INDEX_ASSIGN,this,key,value);
+        op(Op.INDEX_ASSIGN, this, key, value);
         return value;
     }
-    remove(key : core.DartObject) {
+
+    remove(key: core.DartObject) {
         if (!this._isUpgraded && !this.containsKey(key)) return null;
         return this._upgrade().remove(key);
     }
-    clear() : void {
+
+    clear(): void {
         if (this._isUpgraded) {
             this._upgradedMap.clear();
-        }else {
+        } else {
             if (this._data != null) {
                 this._data.clear();
             }
@@ -2112,78 +2131,94 @@ export class _JsonMap implements core.DartMap<string,any> {
             this._data = new core.DartMap.literal([]);
         }
     }
-    forEach(f : (key : any,value : any) => void) : void {
+
+    forEach(f: (key: any, value: any) => void): void {
         if (this._isUpgraded) return this._upgradedMap.forEach(f);
-        let keys : core.DartList<string> = this._computeKeys();
-        for(let i : number = 0; i < keys.length; i++){
-            let key : string = keys[i];
-            let value = _JsonMap._getProperty(this._processed,key);
+        let keys: core.DartList<string> = this._computeKeys();
+        for (let i: number = 0; i < keys.length; i++) {
+            let key: string = keys[i];
+            let value = _JsonMap._getProperty(this._processed, key);
             if (_JsonMap._isUnprocessed(value)) {
-                value = _convertJsonToDartLazy(_JsonMap._getProperty(this._original,key));
-                _JsonMap._setProperty(this._processed,key,value);
+                value = _convertJsonToDartLazy(_JsonMap._getProperty(this._original, key));
+                _JsonMap._setProperty(this._processed, key, value);
             }
-            f(key,value);
-            if (!core.identical(keys,this._data)) {
+            f(key, value);
+            if (!core.identical(keys, this._data)) {
                 throw new core.ConcurrentModificationError(this);
             }
         }
     }
-    toString() : string {
+
+    toString(): string {
         return core.DartMaps.mapToString(this);
     }
-    get _isUpgraded() : boolean {
-        return op(Op.EQUALS,this._processed,null);
+
+    get _isUpgraded(): boolean {
+        return op(Op.EQUALS, this._processed, null);
     }
-    get _upgradedMap() : core.DartMap<any,any> {
-        /* TODO (AssertStatementImpl) : assert (_isUpgraded); */;
+
+    get _upgradedMap(): core.DartMap<any, any> {
+        /* TODO (AssertStatementImpl) : assert (_isUpgraded); */
+        ;
         return this._data/* JS('LinkedHashMap', '#', _data) */;
     }
-    _computeKeys() : core.DartList<string> {
-        /* TODO (AssertStatementImpl) : assert (!_isUpgraded); */;
-        let keys : core.DartList<any> = this._data;
+
+    _computeKeys(): core.DartList<string> {
+        /* TODO (AssertStatementImpl) : assert (!_isUpgraded); */
+        ;
+        let keys: core.DartList<any> = this._data;
         if (keys == null) {
             keys = this._data = _JsonMap._getPropertyNames(this._original);
         }
         return keys/* JS('JSExtendableArray', '#', keys) */;
     }
-    _upgrade() : core.DartMap<string,any> {
+
+    _upgrade(): core.DartMap<string, any> {
         if (this._isUpgraded) return this._upgradedMap;
-        let result : core.DartMap<any,any> = new core.DartMap.literal([]);
-        let keys : core.DartList<string> = this._computeKeys();
-        for(let i : number = 0; i < keys.length; i++){
-            let key : string = keys[i];
-            result.set(key,op(Op.INDEX,this,key));
+        let result: core.DartMap<any, any> = new core.DartMap.literal([]);
+        let keys: core.DartList<string> = this._computeKeys();
+        for (let i: number = 0; i < keys.length; i++) {
+            let key: string = keys[i];
+            result.set(key, op(Op.INDEX, this, key));
         }
         if (keys.isEmpty) {
             keys.add(null);
-        }else {
+        } else {
             keys.clear();
         }
         this._original = this._processed = null;
         this._data = result;
-        /* TODO (AssertStatementImpl) : assert (_isUpgraded); */;
+        /* TODO (AssertStatementImpl) : assert (_isUpgraded); */
+        ;
         return result;
     }
-    _process(key : string) {
-        if (!_JsonMap._hasProperty(this._original,key)) return null;
-        let result = _convertJsonToDartLazy(_JsonMap._getProperty(this._original,key));
-        return _JsonMap._setProperty(this._processed,key,result);
+
+    _process(key: string) {
+        if (!_JsonMap._hasProperty(this._original, key)) return null;
+        let result = _convertJsonToDartLazy(_JsonMap._getProperty(this._original, key));
+        return _JsonMap._setProperty(this._processed, key, result);
     }
-    static _hasProperty(object : any,key : string) : boolean {
-        return Object.prototype.hasOwnProperty.call(object,key)/* JS('bool', 'Object.prototype.hasOwnProperty.call(#,#)', object, key) */;
+
+    static _hasProperty(object: any, key: string): boolean {
+        return Object.prototype.hasOwnProperty.call(object, key)/* JS('bool', 'Object.prototype.hasOwnProperty.call(#,#)', object, key) */;
     }
-    static _getProperty(object : any,key : string) {
+
+    static _getProperty(object: any, key: string) {
         return object[key]/* JS('', '#[#]', object, key) */;
     }
-    static _setProperty(object : any,key : string,value : any) {
-        return object[key]=value/* JS('', '#[#]=#', object, key, value) */;
+
+    static _setProperty(object: any, key: string, value: any) {
+        return object[key] = value/* JS('', '#[#]=#', object, key, value) */;
     }
-    static _getPropertyNames(object : any) : core.DartList<any> {
+
+    static _getPropertyNames(object: any): core.DartList<any> {
         return Object.keys(object)/* JS('JSExtendableArray', 'Object.keys(#)', object) */;
     }
-    static _isUnprocessed(object : any) : boolean {
-        return typeof(object)=="undefined"/* JS('bool', 'typeof(#)=="undefined"', object) */;
+
+    static _isUnprocessed(object: any): boolean {
+        return typeof(object) == "undefined"/* JS('bool', 'typeof(#)=="undefined"', object) */;
     }
+
     static _newJavaScriptObject() {
         return Object.create(null)/* JS('=Object', 'Object.create(null)') */;
     }
@@ -2191,24 +2226,30 @@ export class _JsonMap implements core.DartMap<string,any> {
 
 @DartClass
 export class _JsonMapKeyIterable extends core.DartListIterable<string> {
-    _parent : _JsonMap;
-    constructor(_parent : _JsonMap) {
+    _parent: _JsonMap;
+
+    constructor(_parent: _JsonMap) {
         super();
     }
+
     @defaultConstructor
-    _JsonMapKeyIterable(_parent : _JsonMap) {
+    _JsonMapKeyIterable(_parent: _JsonMap) {
         this._parent = _parent;
     }
-    get length() : number {
+
+    get length(): number {
         return this._parent.length;
     }
-    elementAt(index : number) : string {
+
+    elementAt(index: number): string {
         return this._parent._isUpgraded ? this._parent.keys.elementAt(index) : this._parent._computeKeys()[index];
     }
-    get iterator() : core.DartIterator<string> {
+
+    get iterator(): core.DartIterator<string> {
         return this._parent._isUpgraded ? this._parent.keys.iterator : this._parent._computeKeys().iterator;
     }
-    contains(key : core.DartObject) : boolean {
+
+    contains(key: core.DartObject): boolean {
         return this._parent.containsKey(key);
     }
 }
@@ -3675,11 +3716,11 @@ export class Utf8Decoder extends Converter<core.DartList<number>, string> {
     }
 
     fuse<T>(next: Converter<string, T>): Converter<core.DartList<number>, T> {
-        throw 'external';
+        return super.fuse(next);
     }
 
     static _convertIntercepted(allowMalformed: boolean, codeUnits: core.DartList<number>, start: number, end: number): string {
-        throw 'external';
+        return null; // This call was not intercepted.
     }
 }
 
