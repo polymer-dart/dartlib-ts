@@ -81,26 +81,45 @@ export function safeCallOriginal(target, name, ...args) {
     }
     f.apply(this, args);
 }
-export function copyProps(s, t, excludes) {
-    excludes = excludes || new Set(['constructor']);
+export function copyProps(s, t, _) {
+    let { excludes, dstMeta, overwrite } = Object.assign({ excludes: new Set(['constructor']), overwrite: true }, _);
+    //excludes = excludes || new Set(['constructor']);
     Object.getOwnPropertySymbols(s).forEach(n => {
         if (excludes.has(n)) {
             return;
         }
-        if (t.hasOwnProperty(n)) {
-            Object.defineProperty(getOldDefs(t), n, Object.getOwnPropertyDescriptor(t, n));
+        if (t.hasOwnProperty(n) && dstMeta && !dstMeta.abstracts.has(n)) {
+            if (overwrite) {
+                Object.defineProperty(getOldDefs(t), n, Object.getOwnPropertyDescriptor(t, n));
+            }
+            else {
+                return;
+            }
         }
         Object.defineProperty(t, n, Object.getOwnPropertyDescriptor(s, n));
+        // if meta => remove abstract
+        if (dstMeta) {
+            dstMeta.abstracts.delete(n);
+        }
     });
     Object.getOwnPropertyNames(s).forEach(n => {
         if (excludes.has(n)) {
             return;
         }
         // save old def
-        if (t.hasOwnProperty(n)) {
-            Object.defineProperty(getOldDefs(t), n, Object.getOwnPropertyDescriptor(t, n));
+        if (t.hasOwnProperty(n) && dstMeta && !dstMeta.abstracts.has(n)) {
+            if (overwrite) {
+                Object.defineProperty(getOldDefs(t), n, Object.getOwnPropertyDescriptor(t, n));
+            }
+            else {
+                return;
+            }
         }
         Object.defineProperty(t, n, Object.getOwnPropertyDescriptor(s, n));
+        // if meta => remove abstract
+        if (dstMeta) {
+            dstMeta.abstracts.delete(n);
+        }
     });
 }
 export function mixin(mixin, base) {
@@ -113,11 +132,23 @@ const META_DATA = Symbol('META_DATA');
 /**
  * Simple decorator to apply a mixin without adding type info
  */
-export function With(mixin) {
+export function With(...mixins) {
     return (ctor) => {
-        copyProps(mixin.prototype, ctor.prototype);
-        copyProps(mixin, ctor, new Set(['constructor', 'prototype']));
-        getMetadata(ctor).implements.push(mixin);
+        mixins.forEach(mixin => {
+            let srcMeta = getMetadata(mixin);
+            let dstMeta = getMetadata(ctor);
+            let excludesFromPrototype = new Set(srcMeta.abstracts.keys());
+            excludesFromPrototype.add('constructor');
+            copyProps(mixin.prototype, ctor.prototype, { excludes: excludesFromPrototype, dstMeta, overwrite: false });
+            copyProps(mixin, ctor, { excludes: new Set(['constructor', 'prototype', META_DATA]), overwrite: false });
+            getMetadata(ctor).implements.push(mixin);
+        });
+    };
+}
+export function AbstractSymbols(...symbols) {
+    return (ctor) => {
+        let meta = getMetadata(ctor);
+        symbols.forEach((sym) => meta.abstracts.set(sym, sym));
     };
 }
 export function getMetadata(o) {
@@ -127,7 +158,8 @@ export function getMetadata(o) {
             abstracts: new Map(),
             implements: [],
             annotations: [],
-            propertyAnnotations: new Map()
+            propertyAnnotations: new Map(),
+            mixins: new Set()
         };
     }
     return o[META_DATA];

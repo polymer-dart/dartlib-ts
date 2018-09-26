@@ -3160,6 +3160,39 @@ declare class DartUnmodifiableListMixin<E> {
 declare class DartUnmodifiableListBase<E> extends DartListBase<E> {
 }
 /**
+ * Mixin that throws on the length changing operations of [List].
+ *
+ * Intended to mix-in on top of [ListMixin] for fixed-length lists.
+ */
+declare class DartFixedLengthListMixin<E> {
+    /** This operation is not supported by a fixed length list. */
+    length: int;
+    /** This operation is not supported by a fixed length list. */
+    add(value: E): void;
+    /** This operation is not supported by a fixed length list. */
+    insert(index: int, value: E): void;
+    /** This operation is not supported by a fixed length list. */
+    insertAll(at: int, iterable: DartIterable<E>): void;
+    /** This operation is not supported by a fixed length list. */
+    addAll(iterable: DartIterable<E>): void;
+    /** This operation is not supported by a fixed length list. */
+    remove(element: DartObject): boolean;
+    /** This operation is not supported by a fixed length list. */
+    removeWhere(test: (element: E) => boolean): void;
+    /** This operation is not supported by a fixed length list. */
+    retainWhere(test: (element: E) => boolean): void;
+    /** This operation is not supported by a fixed length list. */
+    clear(): void;
+    /** This operation is not supported by a fixed length list. */
+    removeAt(index: int): E;
+    /** This operation is not supported by a fixed length list. */
+    removeLast(): E;
+    /** This operation is not supported by a fixed length list. */
+    removeRange(start: int, end: int): void;
+    /** This operation is not supported by a fixed length list. */
+    replaceRange(start: int, end: int, iterable: DartIterable<E>): void;
+}
+/**
  * Abstract implementation of a fixed-length list.
  *
  * All operations are defined in terms of `length`, `operator[]` and
@@ -3907,6 +3940,7 @@ export declare function checkInt(value: any): number;
 export declare function checkBool(value: any): boolean;
 export declare function checkString(value: any): string;
 export declare function diagnoseIndexError(indexable: any, index: any): DartError;
+export declare function diagnoseRangeError(start: any, end: any, length: any): Error;
 export declare function throwConcurrentModificationError(collection: any): void;
 declare class DartPrimitives {
     static objectToHumanReadableString(object: any): string;
@@ -6678,4 +6712,4 @@ declare class DartExpando<T> {
     static _createKey(): string;
     static _checkType(object: any): void;
 }
-export { DartIterable, DartEfficientLengthIterable, DartSetMixin, AbstractDartMap, DartConstantMap, DartHashMap, DartHashSet, DartLinkedHashSet, DartList, DartLinkedHashMap, DartMap, DartSet, DartStringBuffer, ArgumentError, ConcurrentModificationError, DartArrayIterator, DartConstantMapView, DartEfficientLengthMappedIterable, DartError, DartEs6LinkedHashMap, DartExpandIterable, DartExpandIterator, DartIterableBase, DartIterableMixin, DartJsLinkedHashMap, DartLinkedHashMapKeyIterable, DartLinkedHashMapKeyIterator, DartListBase, DartListIterator, DartListMapView, DartListMixin, DartMapBase, DartMapMixin, DartMappedIterable, DartMappedListIterable, DartPrimitives, DartRandom, DartReversedListIterable, DartSetBase, DartSkipIterable, DartSkipWhileIterable, DartSort, DartSubListIterable, DartTakeIterable, DartTakeWhileIterable, DartUnmodifiableListBase, DartUnmodifiableListMixin, DartUnmodifiableMapView, DartWhereIterable, DartWhereIterator, FixedLengthListBase, IndexError, JSFixedArray, JSMutableArray, JSUnmodifiableArray, LinkedHashMapCell, RangeError, StateError, UnmodifiableMapBase, UnsupportedError, DartObject, DartStackTrace, DartDuration, DartIntegerDivisionByZeroException, NullThrownError, DartSink, DartStopwatch, DartDateTime, FormatException, DartPattern, DartRegExp, DartMatch, DartBidirectionalIterator, DartString, DartStringMatch, DartRunes, DartRuneIterator, DartCodeUnits, JSNumber, JSInt, JSDouble, DartNumber, DartInt, DartDouble, iter, toDartIterable, JSIterable, JSIterator, print, DartExpando, DartMapView };
+export { DartIterable, DartEfficientLengthIterable, DartSetMixin, AbstractDartMap, DartConstantMap, DartHashMap, DartHashSet, DartLinkedHashSet, DartList, DartLinkedHashMap, DartMap, DartSet, DartStringBuffer, ArgumentError, ConcurrentModificationError, DartArrayIterator, DartConstantMapView, DartEfficientLengthMappedIterable, DartError, DartEs6LinkedHashMap, DartExpandIterable, DartExpandIterator, DartIterableBase, DartIterableMixin, DartJsLinkedHashMap, DartLinkedHashMapKeyIterable, DartLinkedHashMapKeyIterator, DartListBase, DartListIterator, DartListMapView, DartListMixin, DartMapBase, DartMapMixin, DartMappedIterable, DartMappedListIterable, DartPrimitives, DartRandom, DartReversedListIterable, DartFixedLengthListMixin, DartSetBase, DartSkipIterable, DartSkipWhileIterable, DartSort, DartSubListIterable, DartTakeIterable, DartTakeWhileIterable, DartUnmodifiableListBase, DartUnmodifiableListMixin, DartUnmodifiableMapView, DartWhereIterable, DartWhereIterator, FixedLengthListBase, IndexError, JSFixedArray, JSMutableArray, JSUnmodifiableArray, LinkedHashMapCell, RangeError, StateError, UnmodifiableMapBase, UnsupportedError, DartObject, DartStackTrace, DartDuration, DartIntegerDivisionByZeroException, NullThrownError, DartSink, DartStopwatch, DartDateTime, FormatException, DartPattern, DartRegExp, DartMatch, DartBidirectionalIterator, DartString, DartStringMatch, DartRunes, DartRuneIterator, DartCodeUnits, JSNumber, JSInt, JSDouble, DartNumber, DartInt, DartDouble, iter, toDartIterable, JSIterable, JSIterator, print, DartExpando, DartMapView };

@@ -54,16 +54,21 @@ declare type Constructor<X extends {}> = {
     prototype: any;
 };
 export declare function safeCallOriginal(target: any, name: string | symbol, ...args: any[]): any;
-export declare function copyProps(s: any, t: any, excludes?: Set<string | symbol>): void;
+export declare function copyProps(s: any, t: any, _?: {
+    excludes?: Set<string | symbol>;
+    dstMeta?: Metadata;
+    overwrite?: boolean;
+}): void;
 export declare function mixin<Mixin extends {}, Base extends {}>(mixin: Constructor<Mixin>, base: Constructor<Base>): Constructor<Mixin & Base>;
 /**
  * Simple decorator to apply a mixin without adding type info
  */
-export declare function With(mixin: any): ClassDecorator;
+export declare function With(...mixins: Constructor<any>[]): ClassDecorator;
 interface ConstructorData {
     ctor: Function;
     factory: boolean;
 }
+export declare function AbstractSymbols(...symbols: symbol[]): ClassDecorator;
 export interface Metadata {
     annotations?: Array<IAnnotation>;
     propertyAnnotations?: Map<string | symbol, Map<string, Array<any>>>;
@@ -71,6 +76,7 @@ export interface Metadata {
     constructors?: Map<string, ConstructorData>;
     abstracts?: Map<string | symbol, PropertyDescriptor | string | symbol>;
     implements?: Array<any>;
+    mixins?: Set<any>;
 }
 export declare function getMetadata(o: any): Metadata;
 export declare function DartConstructor(_: {
