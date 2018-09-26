@@ -137,7 +137,7 @@ export class ByteData extends TypedData {
 
     @defaultFactory
     static _ByteData(length: number): ByteData {
-        throw 'external';
+        return new NativeByteData(length);
     }
 
     @namedFactory
@@ -260,12 +260,12 @@ export class Uint16List extends TypedData implements core.DartList<number> {
 
     @defaultFactory
     static _Uint16List(length: number): Uint16List {
-        throw 'external';
+        return new NativeUint16List(length);
     }
 
     @namedFactory
     static _fromList(elements: core.DartList<number>): Uint16List {
-        throw 'external';
+        return new NativeUint16List.fromList(elements);
     }
 
     static fromList: new(elements: core.DartList<number>) => Uint16List;
@@ -555,12 +555,12 @@ export class Int8List extends TypedData implements core.DartList<number> {
 
     @defaultFactory
     static _Int8List(length: number): Int8List {
-        throw 'external';
+        return new NativeInt8List(length);
     }
 
     @namedFactory
     static _fromList(elements: core.DartList<number>): Int8List {
-        throw 'external';
+        return new NativeInt8List.fromList(elements);
     }
 
     static fromList: new(elements: core.DartList<number>) => Int8List;
@@ -836,12 +836,12 @@ export class Uint8List extends TypedData implements core.DartList<number> {
 
     @defaultFactory
     static _Uint8List(length: number): Uint8List {
-        throw 'external';
+        return new NativeUint8List(length);
     }
 
     @namedFactory
     static _fromList(elements: core.DartList<number>): Uint8List {
-        throw 'exernal';
+        return new NativeUint8List.fromList(elements);
     }
 
     static fromList: new(elements: core.DartList<number>) => Uint8List;
@@ -1116,12 +1116,12 @@ export class Uint8ClampedList extends TypedData implements core.DartList<number>
 
     @defaultFactory
     static _Uint8ClampedList(length: number): Uint8ClampedList {
-        throw 'external';
+        return new NativeUint8ClampedList(length);
     }
 
     @namedFactory
     static _fromList(elements: core.DartList<number>): Uint8ClampedList {
-        throw 'external';
+        return new NativeUint8ClampedList.fromList(elements);
     }
 
     static fromList: new(elements: core.DartList<number>) => Uint8ClampedList;
@@ -1397,12 +1397,12 @@ export class Int16List extends TypedData implements core.DartList<number> {
 
     @defaultFactory
     static _Int16List(length: number): Int16List {
-        throw 'external';
+        return new NativeInt16List(length);
     }
 
     @namedFactory
     static _fromList(elements: core.DartList<number>): Int16List {
-        throw 'external';
+        return new NativeInt16List.fromList(elements);
     }
 
     static fromList: new(elements: core.DartList<number>) => Int16List;
@@ -1677,12 +1677,12 @@ export class Int32List extends TypedData implements core.DartList<number> {
 
     @defaultFactory
     static _Int32List(length: number): Int32List {
-        throw 'external';
+        return new NativeInt32List(length);
     }
 
     @namedFactory
     static _fromList(elements: core.DartList<number>): Int32List {
-        throw 'external';
+        return new NativeInt32List.fromList(elements);
     }
 
     static fromList: new(elements: core.DartList<number>) => Int32List;
@@ -1957,12 +1957,12 @@ export class Uint32List extends TypedData implements core.DartList<number> {
 
     @defaultFactory
     static _Uint32List(length: number): Uint32List {
-        throw 'external';
+        return new NativeUint32List(length);
     }
 
     @namedFactory
     static _fromList(elements: core.DartList<number>): Uint32List {
-        throw 'external';
+        return new NativeUint32List.fromList(elements);
     }
 
     static fromList: new(elements: core.DartList<number>) => Uint32List;
@@ -2237,12 +2237,12 @@ export class Int64List extends TypedData implements core.DartList<number> {
 
     @defaultFactory
     static _Int64List(length: number): Int64List {
-        throw 'external';
+        throw new core.UnsupportedError("Int64List not supported by dart2ts.");
     }
 
     @namedFactory
     static _fromList(elements: core.DartList<number>): Int64List {
-        throw 'external';
+        throw new core.UnsupportedError("Int64List not supported by dart2ts.");
     }
 
     static fromList: new(elements: core.DartList<number>) => Int64List;
@@ -2517,12 +2517,12 @@ export class Uint64List extends TypedData implements core.DartList<number> {
 
     @defaultFactory
     static _Uint64List(length: number): Uint64List {
-        throw 'external';
+        throw new core.UnsupportedError("Int64List not supported by dart2ts.");
     }
 
     @namedFactory
     static _fromList(elements: core.DartList<number>): Uint64List {
-        throw 'external';
+        throw new core.UnsupportedError("Int64List not supported by dart2ts.");
     }
 
     static fromList: new(elements: core.DartList<number>) => Uint64List;
@@ -2796,12 +2796,12 @@ export class Float32List extends TypedData implements core.DartList<double> {
 
     @defaultFactory
     static _Float32List(length: number): Float32List {
-        throw 'external';
+        return new NativeFloat32List(length);
     }
 
     @namedFactory
     static _fromList(elements: core.DartList<double>): Float32List {
-        throw 'external';
+        return new NativeFloat32List.fromList(elements);
     }
 
     static fromList: new(elements: core.DartList<double>) => Float32List;
@@ -3076,12 +3076,12 @@ export class Float64List extends TypedData implements core.DartList<double> {
 
     @defaultFactory
     static _Float64List(length: number): Float64List {
-        throw 'external';
+        return new NativeFloat64List(length);
     }
 
     @namedFactory
     static _fromList(elements: core.DartList<double>): Float64List {
-        throw 'external';
+        return new NativeFloat64List.fromList(elements);
     }
 
     static fromList: new(elements: core.DartList<double>) => Float64List;
@@ -3356,12 +3356,12 @@ export class Float32x4List extends TypedData implements core.DartList<Float32x4>
 
     @defaultFactory
     static _Float32x4List(length: number): Float32x4List {
-        throw 'external';
+        return new NativeFloat32x4List(length);
     }
 
     @namedFactory
     static _fromList(elements: core.DartList<Float32x4>): Float32x4List {
-        throw 'external';
+        return new NativeFloat32x4List.fromList(elements);
     }
 
     static fromList: new(elements: core.DartList<Float32x4>) => Float32x4List;
@@ -3636,12 +3636,12 @@ export class Int32x4List extends TypedData implements core.DartList<Int32x4> {
 
     @defaultFactory
     static _Int32x4List(length: number): Int32x4List {
-        throw 'external';
+        return new NativeInt32x4List(length);
     }
 
     @namedFactory
     static _fromList(elements: core.DartList<Int32x4>): Int32x4List {
-        throw 'external';
+        return new NativeInt32x4List.fromList(elements);
     }
 
     static fromList: new(elements: core.DartList<Int32x4>) => Int32x4List;
@@ -3916,12 +3916,12 @@ export class Float64x2List extends TypedData implements core.DartList<Float64x2>
 
     @defaultFactory
     static _Float64x2List(length: number): Float64x2List {
-        throw 'external';
+        return new NativeFloat64x2List(length);
     }
 
     @namedFactory
     static _fromList(elements: core.DartList<Float64x2>): Float64x2List {
-        throw 'external';
+        return new NativeFloat64x2List.fromList(elements);
     }
 
     static fromList: new(elements: core.DartList<Float64x2>) => Float64x2List;
@@ -4189,38 +4189,37 @@ export class Float64x2List extends TypedData implements core.DartList<Float64x2>
 @DartClass
 export class Float32x4 {
     constructor(x: double, y: double, z: double, w: double) {
-        throw 'external';
     }
 
     @defaultFactory
     static _Float32x4(x: double, y: double, z: double, w: double): Float32x4 {
-        throw 'external';
+        return new NativeFloat32x4(x, y, z, w);
     }
 
     @namedFactory
     static _splat(v: double): Float32x4 {
-        throw 'external';
+        return new NativeFloat32x4.splat(v);
     }
 
     static splat: new(v: double) => Float32x4;
 
     @namedFactory
     static _zero(): Float32x4 {
-        throw 'external';
+        return new NativeFloat32x4.zero();
     }
 
     static zero: new() => Float32x4;
 
     @namedFactory
     static _fromInt32x4Bits(x: Int32x4): Float32x4 {
-        throw 'external';
+        return new NativeFloat32x4.fromInt32x4Bits(x);
     }
 
     static fromInt32x4Bits: new(x: Int32x4) => Float32x4;
 
     @namedFactory
     static _fromFloat64x2(v: Float64x2): Float32x4 {
-        throw 'external';
+        return new Float32x4.fromFloat64x2(v);
     }
 
     static fromFloat64x2: new(v: Float64x2) => Float32x4;
@@ -4637,24 +4636,23 @@ export class Float32x4 {
 @AbstractSymbols(OperatorMethods.BINARY_OR, OperatorMethods.BINARY_AND, OperatorMethods.XOR, OperatorMethods.PLUS, OperatorMethods.MINUS)
 export class Int32x4 {
     constructor(x: number, y: number, z: number, w: number) {
-        throw 'external';
     }
 
     @defaultFactory
     static _Int32x4(x: number, y: number, z: number, w: number): Int32x4 {
-        throw 'external';
+        return new NativeInt32x4(x, y, z, w);
     }
 
     @namedFactory
     static _bool(x: boolean, y: boolean, z: boolean, w: boolean): Int32x4 {
-        throw 'external';
+        return new NativeInt32x4.bool(x, y, z, w);
     }
 
     static bool: new(x: boolean, y: boolean, z: boolean, w: boolean) => Int32x4;
 
     @namedFactory
     static _fromFloat32x4Bits(x: Float32x4): Int32x4 {
-        throw 'external';
+        return new NativeInt32x4.fromFloat32x4Bits(x);
     }
 
     static fromFloat32x4Bits: new(x: Float32x4) => Int32x4;
@@ -5045,31 +5043,30 @@ export class Int32x4 {
 @DartClass
 export class Float64x2 {
     constructor(x: double, y: double) {
-        throw 'external';
     }
 
     @defaultFactory
     static _Float64x2(x: double, y: double): Float64x2 {
-        throw 'external';
+        return new NativeFloat64x2(x, y);
     }
 
     @namedFactory
     static _splat(v: double): Float64x2 {
-        throw 'external';
+        return new NativeFloat64x2.splat(v);
     }
 
     static splat: new(v: double) => Float64x2;
 
     @namedFactory
     static _zero(): Float64x2 {
-        throw 'external';
+        return new NativeFloat64x2.zero();
     }
 
     static zero: new() => Float64x2;
 
     @namedFactory
     static _fromFloat32x4(v: Float32x4): Float64x2 {
-        throw 'external';
+        return new NativeFloat64x2.fromFloat32x4(v);
     }
 
     static fromFloat32x4: new(v: Float32x4) => Float64x2;
