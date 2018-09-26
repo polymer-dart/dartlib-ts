@@ -537,6 +537,10 @@ describe("Utils", () => {
             [sym](): string {
                 throw 'mixed';
             }
+
+            get prop(): string {
+                return 'proppa';
+            }
         }
 
         @DartClass
@@ -565,10 +569,22 @@ describe("Utils", () => {
             stillAbstract(): string {
                 throw 'abstract';
             }
+
+            @AbstractProperty
+            get prop(): string {
+                throw 'abstract';
+            }
         }
 
+        // No need for dart class anno
+        let mixin = new Mixin();
+        expect(mixin.other()).toEqual('overwrited');
+        expect(mixin.parent()).toEqual('parent');
+
+        // works with dart class anno, symbols and transitively
         let some = new SomeClass();
         expect(some.changeme()).toEqual('changed');
+        expect(some.prop).toEqual('proppa');
         expect(some.other()).toEqual('original');
         expect(some.parent()).toEqual('parent');
         expect(some[sym]()).toEqual('symb');
