@@ -1,4 +1,4 @@
-import {mixin, DartClass, defaultConstructor, namedConstructor, DartConstructor, Abstract, With, AbstractProperty, AbstractMethods, Implements, isA, Operator, Op, OperatorMethods, defaultFactory} from "../utils"
+import {mixin, DartClass, defaultConstructor, namedConstructor, DartConstructor, Abstract, With, AbstractProperty, AbstractMethods, Implements, isA, Operator, Op, OperatorMethods, defaultFactory, Abstract, AbstractSymbols} from "../utils"
 import _dart from '../_common';
 
 describe("Utils", () => {
@@ -504,22 +504,75 @@ describe("Utils", () => {
     });
 
     it('with mixin works', () => {
-        class Mixin {
+
+        const sym = Symbol('test');
+
+
+        class ParentMixin {
+            parent(): string {
+                return 'parent';
+            }
+
+            [sym](): string {
+                return 'symb';
+            }
+        }
+
+        @With(ParentMixin)
+        @AbstractSymbols(sym)
+        class Mixin implements ParentMixin {
             changeme(): string {
                 return "changed";
             }
-        }
 
+            other(): string {
+                return 'overwrited';
+            }
 
-        @DartClass
-        @With(Mixin)
-        class SomeClass {
-            changeme(): string {
-                return "original";
+            @Abstract
+            parent(): string {
+                throw 'mixed';
+            }
+
+            [sym](): string {
+                throw 'mixed';
             }
         }
 
-        expect(new SomeClass().changeme()).toEqual('changed');
+        @DartClass
+        @With(Mixin)
+        @AbstractSymbols(sym)
+        class SomeClass implements Mixin {
+            @Abstract
+            changeme(): string {
+                return "original";
+            }
+
+            other(): string {
+                return 'original';
+            }
+
+            @Abstract
+            parent(): string {
+                throw 'abstract';
+            }
+
+            [sym](): string {
+                throw 'mixed';
+            }
+
+            @Abstract
+            stillAbstract(): string {
+                throw 'abstract';
+            }
+        }
+
+        let some = new SomeClass();
+        expect(some.changeme()).toEqual('changed');
+        expect(some.other()).toEqual('original');
+        expect(some.parent()).toEqual('parent');
+        expect(some[sym]()).toEqual('symb');
+        expect(some).not.toHaveProperty('stillAbstract');
     });
 
     it('records interfaces', () => {
@@ -724,7 +777,7 @@ describe("Utils", () => {
             constructor() {
                 this.res = new Promise<string>((resolve, reject) => {
                     setTimeout(() => {
-                       // console.log('fired!');
+                        // console.log('fired!');
                         resolve('hi');
                     }, 1000);
                 });
@@ -748,7 +801,7 @@ describe("Utils", () => {
         }
 
         let res = await new OneSecPromise();
-     //   console.log(`Return :${res}`);
+        //   console.log(`Return :${res}`);
         expect(res).toEqual('hi');
     })
 });

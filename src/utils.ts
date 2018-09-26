@@ -100,17 +100,27 @@ export function safeCallOriginal(target: any, name: string | symbol, ...args: an
     f.apply(this, args);
 }
 
-export function copyProps(s: any, t: any, excludes?: Set<string | symbol>): void {
-    excludes = excludes || new Set(['constructor']);
+export function copyProps(s: any, t: any, _?: { excludes?: Set<string | symbol>, dstMeta?: Metadata, overwrite?: boolean }): void {
+    let {excludes, dstMeta, overwrite} = Object.assign({excludes: new Set(['constructor']), overwrite: true}, _);
+    //excludes = excludes || new Set(['constructor']);
 
     Object.getOwnPropertySymbols(s).forEach(n => {
         if (excludes.has(n)) {
             return;
         }
-        if (t.hasOwnProperty(n)) {
-            Object.defineProperty(getOldDefs(t), n, Object.getOwnPropertyDescriptor(t, n));
+        if (t.hasOwnProperty(n) && dstMeta && !dstMeta.abstracts.has(n)) {
+            if (overwrite) {
+                Object.defineProperty(getOldDefs(t), n, Object.getOwnPropertyDescriptor(t, n));
+            } else {
+                return;
+            }
         }
         Object.defineProperty(t, n, Object.getOwnPropertyDescriptor(s, n) as PropertyDescriptor);
+
+        // if meta => remove abstract
+        if (dstMeta) {
+            dstMeta.abstracts.delete(n);
+        }
     });
 
     Object.getOwnPropertyNames(s).forEach(n => {
@@ -118,10 +128,19 @@ export function copyProps(s: any, t: any, excludes?: Set<string | symbol>): void
             return;
         }
         // save old def
-        if (t.hasOwnProperty(n)) {
-            Object.defineProperty(getOldDefs(t), n, Object.getOwnPropertyDescriptor(t, n));
+        if (t.hasOwnProperty(n) && dstMeta && !dstMeta.abstracts.has(n)) {
+            if (overwrite) {
+                Object.defineProperty(getOldDefs(t), n, Object.getOwnPropertyDescriptor(t, n));
+            } else {
+                return;
+            }
         }
         Object.defineProperty(t, n, Object.getOwnPropertyDescriptor(s, n) as PropertyDescriptor);
+
+        // if meta => remove abstract
+        if (dstMeta) {
+            dstMeta.abstracts.delete(n);
+        }
     });
 
 }
@@ -141,11 +160,20 @@ const META_DATA = Symbol('META_DATA');
  * Simple decorator to apply a mixin without adding type info
  */
 
-export function With(mixin: any): ClassDecorator {
+export function With(...mixins: Constructor<any>[]): ClassDecorator {
     return (ctor) => {
-        copyProps(mixin.prototype, ctor.prototype);
-        copyProps(mixin, ctor, new Set(['constructor', 'prototype']));
-        getMetadata(ctor).implements.push(mixin);
+        mixins.forEach(mixin => {
+            let srcMeta = getMetadata(mixin);
+            let dstMeta = getMetadata(ctor);
+
+
+            let excludesFromPrototype = new Set<string | symbol>(srcMeta.abstracts.keys());
+            excludesFromPrototype.add('constructor');
+
+            copyProps(mixin.prototype, ctor.prototype, {excludes: excludesFromPrototype, dstMeta, overwrite: false});
+            copyProps(mixin, ctor, {excludes: new Set(['constructor', 'prototype', META_DATA]), overwrite: false});
+            getMetadata(ctor).implements.push(mixin);
+        });
     };
 }
 
@@ -154,13 +182,21 @@ interface ConstructorData {
     factory: boolean
 }
 
+export function AbstractSymbols(...symbols: symbol[]): ClassDecorator {
+    return (ctor) => {
+        let meta = getMetadata(ctor);
+        symbols.forEach((sym) => meta.abstracts.set(sym, sym));
+    }
+}
+
 export interface Metadata {
     annotations?: Array<IAnnotation>;
     propertyAnnotations?: Map<string | symbol, Map<string, Array<any>>>;
     parent?: Metadata,
     constructors?: Map<string, ConstructorData>,
     abstracts?: Map<string | symbol, PropertyDescriptor | string | symbol>,
-    implements?: Array<any>
+    implements?: Array<any>,
+    mixins?: Set<any>
 }
 
 export function getMetadata(o: any): Metadata {
@@ -170,7 +206,8 @@ export function getMetadata(o: any): Metadata {
             abstracts: new Map(),
             implements: [],
             annotations: [],
-            propertyAnnotations: new Map()
+            propertyAnnotations: new Map(),
+            mixins: new Set<any>()
         }
     }
 
