@@ -1,5 +1,5 @@
 /** Library asset:sample_project/lib/typed_data/dart */
-import {is, equals} from "./_common";
+import {is, equals, isNot} from "./_common";
 import {
     defaultConstructor,
     namedConstructor,
@@ -21,9 +21,28 @@ import * as _common from "./_common";
 import * as core from "./core";
 import * as async from "./async";
 import * as math from "./math";
+import {DartMaps} from "./core";
+import length = DartMaps.length;
 
 @DartClass
 export class ByteBuffer extends ArrayBuffer {
+
+
+    @namedFactory
+    static _withLength(len: number): ByteBuffer {
+        return new NativeByteBuffer(len);
+    }
+
+    static withLength: new(len: number) => ByteBuffer
+
+    @namedFactory
+    static _fromBuffer(buffer: ArrayBuffer): ByteBuffer {
+        return new NativeByteBuffer(buffer.byteLength);
+    }
+
+    static fromBuffer: new(buffer: ArrayBuffer) => ByteBuffer;
+
+
     @AbstractProperty
     get lengthInBytes(): number {
         throw 'abstract'
@@ -260,7 +279,7 @@ export class Uint16List extends TypedData implements core.DartList<number> {
 
     @defaultFactory
     static _Uint16List(length: number): Uint16List {
-        return new NativeUint16List(length);
+        return new NativeUint16List.withLength(length);
     }
 
     @namedFactory
@@ -530,20 +549,6 @@ export class Uint16List extends TypedData implements core.DartList<number> {
     }
 }
 
-
-@DartClass
-export class Endianness {
-    @namedConstructor
-    _(_littleEndian: boolean) {
-        this._littleEndian = _littleEndian;
-    }
-
-    static _: new(_littleEndian: boolean) => Endianness;
-    static BIG_ENDIAN: Endianness = new Endianness._(false);
-    static LITTLE_ENDIAN: Endianness = new Endianness._(true);
-    static HOST_ENDIAN: Endianness = (new ByteData.view(new Uint16List.fromList(new core.DartList.literal(1)).buffer)).getInt8(0) == 1 ? Endianness.LITTLE_ENDIAN : Endianness.BIG_ENDIAN;
-    _littleEndian: boolean;
-}
 
 @DartClass
 @Implements(core.DartList, TypedData)
@@ -2796,7 +2801,7 @@ export class Float32List extends TypedData implements core.DartList<double> {
 
     @defaultFactory
     static _Float32List(length: number): Float32List {
-        return new NativeFloat32List(length);
+        return new NativeFloat32List.withLength(length);
     }
 
     @namedFactory
@@ -3076,7 +3081,7 @@ export class Float64List extends TypedData implements core.DartList<double> {
 
     @defaultFactory
     static _Float64List(length: number): Float64List {
-        return new NativeFloat64List(length);
+        return new NativeFloat64List.withLength(length);
     }
 
     @namedFactory
@@ -5156,6 +5161,11 @@ export class Float64x2 {
 @DartClass
 @Implements(ByteBuffer)
 export class NativeByteBuffer extends ArrayBuffer implements ByteBuffer {
+
+    constructor(len) {
+        super(len);
+    }
+
     lengthInBytes: number;
 
     asUint8List(offsetInBytes?: number, length?: number): Uint8List {
@@ -5249,7 +5259,7 @@ export class NativeFloat32x4List extends Float32x4List {
 
     @defaultConstructor
     NativeFloat32x4List(length: number) {
-        this._storage = new NativeFloat32List(length * 4);
+        this._storage = new NativeFloat32List.withLength(length * 4);
     }
 
     @namedConstructor
@@ -5261,7 +5271,7 @@ export class NativeFloat32x4List extends Float32x4List {
 
     @namedConstructor
     _slowFromList(list: core.DartList<Float32x4>) {
-        this._storage = new NativeFloat32List(list.length * 4);
+        this._storage = new NativeFloat32List.withLength(list.length * 4);
         for (let i: number = 0; i < list.length; i++) {
             let e = list[i];
             op(Op.INDEX_ASSIGN, this._storage, (i * 4) + 0, e.x);
@@ -5429,7 +5439,7 @@ export class NativeFloat64x2List extends core.DartListBase<Float64x2> implements
 
     @defaultConstructor
     NativeFloat64x2List(length: number) {
-        this._storage = new NativeFloat64List(length * 2);
+        this._storage = new NativeFloat64List.withLength(length * 2);
     }
 
     @namedConstructor
@@ -5441,7 +5451,7 @@ export class NativeFloat64x2List extends core.DartListBase<Float64x2> implements
 
     @namedConstructor
     _slowFromList(list: core.DartList<Float64x2>) {
-        this._storage = new NativeFloat64List(list.length * 2);
+        this._storage = new NativeFloat64List.withLength(list.length * 2);
         for (let i: number = 0; i < list.length; i++) {
             let e = list[i];
             op(Op.INDEX_ASSIGN, this._storage, (i * 2) + 0, e.x);
@@ -5568,13 +5578,13 @@ export var _checkLength: (length: any) => number = (length: any): number => {
     return length;
 };
 export var _checkViewArguments: (buffer: any, offsetInBytes: any, length: any) => void = (buffer: any, offsetInBytes: any, length: any): void => {
-    if (is(buffer, NativeByteBuffer)) {
+    if (isNot(buffer, NativeByteBuffer)) {
         throw new core.ArgumentError('Invalid view buffer');
     }
-    if (is(offsetInBytes, "number")) {
+    if (isNot(offsetInBytes, "number")) {
         throw new core.ArgumentError(`Invalid view offsetInBytes ${offsetInBytes}`);
     }
-    if (length != null && is(length, "number")) {
+    if (length != null && isNot(length, "number")) {
         throw new core.ArgumentError(`Invalid view length ${length}`);
     }
 };
@@ -6330,10 +6340,19 @@ export class NativeTypedArrayOfInt extends NativeTypedArray implements core.Dart
 @Implements(Float32List)
 @With(NativeTypedArrayOfDouble)
 export class NativeFloat32List extends Float32Array implements NativeTypedArrayOfDouble, Float32List {
-    constructor(...args: any[]) {
+    protected constructor(length: number | ArrayBufferLike | ArrayLike<number> | core.DartList<number>);
+    protected constructor(buffer: ByteBuffer, byteOffset: number, length?: number);
+    protected constructor(buffer: ByteBuffer | number, byteOffset?: number, length?: number) {
         // @ts-ignore
-        super(...args);
+        super(...arguments);
     }
+
+    @namedFactory
+    static _withLength(len: number): NativeFloat32List {
+        return NativeFloat32List._create1(len);
+    }
+
+    static withLength: new(len: number) => NativeFloat32List;
 
     @namedFactory
     static _fromList(elements: core.DartList<double>): NativeFloat32List {
@@ -6353,12 +6372,18 @@ export class NativeFloat32List extends Float32Array implements NativeTypedArrayO
 
     sublist(start: number, end?: number): core.DartList<double> {
         end = _checkValidRange(start, end, this.length);
-        let source = this.subarray(start, end)/* JS('NativeFloat32List', '#.subarray(#, #)', this, start, end) */;
+        let source: Float32Array = this.subarray(start, end)/* JS('NativeFloat32List', '#.subarray(#, #)', this, start, end) */;
         return NativeFloat32List._create1(source);
     }
 
-    static _create1(arg: any): NativeFloat32List {
-        return new NativeFloat32List(arg)/* JS('NativeFloat32List', 'new Float32Array(#)', arg) */;
+    static _create1(lenOrSource: number | ArrayBufferLike | ArrayLike<number> | core.DartList<number>): NativeFloat32List {
+        // TODO : Accept an array too, but how to create a ByteBuffer from a Float32Array ?
+        if (typeof lenOrSource == 'number') {
+            let buf = new ByteBuffer.withLength(lenOrSource * this.BYTES_PER_ELEMENT);
+            return new NativeFloat32List(buf, 0, lenOrSource);
+        } else {
+            return new NativeFloat32List(lenOrSource)/* JS('NativeFloat32List', 'new Float32Array(#)', arg) */;
+        }
     }
 
     static _create2(arg1: any, arg2: any): NativeFloat32List {
@@ -6646,10 +6671,19 @@ export class NativeFloat32List extends Float32Array implements NativeTypedArrayO
 @Implements(Float64List)
 @With(NativeTypedArrayOfDouble)
 export class NativeFloat64List extends Float64Array implements NativeTypedArrayOfDouble, Float64List {
-    constructor(...args: any[]) {
+    protected constructor(length: number | ArrayBufferLike | ArrayLike<number> | core.DartList<number>);
+    protected constructor(buffer: ByteBuffer, byteOffset: number, length?: number);
+    protected constructor(buffer: ByteBuffer | number, byteOffset?: number, length?: number) {
         // @ts-ignore
-        super(...args);
+        super(...arguments);
     }
+
+    @namedFactory
+    static _withLength(len: number): NativeFloat64List {
+        return NativeFloat64List._create1(len);
+    }
+
+    static withLength: new(len: number) => NativeFloat64List;
 
     @namedFactory
     static _fromList(elements: core.DartList<double>): NativeFloat64List {
@@ -6672,8 +6706,15 @@ export class NativeFloat64List extends Float64Array implements NativeTypedArrayO
         return NativeFloat64List._create1(source);
     }
 
-    static _create1(arg: any): NativeFloat64List {
-        return new NativeFloat64List(arg)/* JS('NativeFloat64List', 'new Float64Array(#)', arg) */;
+
+    static _create1(lenOrSource: number | ArrayBufferLike | ArrayLike<number> | core.DartList<number>): NativeFloat64List {
+        // TODO : Accept an array too, but how to create a ByteBuffer from a Float32Array ?
+        if (typeof lenOrSource == 'number') {
+            let buf = new ByteBuffer.withLength(lenOrSource * this.BYTES_PER_ELEMENT);
+            return new NativeFloat64List(buf, 0, lenOrSource);
+        } else {
+            return new NativeFloat64List(lenOrSource)/* JS('NativeFloat32List', 'new Float32Array(#)', arg) */;
+        }
     }
 
     static _create2(arg1: any, arg2: any): NativeFloat64List {
@@ -7850,10 +7891,19 @@ export class NativeInt8List extends Int8Array implements Int8List, NativeTypedAr
 @With(NativeTypedArrayOfInt)
 @AbstractSymbols(OperatorMethods.INDEX_EQ, Symbol.iterator)
 export class NativeUint16List extends Uint16Array implements Uint16List, NativeTypedArrayOfInt {
-    constructor(...args: any[]) {
+    protected constructor(length: number | ArrayBufferLike | ArrayLike<number> | core.DartList<number>);
+    protected constructor(buffer: ByteBuffer, byteOffset: number, length?: number);
+    protected constructor(buffer: ByteBuffer | number, byteOffset?: number, length?: number) {
         // @ts-ignore
-        super(...args);
+        super(...arguments);
     }
+
+    @namedFactory
+    static _withLength(len: number): NativeUint16List {
+        return NativeUint16List._create1(len);
+    }
+
+    static withLength: new(len: number) => Uint16List;
 
     @namedFactory
     static _fromList(list: core.DartList<number>): NativeUint16List {
@@ -7882,8 +7932,14 @@ export class NativeUint16List extends Uint16Array implements Uint16List, NativeT
         return NativeUint16List._create1(source);
     }
 
-    static _create1(arg: any): NativeUint16List {
-        return new NativeUint16List(arg)/* JS('NativeUint16List', 'new Uint16Array(#)', arg) */;
+    static _create1(lenOrSource: number | ArrayBufferLike | ArrayLike<number> | core.DartList<number>): NativeUint16List {
+        // TODO : Accept an array too, but how to create a ByteBuffer from a Float32Array ?
+        if (typeof lenOrSource == 'number') {
+            let buf = new ByteBuffer.withLength(lenOrSource * this.BYTES_PER_ELEMENT);
+            return new NativeUint16List(buf, 0, lenOrSource);
+        } else {
+            return new NativeUint16List(lenOrSource)/* JS('NativeFloat32List', 'new Float32Array(#)', arg) */;
+        }
     }
 
     static _create2(arg1: any, arg2: any): NativeUint16List {
@@ -8980,7 +9036,7 @@ export class NativeFloat32x4 implements Float32x4 {
     y: double;
     z: double;
     w: double;
-    static _list: NativeFloat32List = new NativeFloat32List(4);
+    static _list: NativeFloat32List = new NativeFloat32List.withLength(4);
     static _uint32view: Uint32List = NativeFloat32x4._list.buffer.asUint32List();
 
     static _truncate(x: any) {
@@ -8997,10 +9053,10 @@ export class NativeFloat32x4 implements Float32x4 {
         this.y = NativeFloat32x4._truncate(y);
         this.z = NativeFloat32x4._truncate(z);
         this.w = NativeFloat32x4._truncate(w);
-        if (is(x, "number")) throw new core.ArgumentError(x);
-        if (is(y, "number")) throw new core.ArgumentError(y);
-        if (is(z, "number")) throw new core.ArgumentError(z);
-        if (is(w, "number")) throw new core.ArgumentError(w);
+        if (isNot(x, "number")) throw new core.ArgumentError(x);
+        if (isNot(y, "number")) throw new core.ArgumentError(y);
+        if (isNot(z, "number")) throw new core.ArgumentError(z);
+        if (isNot(w, "number")) throw new core.ArgumentError(w);
     }
 
     @namedConstructor
@@ -9512,7 +9568,7 @@ export class NativeInt32x4 implements Int32x4 {
 export class NativeFloat64x2 implements Float64x2 {
     x: double;
     y: double;
-    static _list: NativeFloat64List = new NativeFloat64List(2);
+    static _list: NativeFloat64List = new NativeFloat64List.withLength(2);
     static _uint32View: NativeUint32List = NativeFloat64x2._list.buffer.asUint32List();
 
     constructor(x: double, y: double) {
@@ -9649,6 +9705,24 @@ export var _checkValidRange: (start: number, end: number, length: number) => num
     return end;
 };
 
+@DartClass
+export class Endianness {
+    @namedConstructor
+    _(_littleEndian: boolean) {
+        this._littleEndian = _littleEndian;
+    }
+
+    static _: new(_littleEndian: boolean) => Endianness;
+    static BIG_ENDIAN: Endianness;
+    static LITTLE_ENDIAN: Endianness;
+    static HOST_ENDIAN: Endianness;
+    _littleEndian: boolean;
+}
+
+// Init later because of decorators needs to apply first.
+Endianness.BIG_ENDIAN = new Endianness._(false);
+Endianness.LITTLE_ENDIAN = new Endianness._(true);
+Endianness.HOST_ENDIAN = (new ByteData.view(new Uint16List.fromList(new core.DartList.literal(1)).buffer)).getInt8(0) == 1 ? Endianness.LITTLE_ENDIAN : Endianness.BIG_ENDIAN;
 
 export class _Properties {
 }
