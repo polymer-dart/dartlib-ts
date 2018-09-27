@@ -5160,13 +5160,13 @@ export class Float64x2 {
 
 @DartClass
 @Implements(ByteBuffer)
-export class NativeByteBuffer extends ArrayBuffer implements ByteBuffer {
+@AbstractSymbols(Symbol.toStringTag)
+export class NativeByteBufferMixin implements ByteBuffer {
 
-    constructor(len) {
-        super(len);
+    @Abstract
+    get lengthInBytes(): number {
+        throw 'native';
     }
-
-    lengthInBytes: number;
 
     asUint8List(offsetInBytes?: number, length?: number): Uint8List {
         offsetInBytes = offsetInBytes || 0;
@@ -5244,6 +5244,109 @@ export class NativeByteBuffer extends ArrayBuffer implements ByteBuffer {
     asByteData(offsetInBytes?: number, length?: number): ByteData {
         offsetInBytes = offsetInBytes || 0;
         return new NativeByteData.view(this, offsetInBytes, length);
+    }
+
+    @AbstractProperty
+    get byteLength(): number {
+        throw 'abstract';
+    }
+
+    @Abstract
+    slice(begin: number, end?: number): ArrayBuffer {
+        throw 'abstract';
+    }
+
+    readonly [Symbol.toStringTag]: "ArrayBuffer";
+}
+
+// Add the mixin to the ArrayBuffer directly
+With(NativeByteBufferMixin)(ArrayBuffer);
+
+@DartClass
+@Implements(ByteBuffer)
+export class NativeByteBuffer extends ArrayBuffer implements ByteBuffer, NativeByteBufferMixin {
+    constructor(len) {
+        super(len);
+    }
+
+    @AbstractProperty
+    get lengthInBytes(): number {
+        throw 'abstract'
+    }
+
+    @Abstract
+    asUint8List(offsetInBytes?: number, length?: number): Uint8List {
+        throw 'abstract'
+    }
+
+    @Abstract
+    asInt8List(offsetInBytes?: number, length?: number): Int8List {
+        throw 'abstract'
+    }
+
+    @Abstract
+    asUint8ClampedList(offsetInBytes?: number, length?: number): Uint8ClampedList {
+        throw 'abstract'
+    }
+
+    @Abstract
+    asUint16List(offsetInBytes?: number, length?: number): Uint16List {
+        throw 'abstract'
+    }
+
+    @Abstract
+    asInt16List(offsetInBytes?: number, length?: number): Int16List {
+        throw 'abstract'
+    }
+
+    @Abstract
+    asUint32List(offsetInBytes?: number, length?: number): Uint32List {
+        throw 'abstract'
+    }
+
+    @Abstract
+    asInt32List(offsetInBytes?: number, length?: number): Int32List {
+        throw 'abstract'
+    }
+
+    @Abstract
+    asUint64List(offsetInBytes?: number, length?: number): Uint64List {
+        throw 'abstract'
+    }
+
+    @Abstract
+    asInt64List(offsetInBytes?: number, length?: number): Int64List {
+        throw 'abstract'
+    }
+
+    @Abstract
+    asInt32x4List(offsetInBytes?: number, length?: number): Int32x4List {
+        throw 'abstract'
+    }
+
+    @Abstract
+    asFloat32List(offsetInBytes?: number, length?: number): Float32List {
+        throw 'abstract'
+    }
+
+    @Abstract
+    asFloat64List(offsetInBytes?: number, length?: number): Float64List {
+        throw 'abstract'
+    }
+
+    @Abstract
+    asFloat32x4List(offsetInBytes?: number, length?: number): Float32x4List {
+        throw 'abstract'
+    }
+
+    @Abstract
+    asFloat64x2List(offsetInBytes?: number, length?: number): Float64x2List {
+        throw 'abstract'
+    }
+
+    @Abstract
+    asByteData(offsetInBytes?: number, length?: number): ByteData {
+        throw 'abstract'
     }
 }
 
@@ -5578,7 +5681,7 @@ export var _checkLength: (length: any) => number = (length: any): number => {
     return length;
 };
 export var _checkViewArguments: (buffer: any, offsetInBytes: any, length: any) => void = (buffer: any, offsetInBytes: any, length: any): void => {
-    if (isNot(buffer, NativeByteBuffer)) {
+    if (isNot(buffer, NativeByteBuffer) && isNot(buffer, ArrayBuffer)) {
         throw new core.ArgumentError('Invalid view buffer');
     }
     if (isNot(offsetInBytes, "number")) {
@@ -5603,9 +5706,14 @@ export var _ensureNativeList: (list: core.DartList<any>) => core.DartList<any> =
 export class NativeByteData extends DataView implements ByteData, NativeTypedData {
     constructor(...args: any[]) {
         // @ts-ignore
-        super();
+        super(...args);
     }
-
+/*
+    @namedFactory
+    static empty():NativeByteData {
+        return NativeByteData._create1()
+    }
+*/
     @namedFactory
     static _view(buffer: ByteBuffer, offsetInBytes: number, length: number): NativeByteData {
         _checkViewArguments(buffer, offsetInBytes, length);
@@ -5747,7 +5855,7 @@ export class NativeByteData extends DataView implements ByteData, NativeTypedDat
     //setUint8(byteOffset: number, value: number): void
 
     static _create1(arg: any): NativeByteData {
-        return new NativeByteData(new ArrayBuffer(arg))/* JS('NativeByteData', 'new DataView(new ArrayBuffer(#))', arg) */;
+        return new NativeByteData(new ByteBuffer(arg))/* JS('NativeByteData', 'new DataView(new ArrayBuffer(#))', arg) */;
     }
 
     static _create2(arg1: any, arg2: any): NativeByteData {

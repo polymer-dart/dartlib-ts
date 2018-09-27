@@ -177,6 +177,19 @@ export function With(...mixins: Constructor<any>[]): ClassDecorator {
     };
 }
 
+export function applyMixin<T, X extends {}, M extends Constructor<X>>(t: T, m: M): T & X {
+    let srcMeta = getMetadata(mixin);
+    let dstMeta = getMetadata(t.constructor);
+
+
+    let excludesFromPrototype = new Set<string | symbol>(srcMeta.abstracts.keys());
+    excludesFromPrototype.add('constructor');
+
+    copyProps(mixin.prototype, t, {excludes: excludesFromPrototype, dstMeta, overwrite: false});
+
+    return t as T & X;
+}
+
 interface ConstructorData {
     ctor: Function,
     factory: boolean
@@ -343,21 +356,24 @@ export function Implements(...intf: any[]) {
     }
 }
 
-function _isA(ctor, cls): boolean {
-    if (ctor == null) {
+function _isA(ctor, cls, visited: Set<any>): boolean {
+    if (ctor == null || (visited && visited.has(ctor))) {
         return false;
     }
     if (ctor === cls) {
         return true;
     }
+
+    visited = visited || new Set<any>();
+    visited.add(ctor);
     // Check interfaces
     let meta = getMetadata(ctor);
-    if (meta.implements.some(((intf) => _isA(intf, cls)))) {
+    if (meta.implements.some(((intf) => _isA(intf, cls, visited)))) {
         return true;
     }
 
     if (ctor !== Object) {
-        return _isA(Object.getPrototypeOf(ctor), cls);
+        return _isA(Object.getPrototypeOf(ctor), cls, visited);
     }
     return false;
 }
@@ -367,7 +383,7 @@ export function isA(obj, cls): boolean {
         return false;
     }
     let ctor = Object.getPrototypeOf(obj).constructor;
-    return _isA(ctor, cls);
+    return _isA(ctor, cls, new Set<any>());
 }
 
 
