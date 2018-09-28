@@ -6,6 +6,7 @@ import * as core from "./core";
 import * as async from "./async";
 import * as typed_data from "./typed_data";
 import * as _internal from "./_internal";
+import {DartList} from "./core";
 
 
 const _ONE_BYTE_LIMIT: number = 127;
@@ -1971,11 +1972,12 @@ export var _convertJsonToDartLazy: (object: any) => any = (object: any) => {
     if (Object.getPrototypeOf(object) !== Array.prototype/* JS('bool', 'Object.getPrototypeOf(#) !== Array.prototype', object) */) {
         return new _JsonMap(object);
     }
+    let res = new DartList();
     for (let i: number = 0; i < object.length/* JS('int', '#.length', object) */; i++) {
         let item = object[i]/* JS('', '#[#]', object, i) */;
-        object[i] = _convertJsonToDartLazy(item)/* JS('', '#[#]=#', object, i, _convertJsonToDartLazy(item)) */;
+        res.add(_convertJsonToDartLazy(item))/* JS('', '#[#]=#', object, i, _convertJsonToDartLazy(item)) */;
     }
-    return object;
+    return res;
 };
 
 @DartClass
@@ -3497,8 +3499,8 @@ export class Utf8Encoder extends Converter<string, core.DartList<number>> {
 
 @DartClass
 export class _Utf8Encoder {
-    _carry: number = 0;
-    _bufferIndex: number = 0;
+    _carry: number;
+    _bufferIndex: number;
     _buffer: core.DartList<number>;
     static _DEFAULT_BYTE_BUFFER_SIZE = 1024;
 
@@ -3507,11 +3509,15 @@ export class _Utf8Encoder {
 
     @defaultConstructor
     _Utf8Encoder() {
+        this._carry =0;
+        this._bufferIndex=0;
         this.withBufferSize(_Utf8Encoder._DEFAULT_BYTE_BUFFER_SIZE);
     }
 
     @namedConstructor
     withBufferSize(bufferSize: number) {
+        this._carry =0;
+        this._bufferIndex=0;
         this._buffer = _Utf8Encoder._createBuffer(bufferSize);
     }
 

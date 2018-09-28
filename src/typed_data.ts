@@ -8878,10 +8878,6 @@ export class NativeUint8List extends Uint8Array implements Uint8List, NativeType
 
     static view: new(buffer: ByteBuffer, offsetInBytes: number, length: number) => NativeUint8List;
 
-    get length(): number {
-        return this.length/* JS('JSUInt32', '#.length', this) */;
-    }
-
     [OperatorMethods.INDEX](index: number): number {
         _checkValidIndex(index, this, this.length);
         return this[index]/* JS('JSUInt31', '#[#]', this, index) */;
