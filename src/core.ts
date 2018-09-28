@@ -23,7 +23,7 @@ import {
     With,
     num,
     OperatorMethods,
-    AbstractProperty
+    AbstractProperty, AbstractSymbols
 } from "./utils";
 import _dart, {divide, isNot, is, nullOr} from './_common';
 import {printToConsole, printToZone} from "./_internal";
@@ -7427,6 +7427,7 @@ class DartLinkedHashMap<K, V> implements DartHashMap<K, V> {
  * "package:collection/wrappers.dart" instead.
  */
 @Implements(DartList)
+@AbstractSymbols(OperatorMethods.INDEX,OperatorMethods.INDEX_EQ)
 class DartListMixin<E> implements DartList<E> {
     [Symbol.iterator](): Iterator<E> {
         return this.iterator;
@@ -7441,6 +7442,7 @@ class DartListMixin<E> implements DartList<E> {
 
     }
 
+    @AbstractProperty
     get length(): int {
         throw new Error('abstract');
     }
