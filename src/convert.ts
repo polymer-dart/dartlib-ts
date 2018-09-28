@@ -1,5 +1,5 @@
 /** Library asset:sample_project/lib/convert/convert.dart */
-import {is, equals} from "./_common";
+import {is, equals, isNot} from "./_common";
 import {defaultConstructor, namedConstructor, namedFactory, defaultFactory, DartClass, Implements, op, Op, OperatorMethods, DartClassAnnotation, DartMethodAnnotation, DartPropertyAnnotation, Abstract, AbstractProperty} from "./utils";
 import * as _common from "./_common";
 import * as core from "./core";
@@ -8,33 +8,16 @@ import * as typed_data from "./typed_data";
 import * as _internal from "./_internal";
 
 
-export class _Properties {
-    ASCII: AsciiCodec = new AsciiCodec();
-    _ASCII_MASK: number = 127;
-    BASE64: Base64Codec = new Base64Codec();
-    BASE64URL: Base64Codec = new Base64Codec.urlSafe();
-    _paddingChar: number = 61;
-    HTML_ESCAPE: HtmlEscape = new HtmlEscape();
-    JSON: JsonCodec = new JsonCodec();
-    LATIN1: Latin1Codec = new Latin1Codec();
-    _LATIN1_MASK: number = 255;
-    _LF: number = 10;
-    _CR: number = 13;
-    UNICODE_REPLACEMENT_CHARACTER_RUNE: number = 65533;
-    UNICODE_BOM_CHARACTER_RUNE: number = 65279;
-    UTF8: Utf8Codec = new Utf8Codec();
-    _ONE_BYTE_LIMIT: number = 127;
-    _TWO_BYTE_LIMIT: number = 2047;
-    _THREE_BYTE_LIMIT: number = 65535;
-    _FOUR_BYTE_LIMIT: number = 1114111;
-    _SURROGATE_MASK: number = 63488;
-    _SURROGATE_TAG_MASK: number = 64512;
-    _SURROGATE_VALUE_MASK: number = 1023;
-    _LEAD_SURROGATE_MIN: number = 55296;
-    _TAIL_SURROGATE_MIN: number = 56320;
-}
+const _ONE_BYTE_LIMIT: number = 127;
+const _TWO_BYTE_LIMIT: number = 2047;
+const _THREE_BYTE_LIMIT: number = 65535;
+const _FOUR_BYTE_LIMIT: number = 1114111;
+const _SURROGATE_MASK: number = 63488;
+const _SURROGATE_TAG_MASK: number = 64512;
+const _SURROGATE_VALUE_MASK: number = 1023;
+const _LEAD_SURROGATE_MIN: number = 55296;
+const _TAIL_SURROGATE_MIN: number = 56320;
 
-export const properties: _Properties = new _Properties();
 
 @DartClass
 export class Codec<S, T> {
@@ -112,30 +95,7 @@ export class Encoding extends Codec<string, core.DartList<number>> {
         throw 'abstract'
     }
 
-    static _nameToEncoding: core.DartMap<string, Encoding> = new core.DartMap.literal([
-        ["iso_8859-1:1987", properties.LATIN1 as Encoding],
-        ["iso-ir-100", properties.LATIN1],
-        ["iso_8859-1", properties.LATIN1],
-        ["iso-8859-1", properties.LATIN1],
-        ["latin1", properties.LATIN1],
-        ["l1", properties.LATIN1],
-        ["ibm819", properties.LATIN1],
-        ["cp819", properties.LATIN1],
-        ["csisolatin1", properties.LATIN1],
-        ["iso-ir-6", properties.ASCII],
-        ["ansi_x3.4-1968", properties.ASCII],
-        ["ansi_x3.4-1986", properties.ASCII],
-        ["iso_646.irv:1991", properties.ASCII],
-        ["iso646-us", properties.ASCII],
-        ["us-ascii", properties.ASCII],
-        ["us", properties.ASCII],
-        ["ibm367", properties.ASCII],
-        ["cp367", properties.ASCII],
-        ["csascii", properties.ASCII],
-        ["ascii", properties.ASCII],
-        ["csutf8", properties.UTF8],
-        ["utf-8", properties.UTF8],
-    ]);
+    static _nameToEncoding: core.DartMap<string, Encoding>;
 
     static getByName(name: string): Encoding {
         if (name == null) return null;
@@ -256,7 +216,7 @@ export class _UnicodeSubsetEncoder extends Converter<string, core.DartList<numbe
     }
 
     startChunkedConversion(sink: core.DartSink<core.DartList<number>>): StringConversionSink {
-        if (is(sink, ByteConversionSink)) {
+        if (isNot(sink, ByteConversionSink)) {
             sink = new ByteConversionSink.from(sink);
         }
         return new _UnicodeSubsetEncoderSink(this._subsetMask, sink as any);
@@ -1513,10 +1473,10 @@ export class HtmlEscapeMode {
 
     static _: new(_name: string, escapeLtGt: boolean, escapeQuot: boolean, escapeApos: boolean, escapeSlash: boolean) => HtmlEscapeMode;
 
-    static UNKNOWN: HtmlEscapeMode = new HtmlEscapeMode._('unknown', true, true, true, true);
-    static ATTRIBUTE: HtmlEscapeMode = new HtmlEscapeMode._('attribute', true, true, false, false);
-    static SQ_ATTRIBUTE: HtmlEscapeMode = new HtmlEscapeMode._('attribute', true, false, true, false);
-    static ELEMENT: HtmlEscapeMode = new HtmlEscapeMode._('element', true, false, false, false);
+    static UNKNOWN: HtmlEscapeMode;
+    static ATTRIBUTE: HtmlEscapeMode;
+    static SQ_ATTRIBUTE: HtmlEscapeMode;
+    static ELEMENT: HtmlEscapeMode;
 
 
     constructor(_namedArguments?: { name?: string, escapeLtGt?: boolean, escapeQuot?: boolean, escapeApos?: boolean, escapeSlash?: boolean }) {
@@ -1542,6 +1502,12 @@ export class HtmlEscapeMode {
         return this._name;
     }
 }
+
+// Need to set this later because of decorator precedence
+HtmlEscapeMode.UNKNOWN = new HtmlEscapeMode._('unknown', true, true, true, true);
+HtmlEscapeMode.ATTRIBUTE = new HtmlEscapeMode._('attribute', true, true, false, false);
+HtmlEscapeMode.SQ_ATTRIBUTE = new HtmlEscapeMode._('attribute', true, false, true, false);
+HtmlEscapeMode.ELEMENT = new HtmlEscapeMode._('element', true, false, false, false);
 
 @DartClass
 export class HtmlEscape extends Converter<string, string> {
@@ -1601,7 +1567,7 @@ export class HtmlEscape extends Converter<string, string> {
     }
 
     startChunkedConversion(sink: core.DartSink<string>): StringConversionSink {
-        if (is(sink, StringConversionSink)) {
+        if (isNot(sink, StringConversionSink)) {
             sink = new StringConversionSink.from(sink);
         }
         return new _HtmlEscapeSink(this, sink as any);
@@ -1715,7 +1681,7 @@ export class JsonCodec extends Codec<core.DartObject, string> {
         return new JsonDecoder(reviver).convert(source);
     }
 
-    encode(value: core.DartObject, _namedArguments?: { toEncodable?: (object: any) => any }): string {
+    encode(value: any, _namedArguments?: { toEncodable?: (object: any) => any }): string {
         let {toEncodable} = Object.assign({}, _namedArguments);
         if (op(Op.EQUALS, toEncodable, null)) toEncodable = this._toEncodable;
         if (op(Op.EQUALS, toEncodable, null)) return this.encoder.convert(value);
@@ -1762,7 +1728,7 @@ export class JsonEncoder extends Converter<core.DartObject, string> {
     }
 
     startChunkedConversion(sink: core.DartSink<string>): ChunkedConversionSink<core.DartObject> {
-        if (is(sink, StringConversionSink)) {
+        if (isNot(sink, StringConversionSink)) {
             sink = new StringConversionSink.from(sink);
         } else if (is(sink, _Utf8EncoderSink)) {
             return new _JsonUtf8EncoderSink(sink._sink, this._toEncodable, JsonUtf8Encoder._utf8Encode(this.indent), JsonUtf8Encoder.DEFAULT_BUFFER_SIZE);
@@ -1953,7 +1919,7 @@ export class JsonDecoder extends Converter<string, core.DartObject> {
 }
 
 export var _parseJson: (source: string, reviver: (key: any, value: any) => any) => any = (source: string, reviver: (key: any, value: any) => any) => {
-    if (is(source, 'string')) throw core.argumentErrorValue(source);
+    if (isNot(source, 'string')) throw core.argumentErrorValue(source);
 
     let parsed;
     try {
@@ -2016,8 +1982,8 @@ export var _convertJsonToDartLazy: (object: any) => any = (object: any) => {
 @Implements(core.DartMap)
 export class _JsonMap implements core.DartMap<string, any> {
     _original;
-    _processed = _JsonMap._newJavaScriptObject();
-    _data = null;
+    _processed;
+    _data;
 
     constructor(_original: any) {
     }
@@ -2025,6 +1991,8 @@ export class _JsonMap implements core.DartMap<string, any> {
     @defaultConstructor
     _JsonMap(_original: any) {
         this._original = _original;
+        this._processed = _JsonMap._newJavaScriptObject();
+        this._data = null;
     }
 
     [OperatorMethods.INDEX](key: any) {
@@ -2034,7 +2002,7 @@ export class _JsonMap implements core.DartMap<string, any> {
     get(key: any) {
         if (this._isUpgraded) {
             return this._upgradedMap.get(key);
-        } else if (is(key, "string")) {
+        } else if (isNot(key, "string")) {
             return null;
         } else {
             let result = _JsonMap._getProperty(this._processed, key);
@@ -2104,7 +2072,7 @@ export class _JsonMap implements core.DartMap<string, any> {
 
     containsKey(key: any): boolean {
         if (this._isUpgraded) return this._upgradedMap.containsKey(key);
-        if (is(key, "string")) return false;
+        if (isNot(key, "string")) return false;
         return _JsonMap._hasProperty(this._original, key);
     }
 
@@ -2283,6 +2251,7 @@ export class _JsonStringifier {
 
     @defaultConstructor
     _JsonStringifier(toEncodable: (o: any) => any) {
+        this._seen = new core.DartList();
         this._toEncodable = toEncodable || _defaultToEncodable;
     }
 
@@ -2446,7 +2415,7 @@ export class _JsonStringifier {
         let i: number = 0;
         let allStringKeys: boolean = true;
         map.forEach((key: any, value: any) => {
-            if (is(key, "string")) {
+            if (isNot(key, "string")) {
                 allStringKeys = false;
             }
             keyValueList[i++] = key;
@@ -2506,7 +2475,7 @@ export class _JsonPrettyPrintMixin extends _JsonStringifier {
         let i: number = 0;
         let allStringKeys: boolean = true;
         map.forEach((key: any, value: any) => {
-            if (is(key, "string")) {
+            if (isNot(key, "string")) {
                 allStringKeys = false;
             }
             keyValueList[i++] = key;
@@ -2882,7 +2851,7 @@ export class _Latin1DecoderSink extends ByteConversionSinkBase {
     addSlice(source: core.DartList<number>, start: number, end: number, isLast: boolean): void {
         end = core.RangeError.checkValidRange(start, end, source.length);
         if (start == end) return;
-        if (is(source, typed_data.Uint8List)) {
+        if (isNot(source, typed_data.Uint8List)) {
             _Latin1DecoderSink._checkValidLatin1(source, start, end);
         }
         this._addSliceToSink(source, start, end, isLast);
@@ -3004,7 +2973,7 @@ export class LineSplitter extends Converter<string, core.DartList<string>> {
     }
 
     startChunkedConversion(sink: core.DartSink<string>): StringConversionSink {
-        if (is(sink, StringConversionSink)) {
+        if (isNot(sink, StringConversionSink)) {
             sink = new StringConversionSink.from(sink);
         }
         return new _LineSplitterSink(sink as any);
@@ -3515,7 +3484,7 @@ export class Utf8Encoder extends Converter<string, core.DartList<number>> {
     }
 
     startChunkedConversion(sink: core.DartSink<core.DartList<number>>): StringConversionSink {
-        if (is(sink, ByteConversionSink)) {
+        if (isNot(sink, ByteConversionSink)) {
             sink = new ByteConversionSink.from(sink);
         }
         return new _Utf8EncoderSink(sink as any) as any;
@@ -3756,7 +3725,7 @@ export class _Utf8Decoder {
         return this._expectedUnits > 0;
     }
 
-    static _LIMITS: core.DartList<number> = new core.DartList.literal<number>(properties._ONE_BYTE_LIMIT, properties._TWO_BYTE_LIMIT, properties._THREE_BYTE_LIMIT, properties._FOUR_BYTE_LIMIT);
+    static _LIMITS: core.DartList<number> = new core.DartList.literal<number>(_ONE_BYTE_LIMIT, _TWO_BYTE_LIMIT, _THREE_BYTE_LIMIT, _FOUR_BYTE_LIMIT);
 
     close(): void {
         this.flush();
@@ -3892,3 +3861,55 @@ export class _Utf8Decoder {
     }
 }
 
+export class _Properties {
+    ASCII: AsciiCodec = new AsciiCodec();
+    _ASCII_MASK: number = 127;
+    BASE64: Base64Codec = new Base64Codec();
+    BASE64URL: Base64Codec = new Base64Codec.urlSafe();
+    _paddingChar: number = 61;
+    HTML_ESCAPE: HtmlEscape = new HtmlEscape();
+    JSON: JsonCodec = new JsonCodec();
+    LATIN1: Latin1Codec = new Latin1Codec();
+    _LATIN1_MASK: number = 255;
+    _LF: number = 10;
+    _CR: number = 13;
+    UNICODE_REPLACEMENT_CHARACTER_RUNE: number = 65533;
+    UNICODE_BOM_CHARACTER_RUNE: number = 65279;
+    UTF8: Utf8Codec = new Utf8Codec();
+    _ONE_BYTE_LIMIT: number = _ONE_BYTE_LIMIT;
+    _TWO_BYTE_LIMIT: number = _TWO_BYTE_LIMIT;
+    _THREE_BYTE_LIMIT: number = _THREE_BYTE_LIMIT;
+    _FOUR_BYTE_LIMIT: number = _FOUR_BYTE_LIMIT;
+    _SURROGATE_MASK: number = _SURROGATE_MASK;
+    _SURROGATE_TAG_MASK: number = _SURROGATE_TAG_MASK;
+    _SURROGATE_VALUE_MASK: number = _SURROGATE_VALUE_MASK;
+    _LEAD_SURROGATE_MIN: number = _LEAD_SURROGATE_MIN;
+    _TAIL_SURROGATE_MIN: number = _TAIL_SURROGATE_MIN;
+}
+
+export const properties: _Properties = new _Properties();
+
+Encoding._nameToEncoding = new core.DartMap.literal([
+    ["iso_8859-1:1987", properties.LATIN1 as Encoding],
+    ["iso-ir-100", properties.LATIN1],
+    ["iso_8859-1", properties.LATIN1],
+    ["iso-8859-1", properties.LATIN1],
+    ["latin1", properties.LATIN1],
+    ["l1", properties.LATIN1],
+    ["ibm819", properties.LATIN1],
+    ["cp819", properties.LATIN1],
+    ["csisolatin1", properties.LATIN1],
+    ["iso-ir-6", properties.ASCII],
+    ["ansi_x3.4-1968", properties.ASCII],
+    ["ansi_x3.4-1986", properties.ASCII],
+    ["iso_646.irv:1991", properties.ASCII],
+    ["iso646-us", properties.ASCII],
+    ["us-ascii", properties.ASCII],
+    ["us", properties.ASCII],
+    ["ibm367", properties.ASCII],
+    ["cp367", properties.ASCII],
+    ["csascii", properties.ASCII],
+    ["ascii", properties.ASCII],
+    ["csutf8", properties.UTF8],
+    ["utf-8", properties.UTF8],
+]);
