@@ -64,6 +64,7 @@ export declare function mixin<Mixin extends {}, Base extends {}>(mixin: Construc
  * Simple decorator to apply a mixin without adding type info
  */
 export declare function With(...mixins: Constructor<any>[]): ClassDecorator;
+export declare function applyMixin<T, X extends {}, M extends Constructor<X>>(t: T, m: M): T & X;
 interface ConstructorData {
     ctor: Function;
     factory: boolean;

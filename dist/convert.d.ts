@@ -2,32 +2,6 @@ import { OperatorMethods } from "./utils";
 import * as core from "./core";
 import * as async from "./async";
 import * as typed_data from "./typed_data";
-export declare class _Properties {
-    ASCII: AsciiCodec;
-    _ASCII_MASK: number;
-    BASE64: Base64Codec;
-    BASE64URL: Base64Codec;
-    _paddingChar: number;
-    HTML_ESCAPE: HtmlEscape;
-    JSON: JsonCodec;
-    LATIN1: Latin1Codec;
-    _LATIN1_MASK: number;
-    _LF: number;
-    _CR: number;
-    UNICODE_REPLACEMENT_CHARACTER_RUNE: number;
-    UNICODE_BOM_CHARACTER_RUNE: number;
-    UTF8: Utf8Codec;
-    _ONE_BYTE_LIMIT: number;
-    _TWO_BYTE_LIMIT: number;
-    _THREE_BYTE_LIMIT: number;
-    _FOUR_BYTE_LIMIT: number;
-    _SURROGATE_MASK: number;
-    _SURROGATE_TAG_MASK: number;
-    _SURROGATE_VALUE_MASK: number;
-    _LEAD_SURROGATE_MIN: number;
-    _TAIL_SURROGATE_MIN: number;
-}
-export declare const properties: _Properties;
 export declare class Codec<S, T> {
     constructor();
     Codec(): void;
@@ -409,7 +383,7 @@ export declare class JsonCodec extends Codec<core.DartObject, string> {
     decode(source: string, _namedArguments?: {
         reviver?: (key: any, value: any) => any;
     }): any;
-    encode(value: core.DartObject, _namedArguments?: {
+    encode(value: any, _namedArguments?: {
         toEncodable?: (object: any) => any;
     }): string;
     readonly encoder: JsonEncoder;
@@ -814,3 +788,29 @@ export declare class _Utf8Decoder {
     flush(source?: core.DartList<number>, offset?: number): void;
     convert(codeUnits: core.DartList<number>, startIndex: number, endIndex: number): void;
 }
+export declare class _Properties {
+    ASCII: AsciiCodec;
+    _ASCII_MASK: number;
+    BASE64: Base64Codec;
+    BASE64URL: Base64Codec;
+    _paddingChar: number;
+    HTML_ESCAPE: HtmlEscape;
+    JSON: JsonCodec;
+    LATIN1: Latin1Codec;
+    _LATIN1_MASK: number;
+    _LF: number;
+    _CR: number;
+    UNICODE_REPLACEMENT_CHARACTER_RUNE: number;
+    UNICODE_BOM_CHARACTER_RUNE: number;
+    UTF8: Utf8Codec;
+    _ONE_BYTE_LIMIT: number;
+    _TWO_BYTE_LIMIT: number;
+    _THREE_BYTE_LIMIT: number;
+    _FOUR_BYTE_LIMIT: number;
+    _SURROGATE_MASK: number;
+    _SURROGATE_TAG_MASK: number;
+    _SURROGATE_VALUE_MASK: number;
+    _LEAD_SURROGATE_MIN: number;
+    _TAIL_SURROGATE_MIN: number;
+}
+export declare const properties: _Properties;

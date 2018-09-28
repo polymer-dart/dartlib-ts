@@ -4,13 +4,19 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var Endianness_1, Float32x4_1, NativeFloat32x4List_1, NativeInt32x4List_1, NativeFloat64x2List_1, NativeByteData_1, NativeTypedArrayOfDouble_1, NativeTypedArrayOfInt_1, NativeFloat32List_1, NativeFloat64List_1, NativeInt16List_1, NativeInt32List_1, NativeInt8List_1, NativeUint16List_1, NativeUint32List_1, NativeUint8ClampedList_1, NativeUint8List_1, NativeFloat32x4_1, NativeInt32x4_1, NativeFloat64x2_1;
+var Float32x4_1, NativeFloat32x4List_1, NativeInt32x4List_1, NativeFloat64x2List_1, NativeByteData_1, NativeTypedArrayOfDouble_1, NativeTypedArrayOfInt_1, NativeFloat32List_1, NativeFloat64List_1, NativeInt16List_1, NativeInt32List_1, NativeInt8List_1, NativeUint16List_1, NativeUint32List_1, NativeUint8ClampedList_1, NativeUint8List_1, NativeFloat32x4_1, NativeInt32x4_1, NativeFloat64x2_1;
 /** Library asset:sample_project/lib/typed_data/dart */
-import { is } from "./_common";
+import { is, isNot } from "./_common";
 import { defaultConstructor, namedConstructor, namedFactory, defaultFactory, DartClass, Implements, op, Op, OperatorMethods, Abstract, AbstractProperty, With, AbstractSymbols } from "./utils";
 import * as core from "./core";
 import * as math from "./math";
 let ByteBuffer = class ByteBuffer extends ArrayBuffer {
+    static _withLength(len) {
+        return new NativeByteBuffer(len);
+    }
+    static _fromBuffer(buffer) {
+        return new NativeByteBuffer(buffer.byteLength);
+    }
     get lengthInBytes() {
         throw 'abstract';
     }
@@ -108,6 +114,12 @@ __decorate([
 __decorate([
     Abstract
 ], ByteBuffer.prototype, "asByteData", null);
+__decorate([
+    namedFactory
+], ByteBuffer, "_withLength", null);
+__decorate([
+    namedFactory
+], ByteBuffer, "_fromBuffer", null);
 ByteBuffer = __decorate([
     DartClass
 ], ByteBuffer);
@@ -290,7 +302,7 @@ let Uint16List = class Uint16List extends TypedData {
         super();
     }
     static _Uint16List(length) {
-        return new NativeUint16List(length);
+        return new NativeUint16List.withLength(length);
     }
     static _fromList(elements) {
         return new NativeUint16List.fromList(elements);
@@ -609,21 +621,6 @@ Uint16List = __decorate([
     With(core.DartListMixin)
 ], Uint16List);
 export { Uint16List };
-let Endianness = Endianness_1 = class Endianness {
-    _(_littleEndian) {
-        this._littleEndian = _littleEndian;
-    }
-};
-Endianness.BIG_ENDIAN = new Endianness_1._(false);
-Endianness.LITTLE_ENDIAN = new Endianness_1._(true);
-Endianness.HOST_ENDIAN = (new ByteData.view(new Uint16List.fromList(new core.DartList.literal(1)).buffer)).getInt8(0) == 1 ? Endianness_1.LITTLE_ENDIAN : Endianness_1.BIG_ENDIAN;
-__decorate([
-    namedConstructor
-], Endianness.prototype, "_", null);
-Endianness = Endianness_1 = __decorate([
-    DartClass
-], Endianness);
-export { Endianness };
 let Int8List = class Int8List extends TypedData {
     constructor(length) {
         super();
@@ -3221,7 +3218,7 @@ let Float32List = class Float32List extends TypedData {
         super();
     }
     static _Float32List(length) {
-        return new NativeFloat32List(length);
+        return new NativeFloat32List.withLength(length);
     }
     static _fromList(elements) {
         return new NativeFloat32List.fromList(elements);
@@ -3545,7 +3542,7 @@ let Float64List = class Float64List extends TypedData {
         super();
     }
     static _Float64List(length) {
-        return new NativeFloat64List(length);
+        return new NativeFloat64List.withLength(length);
     }
     static _fromList(elements) {
         return new NativeFloat64List.fromList(elements);
@@ -5841,7 +5838,10 @@ Float64x2 = __decorate([
     DartClass
 ], Float64x2);
 export { Float64x2 };
-let NativeByteBuffer = class NativeByteBuffer extends ArrayBuffer {
+let NativeByteBufferMixin = class NativeByteBufferMixin {
+    get lengthInBytes() {
+        throw 'native';
+    }
     asUint8List(offsetInBytes, length) {
         offsetInBytes = offsetInBytes || 0;
         return new NativeUint8List.view(this, offsetInBytes, length);
@@ -5905,7 +5905,131 @@ let NativeByteBuffer = class NativeByteBuffer extends ArrayBuffer {
         offsetInBytes = offsetInBytes || 0;
         return new NativeByteData.view(this, offsetInBytes, length);
     }
+    get byteLength() {
+        throw 'abstract';
+    }
+    slice(begin, end) {
+        throw 'abstract';
+    }
 };
+__decorate([
+    Abstract
+], NativeByteBufferMixin.prototype, "lengthInBytes", null);
+__decorate([
+    AbstractProperty
+], NativeByteBufferMixin.prototype, "byteLength", null);
+__decorate([
+    Abstract
+], NativeByteBufferMixin.prototype, "slice", null);
+NativeByteBufferMixin = __decorate([
+    DartClass,
+    Implements(ByteBuffer),
+    AbstractSymbols(Symbol.toStringTag)
+], NativeByteBufferMixin);
+export { NativeByteBufferMixin };
+// Add the mixin to the ArrayBuffer directly
+With(NativeByteBufferMixin)(ArrayBuffer);
+let NativeByteBuffer = class NativeByteBuffer extends ArrayBuffer {
+    constructor(len) {
+        super(len);
+    }
+    get lengthInBytes() {
+        throw 'abstract';
+    }
+    asUint8List(offsetInBytes, length) {
+        throw 'abstract';
+    }
+    asInt8List(offsetInBytes, length) {
+        throw 'abstract';
+    }
+    asUint8ClampedList(offsetInBytes, length) {
+        throw 'abstract';
+    }
+    asUint16List(offsetInBytes, length) {
+        throw 'abstract';
+    }
+    asInt16List(offsetInBytes, length) {
+        throw 'abstract';
+    }
+    asUint32List(offsetInBytes, length) {
+        throw 'abstract';
+    }
+    asInt32List(offsetInBytes, length) {
+        throw 'abstract';
+    }
+    asUint64List(offsetInBytes, length) {
+        throw 'abstract';
+    }
+    asInt64List(offsetInBytes, length) {
+        throw 'abstract';
+    }
+    asInt32x4List(offsetInBytes, length) {
+        throw 'abstract';
+    }
+    asFloat32List(offsetInBytes, length) {
+        throw 'abstract';
+    }
+    asFloat64List(offsetInBytes, length) {
+        throw 'abstract';
+    }
+    asFloat32x4List(offsetInBytes, length) {
+        throw 'abstract';
+    }
+    asFloat64x2List(offsetInBytes, length) {
+        throw 'abstract';
+    }
+    asByteData(offsetInBytes, length) {
+        throw 'abstract';
+    }
+};
+__decorate([
+    AbstractProperty
+], NativeByteBuffer.prototype, "lengthInBytes", null);
+__decorate([
+    Abstract
+], NativeByteBuffer.prototype, "asUint8List", null);
+__decorate([
+    Abstract
+], NativeByteBuffer.prototype, "asInt8List", null);
+__decorate([
+    Abstract
+], NativeByteBuffer.prototype, "asUint8ClampedList", null);
+__decorate([
+    Abstract
+], NativeByteBuffer.prototype, "asUint16List", null);
+__decorate([
+    Abstract
+], NativeByteBuffer.prototype, "asInt16List", null);
+__decorate([
+    Abstract
+], NativeByteBuffer.prototype, "asUint32List", null);
+__decorate([
+    Abstract
+], NativeByteBuffer.prototype, "asInt32List", null);
+__decorate([
+    Abstract
+], NativeByteBuffer.prototype, "asUint64List", null);
+__decorate([
+    Abstract
+], NativeByteBuffer.prototype, "asInt64List", null);
+__decorate([
+    Abstract
+], NativeByteBuffer.prototype, "asInt32x4List", null);
+__decorate([
+    Abstract
+], NativeByteBuffer.prototype, "asFloat32List", null);
+__decorate([
+    Abstract
+], NativeByteBuffer.prototype, "asFloat64List", null);
+__decorate([
+    Abstract
+], NativeByteBuffer.prototype, "asFloat32x4List", null);
+__decorate([
+    Abstract
+], NativeByteBuffer.prototype, "asFloat64x2List", null);
+__decorate([
+    Abstract
+], NativeByteBuffer.prototype, "asByteData", null);
 NativeByteBuffer = __decorate([
     DartClass,
     Implements(ByteBuffer)
@@ -5916,13 +6040,13 @@ let NativeFloat32x4List = NativeFloat32x4List_1 = class NativeFloat32x4List exte
         super(length);
     }
     NativeFloat32x4List(length) {
-        this._storage = new NativeFloat32List(length * 4);
+        this._storage = new NativeFloat32List.withLength(length * 4);
     }
     _externalStorage(_storage) {
         this._storage = _storage;
     }
     _slowFromList(list) {
-        this._storage = new NativeFloat32List(list.length * 4);
+        this._storage = new NativeFloat32List.withLength(list.length * 4);
         for (let i = 0; i < list.length; i++) {
             let e = list[i];
             op(Op.INDEX_ASSIGN, this._storage, (i * 4) + 0, e.x);
@@ -6078,13 +6202,13 @@ let NativeFloat64x2List = NativeFloat64x2List_1 = class NativeFloat64x2List exte
         super();
     }
     NativeFloat64x2List(length) {
-        this._storage = new NativeFloat64List(length * 2);
+        this._storage = new NativeFloat64List.withLength(length * 2);
     }
     _externalStorage(_storage) {
         this._storage = _storage;
     }
     _slowFromList(list) {
-        this._storage = new NativeFloat64List(list.length * 2);
+        this._storage = new NativeFloat64List.withLength(list.length * 2);
         for (let i = 0; i < list.length; i++) {
             let e = list[i];
             op(Op.INDEX_ASSIGN, this._storage, (i * 2) + 0, e.x);
@@ -6219,13 +6343,13 @@ export var _checkLength = (length) => {
     return length;
 };
 export var _checkViewArguments = (buffer, offsetInBytes, length) => {
-    if (is(buffer, NativeByteBuffer)) {
+    if (isNot(buffer, NativeByteBuffer) && isNot(buffer, ArrayBuffer)) {
         throw new core.ArgumentError('Invalid view buffer');
     }
-    if (is(offsetInBytes, "number")) {
+    if (isNot(offsetInBytes, "number")) {
         throw new core.ArgumentError(`Invalid view offsetInBytes ${offsetInBytes}`);
     }
-    if (length != null && is(length, "number")) {
+    if (length != null && isNot(length, "number")) {
         throw new core.ArgumentError(`Invalid view length ${length}`);
     }
 };
@@ -6241,8 +6365,14 @@ export var _ensureNativeList = (list) => {
 let NativeByteData = NativeByteData_1 = class NativeByteData extends DataView {
     constructor(...args) {
         // @ts-ignore
-        super();
+        super(...args);
     }
+    /*
+        @namedFactory
+        static empty():NativeByteData {
+            return NativeByteData._create1()
+        }
+    */
     static _view(buffer, offsetInBytes, length) {
         _checkViewArguments(buffer, offsetInBytes, length);
         return length == null ? NativeByteData_1._create2(buffer, offsetInBytes) : NativeByteData_1._create3(buffer, offsetInBytes, length);
@@ -6360,7 +6490,7 @@ let NativeByteData = NativeByteData_1 = class NativeByteData extends DataView {
     }
     //setUint8(byteOffset: number, value: number): void
     static _create1(arg) {
-        return new NativeByteData_1(new ArrayBuffer(arg)) /* JS('NativeByteData', 'new DataView(new ArrayBuffer(#))', arg) */;
+        return new NativeByteData_1(new ByteBuffer(arg)) /* JS('NativeByteData', 'new DataView(new ArrayBuffer(#))', arg) */;
     }
     static _create2(arg1, arg2) {
         return new NativeByteData_1(arg1, arg2) /* JS('NativeByteData', 'new DataView(#, #)', arg1, arg2) */;
@@ -7045,9 +7175,12 @@ NativeTypedArrayOfInt = NativeTypedArrayOfInt_1 = __decorate([
 ], NativeTypedArrayOfInt);
 export { NativeTypedArrayOfInt };
 let NativeFloat32List = NativeFloat32List_1 = class NativeFloat32List extends Float32Array {
-    constructor(...args) {
+    constructor(buffer, byteOffset, length) {
         // @ts-ignore
-        super(...args);
+        super(...arguments);
+    }
+    static _withLength(len) {
+        return NativeFloat32List_1._create1(len);
     }
     static _fromList(elements) {
         return NativeFloat32List_1._create1(_ensureNativeList(elements));
@@ -7061,8 +7194,15 @@ let NativeFloat32List = NativeFloat32List_1 = class NativeFloat32List extends Fl
         let source = this.subarray(start, end) /* JS('NativeFloat32List', '#.subarray(#, #)', this, start, end) */;
         return NativeFloat32List_1._create1(source);
     }
-    static _create1(arg) {
-        return new NativeFloat32List_1(arg) /* JS('NativeFloat32List', 'new Float32Array(#)', arg) */;
+    static _create1(lenOrSource) {
+        // TODO : Accept an array too, but how to create a ByteBuffer from a Float32Array ?
+        if (typeof lenOrSource == 'number') {
+            let buf = new ByteBuffer.withLength(lenOrSource * this.BYTES_PER_ELEMENT);
+            return new NativeFloat32List_1(buf, 0, lenOrSource);
+        }
+        else {
+            return new NativeFloat32List_1(lenOrSource) /* JS('NativeFloat32List', 'new Float32Array(#)', arg) */;
+        }
     }
     static _create2(arg1, arg2) {
         return new NativeFloat32List_1(arg1, arg2) /* JS('NativeFloat32List', 'new Float32Array(#, #)', arg1, arg2) */;
@@ -7372,6 +7512,9 @@ __decorate([
 ], NativeFloat32List.prototype, "setRange", null);
 __decorate([
     namedFactory
+], NativeFloat32List, "_withLength", null);
+__decorate([
+    namedFactory
 ], NativeFloat32List, "_fromList", null);
 __decorate([
     namedFactory
@@ -7383,9 +7526,12 @@ NativeFloat32List = NativeFloat32List_1 = __decorate([
 ], NativeFloat32List);
 export { NativeFloat32List };
 let NativeFloat64List = NativeFloat64List_1 = class NativeFloat64List extends Float64Array {
-    constructor(...args) {
+    constructor(buffer, byteOffset, length) {
         // @ts-ignore
-        super(...args);
+        super(...arguments);
+    }
+    static _withLength(len) {
+        return NativeFloat64List_1._create1(len);
     }
     static _fromList(elements) {
         return NativeFloat64List_1._create1(_ensureNativeList(elements));
@@ -7399,8 +7545,15 @@ let NativeFloat64List = NativeFloat64List_1 = class NativeFloat64List extends Fl
         let source = this.subarray(start, end) /* JS('NativeFloat64List', '#.subarray(#, #)', this, start, end) */;
         return NativeFloat64List_1._create1(source);
     }
-    static _create1(arg) {
-        return new NativeFloat64List_1(arg) /* JS('NativeFloat64List', 'new Float64Array(#)', arg) */;
+    static _create1(lenOrSource) {
+        // TODO : Accept an array too, but how to create a ByteBuffer from a Float32Array ?
+        if (typeof lenOrSource == 'number') {
+            let buf = new ByteBuffer.withLength(lenOrSource * this.BYTES_PER_ELEMENT);
+            return new NativeFloat64List_1(buf, 0, lenOrSource);
+        }
+        else {
+            return new NativeFloat64List_1(lenOrSource) /* JS('NativeFloat32List', 'new Float32Array(#)', arg) */;
+        }
     }
     static _create2(arg1, arg2) {
         return new NativeFloat64List_1(arg1, arg2) /* JS('NativeFloat64List', 'new Float64Array(#, #)', arg1, arg2) */;
@@ -7708,6 +7861,9 @@ __decorate([
 __decorate([
     Abstract
 ], NativeFloat64List.prototype, "setRange", null);
+__decorate([
+    namedFactory
+], NativeFloat64List, "_withLength", null);
 __decorate([
     namedFactory
 ], NativeFloat64List, "_fromList", null);
@@ -8723,9 +8879,12 @@ NativeInt8List = NativeInt8List_1 = __decorate([
 ], NativeInt8List);
 export { NativeInt8List };
 let NativeUint16List = NativeUint16List_1 = class NativeUint16List extends Uint16Array {
-    constructor(...args) {
+    constructor(buffer, byteOffset, length) {
         // @ts-ignore
-        super(...args);
+        super(...arguments);
+    }
+    static _withLength(len) {
+        return NativeUint16List_1._create1(len);
     }
     static _fromList(list) {
         return NativeUint16List_1._create1(_ensureNativeList(list));
@@ -8743,8 +8902,15 @@ let NativeUint16List = NativeUint16List_1 = class NativeUint16List extends Uint1
         let source = this.subarray(start, end) /* JS('NativeUint16List', '#.subarray(#, #)', this, start, end) */;
         return NativeUint16List_1._create1(source);
     }
-    static _create1(arg) {
-        return new NativeUint16List_1(arg) /* JS('NativeUint16List', 'new Uint16Array(#)', arg) */;
+    static _create1(lenOrSource) {
+        // TODO : Accept an array too, but how to create a ByteBuffer from a Float32Array ?
+        if (typeof lenOrSource == 'number') {
+            let buf = new ByteBuffer.withLength(lenOrSource * this.BYTES_PER_ELEMENT);
+            return new NativeUint16List_1(buf, 0, lenOrSource);
+        }
+        else {
+            return new NativeUint16List_1(lenOrSource) /* JS('NativeFloat32List', 'new Float32Array(#)', arg) */;
+        }
     }
     static _create2(arg1, arg2) {
         return new NativeUint16List_1(arg1, arg2) /* JS('NativeUint16List', 'new Uint16Array(#, #)', arg1, arg2) */;
@@ -9027,6 +9193,9 @@ __decorate([
 __decorate([
     Abstract
 ], NativeUint16List.prototype, "_setRangeFast", null);
+__decorate([
+    namedFactory
+], NativeUint16List, "_withLength", null);
 __decorate([
     namedFactory
 ], NativeUint16List, "_fromList", null);
@@ -9691,9 +9860,6 @@ let NativeUint8List = NativeUint8List_1 = class NativeUint8List extends Uint8Arr
         _checkViewArguments(buffer, offsetInBytes, length);
         return length == null ? NativeUint8List_1._create2(buffer, offsetInBytes) : NativeUint8List_1._create3(buffer, offsetInBytes, length);
     }
-    get length() {
-        return this.length /* JS('JSUInt32', '#.length', this) */;
-    }
     [OperatorMethods.INDEX](index) {
         _checkValidIndex(index, this, this.length);
         return this[index] /* JS('JSUInt31', '#[#]', this, index) */;
@@ -10012,13 +10178,13 @@ let NativeFloat32x4 = NativeFloat32x4_1 = class NativeFloat32x4 {
         this.y = NativeFloat32x4_1._truncate(y);
         this.z = NativeFloat32x4_1._truncate(z);
         this.w = NativeFloat32x4_1._truncate(w);
-        if (is(x, "number"))
+        if (isNot(x, "number"))
             throw new core.ArgumentError(x);
-        if (is(y, "number"))
+        if (isNot(y, "number"))
             throw new core.ArgumentError(y);
-        if (is(z, "number"))
+        if (isNot(z, "number"))
             throw new core.ArgumentError(z);
-        if (is(w, "number"))
+        if (isNot(w, "number"))
             throw new core.ArgumentError(w);
     }
     splat(v) {
@@ -10255,7 +10421,7 @@ let NativeFloat32x4 = NativeFloat32x4_1 = class NativeFloat32x4 {
         return new NativeFloat32x4_1._doubles(_x, _y, _z, _w);
     }
 };
-NativeFloat32x4._list = new NativeFloat32List(4);
+NativeFloat32x4._list = new NativeFloat32List.withLength(4);
 NativeFloat32x4._uint32view = NativeFloat32x4_1._list.buffer.asUint32List();
 __decorate([
     defaultConstructor
@@ -10566,7 +10732,7 @@ let NativeFloat64x2 = NativeFloat64x2_1 = class NativeFloat64x2 {
         return new NativeFloat64x2_1._doubles(math.sqrt(this.x), math.sqrt(this.y));
     }
 };
-NativeFloat64x2._list = new NativeFloat64List(2);
+NativeFloat64x2._list = new NativeFloat64List.withLength(2);
 NativeFloat64x2._uint32View = NativeFloat64x2_1._list.buffer.asUint32List();
 __decorate([
     defaultConstructor
@@ -10604,6 +10770,22 @@ export var _checkValidRange = (start, end, length) => {
         return length;
     return end;
 };
+let Endianness = class Endianness {
+    _(_littleEndian) {
+        this._littleEndian = _littleEndian;
+    }
+};
+__decorate([
+    namedConstructor
+], Endianness.prototype, "_", null);
+Endianness = __decorate([
+    DartClass
+], Endianness);
+export { Endianness };
+// Init later because of decorators needs to apply first.
+Endianness.BIG_ENDIAN = new Endianness._(false);
+Endianness.LITTLE_ENDIAN = new Endianness._(true);
+Endianness.HOST_ENDIAN = (new ByteData.view(new Uint16List.fromList(new core.DartList.literal(1)).buffer)).getInt8(0) == 1 ? Endianness.LITTLE_ENDIAN : Endianness.BIG_ENDIAN;
 export class _Properties {
 }
 export const properties = new _Properties();

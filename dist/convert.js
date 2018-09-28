@@ -4,42 +4,24 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var Encoding_1, Base64Codec_1, _Base64Encoder_1, _Base64Decoder_1, _ByteCallbackSink_1, HtmlEscapeMode_1, JsonUtf8Encoder_1, _JsonMap_1, _JsonStringifier_1, _JsonStringStringifier_1, _JsonUtf8Stringifier_1, _Latin1DecoderSink_1, _StringConversionSinkAsStringSinkAdapter_1, _Utf8Encoder_1, Utf8Decoder_1, _Utf8Decoder_1;
+var Encoding_1, Base64Codec_1, _Base64Encoder_1, _Base64Decoder_1, _ByteCallbackSink_1, JsonUtf8Encoder_1, _JsonMap_1, _JsonStringifier_1, _JsonStringStringifier_1, _JsonUtf8Stringifier_1, _Latin1DecoderSink_1, _StringConversionSinkAsStringSinkAdapter_1, _Utf8Encoder_1, Utf8Decoder_1, _Utf8Decoder_1;
 /** Library asset:sample_project/lib/convert/convert.dart */
-import { is } from "./_common";
+import { is, isNot } from "./_common";
 import { defaultConstructor, namedConstructor, namedFactory, DartClass, Implements, op, Op, OperatorMethods, Abstract, AbstractProperty } from "./utils";
 import * as core from "./core";
 import * as async from "./async";
 import * as typed_data from "./typed_data";
 import * as _internal from "./_internal";
-export class _Properties {
-    constructor() {
-        this.ASCII = new AsciiCodec();
-        this._ASCII_MASK = 127;
-        this.BASE64 = new Base64Codec();
-        this.BASE64URL = new Base64Codec.urlSafe();
-        this._paddingChar = 61;
-        this.HTML_ESCAPE = new HtmlEscape();
-        this.JSON = new JsonCodec();
-        this.LATIN1 = new Latin1Codec();
-        this._LATIN1_MASK = 255;
-        this._LF = 10;
-        this._CR = 13;
-        this.UNICODE_REPLACEMENT_CHARACTER_RUNE = 65533;
-        this.UNICODE_BOM_CHARACTER_RUNE = 65279;
-        this.UTF8 = new Utf8Codec();
-        this._ONE_BYTE_LIMIT = 127;
-        this._TWO_BYTE_LIMIT = 2047;
-        this._THREE_BYTE_LIMIT = 65535;
-        this._FOUR_BYTE_LIMIT = 1114111;
-        this._SURROGATE_MASK = 63488;
-        this._SURROGATE_TAG_MASK = 64512;
-        this._SURROGATE_VALUE_MASK = 1023;
-        this._LEAD_SURROGATE_MIN = 55296;
-        this._TAIL_SURROGATE_MIN = 56320;
-    }
-}
-export const properties = new _Properties();
+import { DartList } from "./core";
+const _ONE_BYTE_LIMIT = 127;
+const _TWO_BYTE_LIMIT = 2047;
+const _THREE_BYTE_LIMIT = 65535;
+const _FOUR_BYTE_LIMIT = 1114111;
+const _SURROGATE_MASK = 63488;
+const _SURROGATE_TAG_MASK = 64512;
+const _SURROGATE_VALUE_MASK = 1023;
+const _LEAD_SURROGATE_MIN = 55296;
+const _TAIL_SURROGATE_MIN = 56320;
 let Codec = class Codec {
     constructor() {
     }
@@ -112,30 +94,6 @@ let Encoding = Encoding_1 = class Encoding extends Codec {
         return Encoding_1._nameToEncoding.get(name);
     }
 };
-Encoding._nameToEncoding = new core.DartMap.literal([
-    ["iso_8859-1:1987", properties.LATIN1],
-    ["iso-ir-100", properties.LATIN1],
-    ["iso_8859-1", properties.LATIN1],
-    ["iso-8859-1", properties.LATIN1],
-    ["latin1", properties.LATIN1],
-    ["l1", properties.LATIN1],
-    ["ibm819", properties.LATIN1],
-    ["cp819", properties.LATIN1],
-    ["csisolatin1", properties.LATIN1],
-    ["iso-ir-6", properties.ASCII],
-    ["ansi_x3.4-1968", properties.ASCII],
-    ["ansi_x3.4-1986", properties.ASCII],
-    ["iso_646.irv:1991", properties.ASCII],
-    ["iso646-us", properties.ASCII],
-    ["us-ascii", properties.ASCII],
-    ["us", properties.ASCII],
-    ["ibm367", properties.ASCII],
-    ["cp367", properties.ASCII],
-    ["csascii", properties.ASCII],
-    ["ascii", properties.ASCII],
-    ["csutf8", properties.UTF8],
-    ["utf-8", properties.UTF8],
-]);
 __decorate([
     defaultConstructor
 ], Encoding.prototype, "Encoding", null);
@@ -256,7 +214,7 @@ let _UnicodeSubsetEncoder = class _UnicodeSubsetEncoder extends Converter {
         return result;
     }
     startChunkedConversion(sink) {
-        if (is(sink, ByteConversionSink)) {
+        if (isNot(sink, ByteConversionSink)) {
             sink = new ByteConversionSink.from(sink);
         }
         return new _UnicodeSubsetEncoderSink(this._subsetMask, sink);
@@ -1513,7 +1471,7 @@ _FusedConverter = __decorate([
     DartClass
 ], _FusedConverter);
 export { _FusedConverter };
-let HtmlEscapeMode = HtmlEscapeMode_1 = class HtmlEscapeMode {
+let HtmlEscapeMode = class HtmlEscapeMode {
     constructor(_namedArguments) {
     }
     _(_name, escapeLtGt, escapeQuot, escapeApos, escapeSlash) {
@@ -1541,20 +1499,21 @@ let HtmlEscapeMode = HtmlEscapeMode_1 = class HtmlEscapeMode {
         return this._name;
     }
 };
-HtmlEscapeMode.UNKNOWN = new HtmlEscapeMode_1._('unknown', true, true, true, true);
-HtmlEscapeMode.ATTRIBUTE = new HtmlEscapeMode_1._('attribute', true, true, false, false);
-HtmlEscapeMode.SQ_ATTRIBUTE = new HtmlEscapeMode_1._('attribute', true, false, true, false);
-HtmlEscapeMode.ELEMENT = new HtmlEscapeMode_1._('element', true, false, false, false);
 __decorate([
     namedConstructor
 ], HtmlEscapeMode.prototype, "_", null);
 __decorate([
     defaultConstructor
 ], HtmlEscapeMode.prototype, "HtmlEscapeMode", null);
-HtmlEscapeMode = HtmlEscapeMode_1 = __decorate([
+HtmlEscapeMode = __decorate([
     DartClass
 ], HtmlEscapeMode);
 export { HtmlEscapeMode };
+// Need to set this later because of decorator precedence
+HtmlEscapeMode.UNKNOWN = new HtmlEscapeMode._('unknown', true, true, true, true);
+HtmlEscapeMode.ATTRIBUTE = new HtmlEscapeMode._('attribute', true, true, false, false);
+HtmlEscapeMode.SQ_ATTRIBUTE = new HtmlEscapeMode._('attribute', true, false, true, false);
+HtmlEscapeMode.ELEMENT = new HtmlEscapeMode._('element', true, false, false, false);
 let HtmlEscape = class HtmlEscape extends Converter {
     constructor(mode) {
         // @ts-ignore
@@ -1614,7 +1573,7 @@ let HtmlEscape = class HtmlEscape extends Converter {
         return result.toString();
     }
     startChunkedConversion(sink) {
-        if (is(sink, StringConversionSink)) {
+        if (isNot(sink, StringConversionSink)) {
             sink = new StringConversionSink.from(sink);
         }
         return new _HtmlEscapeSink(this, sink);
@@ -1772,7 +1731,7 @@ let JsonEncoder = class JsonEncoder extends Converter {
         return _JsonStringStringifier.stringify(object, this._toEncodable, this.indent);
     }
     startChunkedConversion(sink) {
-        if (is(sink, StringConversionSink)) {
+        if (isNot(sink, StringConversionSink)) {
             sink = new StringConversionSink.from(sink);
         }
         else if (is(sink, _Utf8EncoderSink)) {
@@ -1960,7 +1919,7 @@ JsonDecoder = __decorate([
 ], JsonDecoder);
 export { JsonDecoder };
 export var _parseJson = (source, reviver) => {
-    if (is(source, 'string'))
+    if (isNot(source, 'string'))
         throw core.argumentErrorValue(source);
     let parsed;
     try {
@@ -2012,19 +1971,20 @@ export var _convertJsonToDartLazy = (object) => {
     if (Object.getPrototypeOf(object) !== Array.prototype /* JS('bool', 'Object.getPrototypeOf(#) !== Array.prototype', object) */) {
         return new _JsonMap(object);
     }
+    let res = new DartList();
     for (let i = 0; i < object.length /* JS('int', '#.length', object) */; i++) {
         let item = object[i] /* JS('', '#[#]', object, i) */;
-        object[i] = _convertJsonToDartLazy(item) /* JS('', '#[#]=#', object, i, _convertJsonToDartLazy(item)) */;
+        res.add(_convertJsonToDartLazy(item)) /* JS('', '#[#]=#', object, i, _convertJsonToDartLazy(item)) */;
     }
-    return object;
+    return res;
 };
 let _JsonMap = _JsonMap_1 = class _JsonMap {
     constructor(_original) {
-        this._processed = _JsonMap_1._newJavaScriptObject();
-        this._data = null;
     }
     _JsonMap(_original) {
         this._original = _original;
+        this._processed = _JsonMap_1._newJavaScriptObject();
+        this._data = null;
     }
     [OperatorMethods.INDEX](key) {
         return this.get(key);
@@ -2033,7 +1993,7 @@ let _JsonMap = _JsonMap_1 = class _JsonMap {
         if (this._isUpgraded) {
             return this._upgradedMap.get(key);
         }
-        else if (is(key, "string")) {
+        else if (isNot(key, "string")) {
             return null;
         }
         else {
@@ -2102,7 +2062,7 @@ let _JsonMap = _JsonMap_1 = class _JsonMap {
     containsKey(key) {
         if (this._isUpgraded)
             return this._upgradedMap.containsKey(key);
-        if (is(key, "string"))
+        if (isNot(key, "string"))
             return false;
         return _JsonMap_1._hasProperty(this._original, key);
     }
@@ -2256,6 +2216,7 @@ let _JsonStringifier = _JsonStringifier_1 = class _JsonStringifier {
         this._seen = new core.DartList();
     }
     _JsonStringifier(toEncodable) {
+        this._seen = new core.DartList();
         this._toEncodable = toEncodable || _defaultToEncodable;
     }
     writeString(characters) {
@@ -2418,7 +2379,7 @@ let _JsonStringifier = _JsonStringifier_1 = class _JsonStringifier {
         let i = 0;
         let allStringKeys = true;
         map.forEach((key, value) => {
-            if (is(key, "string")) {
+            if (isNot(key, "string")) {
                 allStringKeys = false;
             }
             keyValueList[i++] = key;
@@ -2509,7 +2470,7 @@ let _JsonPrettyPrintMixin = class _JsonPrettyPrintMixin extends _JsonStringifier
         let i = 0;
         let allStringKeys = true;
         map.forEach((key, value) => {
-            if (is(key, "string")) {
+            if (isNot(key, "string")) {
                 allStringKeys = false;
             }
             keyValueList[i++] = key;
@@ -2880,7 +2841,7 @@ let _Latin1DecoderSink = _Latin1DecoderSink_1 = class _Latin1DecoderSink extends
         end = core.RangeError.checkValidRange(start, end, source.length);
         if (start == end)
             return;
-        if (is(source, typed_data.Uint8List)) {
+        if (isNot(source, typed_data.Uint8List)) {
             _Latin1DecoderSink_1._checkValidLatin1(source, start, end);
         }
         this._addSliceToSink(source, start, end, isLast);
@@ -3004,7 +2965,7 @@ let LineSplitter = class LineSplitter extends Converter {
         return lines;
     }
     startChunkedConversion(sink) {
-        if (is(sink, StringConversionSink)) {
+        if (isNot(sink, StringConversionSink)) {
             sink = new StringConversionSink.from(sink);
         }
         return new _LineSplitterSink(sink);
@@ -3499,7 +3460,7 @@ let Utf8Encoder = class Utf8Encoder extends Converter {
         return encoder._buffer.sublist(0, encoder._bufferIndex);
     }
     startChunkedConversion(sink) {
-        if (is(sink, ByteConversionSink)) {
+        if (isNot(sink, ByteConversionSink)) {
             sink = new ByteConversionSink.from(sink);
         }
         return new _Utf8EncoderSink(sink);
@@ -3517,13 +3478,15 @@ Utf8Encoder = __decorate([
 export { Utf8Encoder };
 let _Utf8Encoder = _Utf8Encoder_1 = class _Utf8Encoder {
     constructor() {
-        this._carry = 0;
-        this._bufferIndex = 0;
     }
     _Utf8Encoder() {
+        this._carry = 0;
+        this._bufferIndex = 0;
         this.withBufferSize(_Utf8Encoder_1._DEFAULT_BYTE_BUFFER_SIZE);
     }
     withBufferSize(bufferSize) {
+        this._carry = 0;
+        this._bufferIndex = 0;
         this._buffer = _Utf8Encoder_1._createBuffer(bufferSize);
     }
     static _createBuffer(size) {
@@ -3876,7 +3839,7 @@ let _Utf8Decoder = _Utf8Decoder_1 = class _Utf8Decoder {
         }
     }
 };
-_Utf8Decoder._LIMITS = new core.DartList.literal(properties._ONE_BYTE_LIMIT, properties._TWO_BYTE_LIMIT, properties._THREE_BYTE_LIMIT, properties._FOUR_BYTE_LIMIT);
+_Utf8Decoder._LIMITS = new core.DartList.literal(_ONE_BYTE_LIMIT, _TWO_BYTE_LIMIT, _THREE_BYTE_LIMIT, _FOUR_BYTE_LIMIT);
 __decorate([
     defaultConstructor
 ], _Utf8Decoder.prototype, "_Utf8Decoder", null);
@@ -3884,4 +3847,56 @@ _Utf8Decoder = _Utf8Decoder_1 = __decorate([
     DartClass
 ], _Utf8Decoder);
 export { _Utf8Decoder };
+export class _Properties {
+    constructor() {
+        this.ASCII = new AsciiCodec();
+        this._ASCII_MASK = 127;
+        this.BASE64 = new Base64Codec();
+        this.BASE64URL = new Base64Codec.urlSafe();
+        this._paddingChar = 61;
+        this.HTML_ESCAPE = new HtmlEscape();
+        this.JSON = new JsonCodec();
+        this.LATIN1 = new Latin1Codec();
+        this._LATIN1_MASK = 255;
+        this._LF = 10;
+        this._CR = 13;
+        this.UNICODE_REPLACEMENT_CHARACTER_RUNE = 65533;
+        this.UNICODE_BOM_CHARACTER_RUNE = 65279;
+        this.UTF8 = new Utf8Codec();
+        this._ONE_BYTE_LIMIT = _ONE_BYTE_LIMIT;
+        this._TWO_BYTE_LIMIT = _TWO_BYTE_LIMIT;
+        this._THREE_BYTE_LIMIT = _THREE_BYTE_LIMIT;
+        this._FOUR_BYTE_LIMIT = _FOUR_BYTE_LIMIT;
+        this._SURROGATE_MASK = _SURROGATE_MASK;
+        this._SURROGATE_TAG_MASK = _SURROGATE_TAG_MASK;
+        this._SURROGATE_VALUE_MASK = _SURROGATE_VALUE_MASK;
+        this._LEAD_SURROGATE_MIN = _LEAD_SURROGATE_MIN;
+        this._TAIL_SURROGATE_MIN = _TAIL_SURROGATE_MIN;
+    }
+}
+export const properties = new _Properties();
+Encoding._nameToEncoding = new core.DartMap.literal([
+    ["iso_8859-1:1987", properties.LATIN1],
+    ["iso-ir-100", properties.LATIN1],
+    ["iso_8859-1", properties.LATIN1],
+    ["iso-8859-1", properties.LATIN1],
+    ["latin1", properties.LATIN1],
+    ["l1", properties.LATIN1],
+    ["ibm819", properties.LATIN1],
+    ["cp819", properties.LATIN1],
+    ["csisolatin1", properties.LATIN1],
+    ["iso-ir-6", properties.ASCII],
+    ["ansi_x3.4-1968", properties.ASCII],
+    ["ansi_x3.4-1986", properties.ASCII],
+    ["iso_646.irv:1991", properties.ASCII],
+    ["iso646-us", properties.ASCII],
+    ["us-ascii", properties.ASCII],
+    ["us", properties.ASCII],
+    ["ibm367", properties.ASCII],
+    ["cp367", properties.ASCII],
+    ["csascii", properties.ASCII],
+    ["ascii", properties.ASCII],
+    ["csutf8", properties.UTF8],
+    ["utf-8", properties.UTF8],
+]);
 //# sourceMappingURL=convert.js.map

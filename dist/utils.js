@@ -145,6 +145,14 @@ export function With(...mixins) {
         });
     };
 }
+export function applyMixin(t, m) {
+    let srcMeta = getMetadata(mixin);
+    let dstMeta = getMetadata(t.constructor);
+    let excludesFromPrototype = new Set(srcMeta.abstracts.keys());
+    excludesFromPrototype.add('constructor');
+    copyProps(mixin.prototype, t, { excludes: excludesFromPrototype, dstMeta, overwrite: false });
+    return t;
+}
 export function AbstractSymbols(...symbols) {
     return (ctor) => {
         let meta = getMetadata(ctor);
@@ -274,20 +282,22 @@ export function Implements(...intf) {
         meta.implements.push(...intf);
     };
 }
-function _isA(ctor, cls) {
-    if (ctor == null) {
+function _isA(ctor, cls, visited) {
+    if (ctor == null || (visited && visited.has(ctor))) {
         return false;
     }
     if (ctor === cls) {
         return true;
     }
+    visited = visited || new Set();
+    visited.add(ctor);
     // Check interfaces
     let meta = getMetadata(ctor);
-    if (meta.implements.some(((intf) => _isA(intf, cls)))) {
+    if (meta.implements.some(((intf) => _isA(intf, cls, visited)))) {
         return true;
     }
     if (ctor !== Object) {
-        return _isA(Object.getPrototypeOf(ctor), cls);
+        return _isA(Object.getPrototypeOf(ctor), cls, visited);
     }
     return false;
 }
@@ -296,7 +306,7 @@ export function isA(obj, cls) {
         return false;
     }
     let ctor = Object.getPrototypeOf(obj).constructor;
-    return _isA(ctor, cls);
+    return _isA(ctor, cls, new Set());
 }
 export function Operator(op) {
     return (target, name, descriptor) => {

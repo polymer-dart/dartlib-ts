@@ -7,9 +7,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var DartJsLinkedHashMap_1, _LinkedIdentityHashMap_1, DartConstantMap_1, DartHashMap_1, DartHashSet_1, DartLinkedHashSet_1, DartList_1, DartLinkedHashMap_1, DartListMixin_1, DartMap_1, DartStringBuffer_1, DartMappedIterable_1, DartSkipIterable_1, DartEfficientLengthSkipIterable_1, RangeError_1, JSArray_1, DartStackTrace_1, DartDuration_1, DartDateTime_1, JSSyntaxRegExp_1, DartString_1, JSString_1, DartNumber_1, JSNumber_1, JSInt_1, DartDouble_1, DartExpando_1;
+var DartJsLinkedHashMap_1, _LinkedIdentityHashMap_1, DartConstantMap_1, DartMap_1, DartHashMap_1, DartHashSet_1, DartLinkedHashSet_1, DartList_1, DartLinkedHashMap_1, DartListMixin_1, DartStringBuffer_1, DartMappedIterable_1, DartSkipIterable_1, DartEfficientLengthSkipIterable_1, RangeError_1, JSArray_1, DartStackTrace_1, DartDuration_1, DartDateTime_1, JSSyntaxRegExp_1, DartString_1, JSString_1, DartNumber_1, JSNumber_1, JSInt_1, DartDouble_1, DartExpando_1;
 // Patch file for dart:collection classes.
-import { Abstract, AbstractMethods, DartClass, defaultConstructor, defaultFactory, Implements, namedConstructor, namedFactory, Op, Operator, With, OperatorMethods, AbstractProperty } from "./utils";
+import { Abstract, AbstractMethods, DartClass, defaultConstructor, defaultFactory, Implements, namedConstructor, namedFactory, Op, Operator, With, OperatorMethods, AbstractProperty, AbstractSymbols } from "./utils";
 import _dart, { divide, isNot, is, nullOr } from './_common';
 import { printToConsole, printToZone } from "./_internal";
 const _USE_ES6_MAPS = true;
@@ -3348,6 +3348,364 @@ export function _defaultHashCode(a) {
     return a.hashCode;
 }
 /**
+ * An collection of key-value pairs, from which you retrieve a value
+ * using its associated key.
+ *
+ * There is a finite number of keys in the map,
+ * and each key has exactly one value associated with it.
+ *
+ * Maps, and their keys and values, can be iterated.
+ * The order of iteration is defined by the individual type of map.
+ * Examples:
+ *
+ * * The plain [HashMap] is unordered (no order is guaranteed),
+ * * the [LinkedHashMap] iterates in key insertion order,
+ * * and a sorted map like [SplayTreeMap] iterates the keys in sorted order.
+ *
+ * It is generally not allowed to modify the map (add or remove keys) while
+ * an operation is being performed on the map, for example in functions called
+ * during a [forEach] or [putIfAbsent] call.
+ * Modifying the map while iterating the keys or values
+ * may also break the iteration.
+ */
+let DartMap = DartMap_1 = class DartMap {
+    /**
+     * Creates a Map instance with the default implementation, [LinkedHashMap].
+     *
+     * This constructor is equivalent to the non-const map literal `<K,V>{}`.
+     *
+     * A `LinkedHashMap` requires the keys to implement compatible
+     * `operator==` and `hashCode`, and it allows null as a key.
+     * It iterates in key insertion order.
+     */
+    /* external */
+    /* @defaultFactory
+     protected static create<K, V>(): DartMap<K, V> {
+         // TODO
+         return undefined;
+     }*/
+    constructor() {
+    }
+    /**
+     * Creates a [LinkedHashMap] instance that contains all key-value pairs of
+     * [other].
+     *
+     * The keys must all be assignable to [K] and the values to [V].
+     * The [other] map itself can have any type.
+     *
+     * A `LinkedHashMap` requires the keys to implement compatible
+     * `operator==` and `hashCode`, and it allows `null` as a key.
+     * It iterates in key insertion order.
+     */
+    static _from(other) {
+        return new DartLinkedHashMap.from(other);
+    }
+    /**
+     * Creates an identity map with the default implementation, [LinkedHashMap].
+     *
+     * The returned map allows `null` as a key.
+     * It iterates in key insertion order.
+     */
+    static _identity() {
+        return new DartLinkedHashMap.identity();
+    }
+    /**
+     * Creates a Map instance in which the keys and values are computed from the
+     * [iterable].
+     *
+     * The created map is a [LinkedHashMap].
+     * A `LinkedHashMap` requires the keys to implement compatible
+     * `operator==` and `hashCode`, and it allows null as a key.
+     * It iterates in key insertion order.
+     *
+     * For each element of the [iterable] this constructor computes a key-value
+     * pair, by applying [key] and [value] respectively.
+     *
+     * The example below creates a new Map from a List. The keys of `map` are
+     * `list` values converted to strings, and the values of the `map` are the
+     * squares of the `list` values:
+     *
+     *     List<int> list = [1, 2, 3];
+     *     Map<String, int> map = new Map.fromIterable(list,
+     *         key: (item) => item.toString(),
+     *         value: (item) => item * item));
+     *
+     *     map['1'] + map['2']; // 1 + 4
+     *     map['3'] - map['2']; // 9 - 4
+     *
+     * If no values are specified for [key] and [value] the default is the
+     * identity function.
+     *
+     * In the following example, the keys and corresponding values of `map`
+     * are `list` values:
+     *
+     *     map = new Map.fromIterable(list);
+     *     map[1] + map[2]; // 1 + 2
+     *     map[3] - map[2]; // 3 - 2
+     *
+     * The keys computed by the source [iterable] do not need to be unique. The
+     * last occurrence of a key will simply overwrite any previous value.
+     */
+    static _fromIterable(iterable, _) {
+        return new DartLinkedHashMap.fromIterable(iterable, _);
+    }
+    /**
+     * Creates a Map instance associating the given [keys] to [values].
+     *
+     * The created map is a [LinkedHashMap].
+     * A `LinkedHashMap` requires the keys to implement compatible
+     * `operator==` and `hashCode`, and it allows null as a key.
+     * It iterates in key insertion order.
+     *
+     * This constructor iterates over [keys] and [values] and maps each element of
+     * [keys] to the corresponding element of [values].
+     *
+     *     List<String> letters = ['b', 'c'];
+     *     List<String> words = ['bad', 'cat'];
+     *     Map<String, String> map = new Map.fromIterables(letters, words);
+     *     map['b'] + map['c'];  // badcat
+     *
+     * If [keys] contains the same object multiple times, the last occurrence
+     * overwrites the previous value.
+     *
+     * The two [Iterable]s must have the same length.
+     */
+    static _fromIterables(keys, values) {
+        return new DartLinkedHashMap.fromIterables(keys, values);
+    }
+    /**
+     * Returns true if this map contains the given [value].
+     *
+     * Returns true if any of the values in the map are equal to `value`
+     * according to the `==` operator.
+     */
+    containsValue(value) {
+        throw Error('abstract');
+    }
+    /**
+     * Returns true if this map contains the given [key].
+     *
+     * Returns true if any of the keys in the map are equal to `key`
+     * according to the equality used by the map.
+     */
+    containsKey(key) {
+        throw Error('abstract');
+    }
+    /**
+     * Returns the value for the given [key] or null if [key] is not in the map.
+     *
+     * Some maps allows keys to have `null` as a value,
+     * For those maps, a lookup using this operator does cannot be used to
+     * distinguish between a key not being in the map, and the key having a null
+     * value.
+     * Methods like [containsKey] or [putIfAbsent] can be use if the distinction
+     * is important.
+     */
+    [OperatorMethods.INDEX](key) {
+        throw 'abstract';
+    }
+    /**
+     * Associates the [key] with the given [value].
+     *
+     * If the key was already in the map, its associated value is changed.
+     * Otherwise the key-value pair is added to the map.
+     */
+    [OperatorMethods.INDEX_EQ](key, value) {
+        throw 'abstract';
+    }
+    /**
+     * Look up the value of [key], or add a new value if it isn't there.
+     *
+     * Returns the value associated to [key], if there is one.
+     * Otherwise calls [ifAbsent] to get a new value, associates [key] to
+     * that value, and then returns the new value.
+     *
+     *     Map<String, int> scores = {'Bob': 36};
+     *     for (var key in ['Bob', 'Rohan', 'Sophena']) {
+     *       scores.putIfAbsent(key, () => key.length);
+     *     }
+     *     scores['Bob'];      // 36
+     *     scores['Rohan'];    //  5
+     *     scores['Sophena'];  //  7
+     *
+     * Calling [ifAbsent] must not add or remove keys from the map.
+     */
+    putIfAbsent(key, ifAbsent) {
+        throw Error('abstract');
+    }
+    /**
+     * Adds all key-value pairs of [other] to this map.
+     *
+     * If a key of [other] is already in this map, its value is overwritten.
+     *
+     * The operation is equivalent to doing `this[key] = value` for each key
+     * and associated value in other. It iterates over [other], which must
+     * therefore not change during the iteration.
+     */
+    addAll(other) {
+        throw Error('abstract');
+    }
+    /**
+     * Removes [key] and its associated value, if present, from the map.
+     *
+     * Returns the value associated with `key` before it was removed.
+     * Returns `null` if `key` was not in the map.
+     *
+     * Note that values can be `null` and a returned `null` value doesn't
+     * always mean that the key was absent.
+     */
+    remove(key) {
+        throw Error('abstract');
+    }
+    /**
+     * Removes all pairs from the map.
+     *
+     * After this, the map is empty.
+     */
+    clear() {
+        throw Error('abstract');
+    }
+    /**
+     * Applies [f] to each key-value pair of the map.
+     *
+     * Calling `f` must not add or remove keys from the map.
+     */
+    forEach(f) {
+        throw Error('abstract');
+    }
+    /**
+     * The keys of [this].
+     *
+     * The returned iterable has efficient `length` and `contains` operations,
+     * based on [length] and [containsKey] of the map.
+     *
+     * The order of iteration is defined by the individual `Map` implementation,
+     * but must be consistent between changes to the map.
+     *
+     * Modifying the map while iterating the keys
+     * may break the iteration.
+     */
+    get keys() {
+        throw Error('abstract');
+    }
+    /**
+     * The values of [this].
+     *
+     * The values are iterated in the order of their corresponding keys.
+     * This means that iterating [keys] and [values] in parallel will
+     * provided matching pairs of keys and values.
+     *
+     * The returned iterable has an efficient `length` method based on the
+     * [length] of the map. Its [Iterable.contains] method is based on
+     * `==` comparison.
+     *
+     * Modifying the map while iterating the
+     * values may break the iteration.
+     */
+    get values() {
+        throw Error('abstract');
+    }
+    /**
+     * The number of key-value pairs in the map.
+     */
+    get length() {
+        throw Error('abstract');
+    }
+    /**
+     * Returns true if there is no key-value pair in the map.
+     */
+    get isEmpty() {
+        throw Error('abstract');
+    }
+    /**
+     * Returns true if there is at least one key-value pair in the map.
+     */
+    get isNotEmpty() {
+        throw Error('abstract');
+    }
+    //@patch
+    static _unmodifiable(other) {
+        return new DartConstantMap.from(other);
+    }
+    //@patch
+    static _create() {
+        return new DartJsLinkedHashMap.es6();
+    }
+    // Better nameing for maps
+    get(k) {
+        return this[OperatorMethods.INDEX](k);
+    }
+    set(k, v) {
+        this[OperatorMethods.INDEX_EQ](k, v);
+    }
+    static _literal(values) {
+        return new DartMap_1.fromIterable(new JSIterable(values), {
+            key: (e) => e[0],
+            value: (e) => e[1]
+        });
+    }
+};
+__decorate([
+    Abstract
+], DartMap.prototype, "containsValue", null);
+__decorate([
+    Abstract
+], DartMap.prototype, "containsKey", null);
+__decorate([
+    Abstract
+], DartMap.prototype, "putIfAbsent", null);
+__decorate([
+    Abstract
+], DartMap.prototype, "addAll", null);
+__decorate([
+    Abstract
+], DartMap.prototype, "remove", null);
+__decorate([
+    Abstract
+], DartMap.prototype, "clear", null);
+__decorate([
+    Abstract
+], DartMap.prototype, "forEach", null);
+__decorate([
+    Abstract
+], DartMap.prototype, "keys", null);
+__decorate([
+    Abstract
+], DartMap.prototype, "values", null);
+__decorate([
+    Abstract
+], DartMap.prototype, "length", null);
+__decorate([
+    Abstract
+], DartMap.prototype, "isEmpty", null);
+__decorate([
+    Abstract
+], DartMap.prototype, "isNotEmpty", null);
+__decorate([
+    namedFactory
+], DartMap, "_from", null);
+__decorate([
+    namedFactory
+], DartMap, "_identity", null);
+__decorate([
+    namedFactory
+], DartMap, "_fromIterable", null);
+__decorate([
+    namedFactory
+], DartMap, "_fromIterables", null);
+__decorate([
+    namedFactory
+], DartMap, "_unmodifiable", null);
+__decorate([
+    defaultFactory
+], DartMap, "_create", null);
+__decorate([
+    namedFactory
+], DartMap, "_literal", null);
+DartMap = DartMap_1 = __decorate([
+    DartClass
+], DartMap);
+/**
  * A hash-table based implementation of [Map].
  *
  * The keys of a `HashMap` must have consistent [Object.==]
@@ -3527,7 +3885,8 @@ __decorate([
     namedFactory
 ], DartHashMap, "_identity", null);
 DartHashMap = DartHashMap_1 = __decorate([
-    DartClass
+    DartClass,
+    Implements(DartMap)
 ], DartHashMap);
 // Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
@@ -6885,6 +7244,7 @@ DartLinkedHashMap = DartLinkedHashMap_1 = __decorate([
     AbstractMethods(OperatorMethods.INDEX, OperatorMethods.INDEX_EQ),
     Implements(DartHashMap)
 ], DartLinkedHashMap);
+Implements(DartLinkedHashMap)(DartJsLinkedHashMap);
 // Copyright (c) 2013, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
@@ -7394,8 +7754,12 @@ let DartListMixin = DartListMixin_1 = class DartListMixin {
 __decorate([
     defaultConstructor
 ], DartListMixin.prototype, "DartListMixin", null);
+__decorate([
+    AbstractProperty
+], DartListMixin.prototype, "length", null);
 DartListMixin = DartListMixin_1 = __decorate([
-    Implements(DartList)
+    Implements(DartList),
+    AbstractSymbols(OperatorMethods.INDEX, OperatorMethods.INDEX_EQ)
 ], DartListMixin);
 /**
  * Abstract implementation of a list.
@@ -7429,364 +7793,7 @@ class DartListBase extends DartListMixin {
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 // part of dart.core;
-/**
- * An collection of key-value pairs, from which you retrieve a value
- * using its associated key.
- *
- * There is a finite number of keys in the map,
- * and each key has exactly one value associated with it.
- *
- * Maps, and their keys and values, can be iterated.
- * The order of iteration is defined by the individual type of map.
- * Examples:
- *
- * * The plain [HashMap] is unordered (no order is guaranteed),
- * * the [LinkedHashMap] iterates in key insertion order,
- * * and a sorted map like [SplayTreeMap] iterates the keys in sorted order.
- *
- * It is generally not allowed to modify the map (add or remove keys) while
- * an operation is being performed on the map, for example in functions called
- * during a [forEach] or [putIfAbsent] call.
- * Modifying the map while iterating the keys or values
- * may also break the iteration.
- */
-let DartMap = DartMap_1 = class DartMap {
-    /**
-     * Creates a Map instance with the default implementation, [LinkedHashMap].
-     *
-     * This constructor is equivalent to the non-const map literal `<K,V>{}`.
-     *
-     * A `LinkedHashMap` requires the keys to implement compatible
-     * `operator==` and `hashCode`, and it allows null as a key.
-     * It iterates in key insertion order.
-     */
-    /* external */
-    /* @defaultFactory
-     protected static create<K, V>(): DartMap<K, V> {
-         // TODO
-         return undefined;
-     }*/
-    constructor() {
-    }
-    /**
-     * Creates a [LinkedHashMap] instance that contains all key-value pairs of
-     * [other].
-     *
-     * The keys must all be assignable to [K] and the values to [V].
-     * The [other] map itself can have any type.
-     *
-     * A `LinkedHashMap` requires the keys to implement compatible
-     * `operator==` and `hashCode`, and it allows `null` as a key.
-     * It iterates in key insertion order.
-     */
-    static _from(other) {
-        return new DartLinkedHashMap.from(other);
-    }
-    /**
-     * Creates an identity map with the default implementation, [LinkedHashMap].
-     *
-     * The returned map allows `null` as a key.
-     * It iterates in key insertion order.
-     */
-    static _identity() {
-        return new DartLinkedHashMap.identity();
-    }
-    /**
-     * Creates a Map instance in which the keys and values are computed from the
-     * [iterable].
-     *
-     * The created map is a [LinkedHashMap].
-     * A `LinkedHashMap` requires the keys to implement compatible
-     * `operator==` and `hashCode`, and it allows null as a key.
-     * It iterates in key insertion order.
-     *
-     * For each element of the [iterable] this constructor computes a key-value
-     * pair, by applying [key] and [value] respectively.
-     *
-     * The example below creates a new Map from a List. The keys of `map` are
-     * `list` values converted to strings, and the values of the `map` are the
-     * squares of the `list` values:
-     *
-     *     List<int> list = [1, 2, 3];
-     *     Map<String, int> map = new Map.fromIterable(list,
-     *         key: (item) => item.toString(),
-     *         value: (item) => item * item));
-     *
-     *     map['1'] + map['2']; // 1 + 4
-     *     map['3'] - map['2']; // 9 - 4
-     *
-     * If no values are specified for [key] and [value] the default is the
-     * identity function.
-     *
-     * In the following example, the keys and corresponding values of `map`
-     * are `list` values:
-     *
-     *     map = new Map.fromIterable(list);
-     *     map[1] + map[2]; // 1 + 2
-     *     map[3] - map[2]; // 3 - 2
-     *
-     * The keys computed by the source [iterable] do not need to be unique. The
-     * last occurrence of a key will simply overwrite any previous value.
-     */
-    static _fromIterable(iterable, _) {
-        return new DartLinkedHashMap.fromIterable(iterable, _);
-    }
-    /**
-     * Creates a Map instance associating the given [keys] to [values].
-     *
-     * The created map is a [LinkedHashMap].
-     * A `LinkedHashMap` requires the keys to implement compatible
-     * `operator==` and `hashCode`, and it allows null as a key.
-     * It iterates in key insertion order.
-     *
-     * This constructor iterates over [keys] and [values] and maps each element of
-     * [keys] to the corresponding element of [values].
-     *
-     *     List<String> letters = ['b', 'c'];
-     *     List<String> words = ['bad', 'cat'];
-     *     Map<String, String> map = new Map.fromIterables(letters, words);
-     *     map['b'] + map['c'];  // badcat
-     *
-     * If [keys] contains the same object multiple times, the last occurrence
-     * overwrites the previous value.
-     *
-     * The two [Iterable]s must have the same length.
-     */
-    static _fromIterables(keys, values) {
-        return new DartLinkedHashMap.fromIterables(keys, values);
-    }
-    /**
-     * Returns true if this map contains the given [value].
-     *
-     * Returns true if any of the values in the map are equal to `value`
-     * according to the `==` operator.
-     */
-    containsValue(value) {
-        throw Error('abstract');
-    }
-    /**
-     * Returns true if this map contains the given [key].
-     *
-     * Returns true if any of the keys in the map are equal to `key`
-     * according to the equality used by the map.
-     */
-    containsKey(key) {
-        throw Error('abstract');
-    }
-    /**
-     * Returns the value for the given [key] or null if [key] is not in the map.
-     *
-     * Some maps allows keys to have `null` as a value,
-     * For those maps, a lookup using this operator does cannot be used to
-     * distinguish between a key not being in the map, and the key having a null
-     * value.
-     * Methods like [containsKey] or [putIfAbsent] can be use if the distinction
-     * is important.
-     */
-    [OperatorMethods.INDEX](key) {
-        throw 'abstract';
-    }
-    /**
-     * Associates the [key] with the given [value].
-     *
-     * If the key was already in the map, its associated value is changed.
-     * Otherwise the key-value pair is added to the map.
-     */
-    [OperatorMethods.INDEX_EQ](key, value) {
-        throw 'abstract';
-    }
-    /**
-     * Look up the value of [key], or add a new value if it isn't there.
-     *
-     * Returns the value associated to [key], if there is one.
-     * Otherwise calls [ifAbsent] to get a new value, associates [key] to
-     * that value, and then returns the new value.
-     *
-     *     Map<String, int> scores = {'Bob': 36};
-     *     for (var key in ['Bob', 'Rohan', 'Sophena']) {
-     *       scores.putIfAbsent(key, () => key.length);
-     *     }
-     *     scores['Bob'];      // 36
-     *     scores['Rohan'];    //  5
-     *     scores['Sophena'];  //  7
-     *
-     * Calling [ifAbsent] must not add or remove keys from the map.
-     */
-    putIfAbsent(key, ifAbsent) {
-        throw Error('abstract');
-    }
-    /**
-     * Adds all key-value pairs of [other] to this map.
-     *
-     * If a key of [other] is already in this map, its value is overwritten.
-     *
-     * The operation is equivalent to doing `this[key] = value` for each key
-     * and associated value in other. It iterates over [other], which must
-     * therefore not change during the iteration.
-     */
-    addAll(other) {
-        throw Error('abstract');
-    }
-    /**
-     * Removes [key] and its associated value, if present, from the map.
-     *
-     * Returns the value associated with `key` before it was removed.
-     * Returns `null` if `key` was not in the map.
-     *
-     * Note that values can be `null` and a returned `null` value doesn't
-     * always mean that the key was absent.
-     */
-    remove(key) {
-        throw Error('abstract');
-    }
-    /**
-     * Removes all pairs from the map.
-     *
-     * After this, the map is empty.
-     */
-    clear() {
-        throw Error('abstract');
-    }
-    /**
-     * Applies [f] to each key-value pair of the map.
-     *
-     * Calling `f` must not add or remove keys from the map.
-     */
-    forEach(f) {
-        throw Error('abstract');
-    }
-    /**
-     * The keys of [this].
-     *
-     * The returned iterable has efficient `length` and `contains` operations,
-     * based on [length] and [containsKey] of the map.
-     *
-     * The order of iteration is defined by the individual `Map` implementation,
-     * but must be consistent between changes to the map.
-     *
-     * Modifying the map while iterating the keys
-     * may break the iteration.
-     */
-    get keys() {
-        throw Error('abstract');
-    }
-    /**
-     * The values of [this].
-     *
-     * The values are iterated in the order of their corresponding keys.
-     * This means that iterating [keys] and [values] in parallel will
-     * provided matching pairs of keys and values.
-     *
-     * The returned iterable has an efficient `length` method based on the
-     * [length] of the map. Its [Iterable.contains] method is based on
-     * `==` comparison.
-     *
-     * Modifying the map while iterating the
-     * values may break the iteration.
-     */
-    get values() {
-        throw Error('abstract');
-    }
-    /**
-     * The number of key-value pairs in the map.
-     */
-    get length() {
-        throw Error('abstract');
-    }
-    /**
-     * Returns true if there is no key-value pair in the map.
-     */
-    get isEmpty() {
-        throw Error('abstract');
-    }
-    /**
-     * Returns true if there is at least one key-value pair in the map.
-     */
-    get isNotEmpty() {
-        throw Error('abstract');
-    }
-    //@patch
-    static _unmodifiable(other) {
-        return new DartConstantMap.from(other);
-    }
-    //@patch
-    static _create() {
-        return new DartJsLinkedHashMap.es6();
-    }
-    // Better nameing for maps
-    get(k) {
-        return this[OperatorMethods.INDEX](k);
-    }
-    set(k, v) {
-        this[OperatorMethods.INDEX_EQ](k, v);
-    }
-    static _literal(values) {
-        return new DartMap_1.fromIterable(new JSIterable(values), {
-            key: (e) => e[0],
-            value: (e) => e[1]
-        });
-    }
-}; // Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
-__decorate([
-    Abstract
-], DartMap.prototype, "containsValue", null);
-__decorate([
-    Abstract
-], DartMap.prototype, "containsKey", null);
-__decorate([
-    Abstract
-], DartMap.prototype, "putIfAbsent", null);
-__decorate([
-    Abstract
-], DartMap.prototype, "addAll", null);
-__decorate([
-    Abstract
-], DartMap.prototype, "remove", null);
-__decorate([
-    Abstract
-], DartMap.prototype, "clear", null);
-__decorate([
-    Abstract
-], DartMap.prototype, "forEach", null);
-__decorate([
-    Abstract
-], DartMap.prototype, "keys", null);
-__decorate([
-    Abstract
-], DartMap.prototype, "values", null);
-__decorate([
-    Abstract
-], DartMap.prototype, "length", null);
-__decorate([
-    Abstract
-], DartMap.prototype, "isEmpty", null);
-__decorate([
-    Abstract
-], DartMap.prototype, "isNotEmpty", null);
-__decorate([
-    namedFactory
-], DartMap, "_from", null);
-__decorate([
-    namedFactory
-], DartMap, "_identity", null);
-__decorate([
-    namedFactory
-], DartMap, "_fromIterable", null);
-__decorate([
-    namedFactory
-], DartMap, "_fromIterables", null);
-__decorate([
-    namedFactory
-], DartMap, "_unmodifiable", null);
-__decorate([
-    defaultFactory
-], DartMap, "_create", null);
-__decorate([
-    namedFactory
-], DartMap, "_literal", null);
-DartMap = DartMap_1 = __decorate([
-    DartClass
-], DartMap);
+// Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 // part of dart.collection;

@@ -1,6 +1,10 @@
 import { OperatorMethods, double, bool, int } from "./utils";
 import * as core from "./core";
 export declare class ByteBuffer extends ArrayBuffer {
+    static _withLength(len: number): ByteBuffer;
+    static withLength: new (len: number) => ByteBuffer;
+    static _fromBuffer(buffer: ArrayBuffer): ByteBuffer;
+    static fromBuffer: new (buffer: ArrayBuffer) => ByteBuffer;
     readonly lengthInBytes: number;
     asUint8List(offsetInBytes?: number, length?: number): Uint8List;
     asInt8List(offsetInBytes?: number, length?: number): Int8List;
@@ -117,14 +121,6 @@ export declare class Uint16List extends TypedData implements core.DartList<numbe
     sublist(start: int, end?: int): core.DartList<number>;
     readonly length: int;
     setRange(start: int, end: int, iterable: core.DartIterable<number>, skipCount?: int): void;
-}
-export declare class Endianness {
-    _(_littleEndian: boolean): void;
-    static _: new (_littleEndian: boolean) => Endianness;
-    static BIG_ENDIAN: Endianness;
-    static LITTLE_ENDIAN: Endianness;
-    static HOST_ENDIAN: Endianness;
-    _littleEndian: boolean;
 }
 export declare class Int8List extends TypedData implements core.DartList<number> {
     constructor(length: number);
@@ -1623,8 +1619,30 @@ export declare class Float64x2 {
     max(other: Float64x2): Float64x2;
     sqrt(): Float64x2;
 }
-export declare class NativeByteBuffer extends ArrayBuffer implements ByteBuffer {
-    lengthInBytes: number;
+export declare class NativeByteBufferMixin implements ByteBuffer {
+    readonly lengthInBytes: number;
+    asUint8List(offsetInBytes?: number, length?: number): Uint8List;
+    asInt8List(offsetInBytes?: number, length?: number): Int8List;
+    asUint8ClampedList(offsetInBytes?: number, length?: number): Uint8ClampedList;
+    asUint16List(offsetInBytes?: number, length?: number): Uint16List;
+    asInt16List(offsetInBytes?: number, length?: number): Int16List;
+    asUint32List(offsetInBytes?: number, length?: number): Uint32List;
+    asInt32List(offsetInBytes?: number, length?: number): Int32List;
+    asUint64List(offsetInBytes?: number, length?: number): Uint64List;
+    asInt64List(offsetInBytes?: number, length?: number): Int64List;
+    asInt32x4List(offsetInBytes?: number, length?: number): Int32x4List;
+    asFloat32List(offsetInBytes?: number, length?: number): Float32List;
+    asFloat64List(offsetInBytes?: number, length?: number): Float64List;
+    asFloat32x4List(offsetInBytes?: number, length?: number): Float32x4List;
+    asFloat64x2List(offsetInBytes?: number, length?: number): Float64x2List;
+    asByteData(offsetInBytes?: number, length?: number): ByteData;
+    readonly byteLength: number;
+    slice(begin: number, end?: number): ArrayBuffer;
+    readonly [Symbol.toStringTag]: "ArrayBuffer";
+}
+export declare class NativeByteBuffer extends ArrayBuffer implements ByteBuffer, NativeByteBufferMixin {
+    constructor(len: any);
+    readonly lengthInBytes: number;
     asUint8List(offsetInBytes?: number, length?: number): Uint8List;
     asInt8List(offsetInBytes?: number, length?: number): Int8List;
     asUint8ClampedList(offsetInBytes?: number, length?: number): Uint8ClampedList;
@@ -1868,13 +1886,16 @@ export declare class NativeTypedArrayOfInt extends NativeTypedArray implements c
     sublist(start: int, end?: int): core.DartList<number>;
 }
 export declare class NativeFloat32List extends Float32Array implements NativeTypedArrayOfDouble, Float32List {
-    constructor(...args: any[]);
+    protected constructor(length: number | ArrayBufferLike | ArrayLike<number> | core.DartList<number>);
+    protected constructor(buffer: ByteBuffer, byteOffset: number, length?: number);
+    static _withLength(len: number): NativeFloat32List;
+    static withLength: new (len: number) => NativeFloat32List;
     static _fromList(elements: core.DartList<double>): NativeFloat32List;
     static fromList: new (elements: core.DartList<double>) => NativeFloat32List;
     static _view(buffer: ByteBuffer, offsetInBytes: number, length: number): NativeFloat32List;
     static view: new (buffer: ByteBuffer, offsetInBytes: number, length: number) => NativeFloat32List;
     sublist(start: number, end?: number): core.DartList<double>;
-    static _create1(arg: any): NativeFloat32List;
+    static _create1(lenOrSource: number | ArrayBufferLike | ArrayLike<number> | core.DartList<number>): NativeFloat32List;
     static _create2(arg1: any, arg2: any): NativeFloat32List;
     static _create3(arg1: any, arg2: any, arg3: any): NativeFloat32List;
     buffer: any;
@@ -1943,13 +1964,16 @@ export declare class NativeFloat32List extends Float32Array implements NativeTyp
     readonly offsetInBytes: number;
 }
 export declare class NativeFloat64List extends Float64Array implements NativeTypedArrayOfDouble, Float64List {
-    constructor(...args: any[]);
+    protected constructor(length: number | ArrayBufferLike | ArrayLike<number> | core.DartList<number>);
+    protected constructor(buffer: ByteBuffer, byteOffset: number, length?: number);
+    static _withLength(len: number): NativeFloat64List;
+    static withLength: new (len: number) => NativeFloat64List;
     static _fromList(elements: core.DartList<double>): NativeFloat64List;
     static fromList: new (elements: core.DartList<double>) => NativeFloat64List;
     static _view(buffer: ByteBuffer, offsetInBytes: number, length: number): NativeFloat64List;
     static view: new (buffer: ByteBuffer, offsetInBytes: number, length: number) => NativeFloat64List;
     sublist(start: number, end?: number): core.DartList<double>;
-    static _create1(arg: any): NativeFloat64List;
+    static _create1(lenOrSource: number | ArrayBufferLike | ArrayLike<number> | core.DartList<number>): NativeFloat64List;
     static _create2(arg1: any, arg2: any): NativeFloat64List;
     static _create3(arg1: any, arg2: any, arg3: any): NativeFloat64List;
     buffer: any;
@@ -2227,14 +2251,17 @@ export declare class NativeInt8List extends Int8Array implements Int8List, Nativ
     _setRangeFast(start: number, end: number, source: NativeTypedArray, skipCount: number): void;
 }
 export declare class NativeUint16List extends Uint16Array implements Uint16List, NativeTypedArrayOfInt {
-    constructor(...args: any[]);
+    protected constructor(length: number | ArrayBufferLike | ArrayLike<number> | core.DartList<number>);
+    protected constructor(buffer: ByteBuffer, byteOffset: number, length?: number);
+    static _withLength(len: number): NativeUint16List;
+    static withLength: new (len: number) => Uint16List;
     static _fromList(list: core.DartList<number>): NativeUint16List;
     static fromList: new (list: core.DartList<number>) => NativeUint16List;
     static _view(buffer: ByteBuffer, offsetInBytes: number, length: number): NativeUint16List;
     static view: new (buffer: ByteBuffer, offsetInBytes: number, length: number) => NativeUint16List;
     [OperatorMethods.INDEX](index: number): number;
     sublist(start: number, end?: number): core.DartList<number>;
-    static _create1(arg: any): NativeUint16List;
+    static _create1(lenOrSource: number | ArrayBufferLike | ArrayLike<number> | core.DartList<number>): NativeUint16List;
     static _create2(arg1: any, arg2: any): NativeUint16List;
     static _create3(arg1: any, arg2: any, arg3: any): NativeUint16List;
     [OperatorMethods.INDEX_EQ](number: int, value: int): void;
@@ -2434,7 +2461,6 @@ export declare class NativeUint8List extends Uint8Array implements Uint8List, Na
     static fromList: new (elements: core.DartList<number>) => NativeUint8List;
     static _view(buffer: ByteBuffer, offsetInBytes: number, length: number): NativeUint8List;
     static view: new (buffer: ByteBuffer, offsetInBytes: number, length: number) => NativeUint8List;
-    readonly length: number;
     [OperatorMethods.INDEX](index: number): number;
     sublist(start: number, end?: number): core.DartList<number>;
     static _create1(arg: any): NativeUint8List;
@@ -2619,6 +2645,14 @@ export declare class NativeFloat64x2 implements Float64x2 {
 export declare var _isInvalidArrayIndex: (index: number) => boolean;
 export declare var _checkValidIndex: (index: number, list: core.DartList<any>, length: number) => void;
 export declare var _checkValidRange: (start: number, end: number, length: number) => number;
+export declare class Endianness {
+    _(_littleEndian: boolean): void;
+    static _: new (_littleEndian: boolean) => Endianness;
+    static BIG_ENDIAN: Endianness;
+    static LITTLE_ENDIAN: Endianness;
+    static HOST_ENDIAN: Endianness;
+    _littleEndian: boolean;
+}
 export declare class _Properties {
 }
 export declare const properties: _Properties;
