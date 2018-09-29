@@ -10697,5 +10697,6 @@ export {
     DartStreamController,
     dartAsync,
     stream,
-    toDartStream
+    toDartStream,
+    DartStreamSubscription
 }

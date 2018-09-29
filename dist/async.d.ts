@@ -2710,4 +2710,4 @@ declare class DartStreamController<T> implements DartStreamSink<T> {
 }
 declare function stream<X>(generator: () => AsyncIterator<X>): DartStream<X>;
 declare function toDartStream<X>(x: AsyncIterable<X>): DartStream<X>;
-export { Future, DartCompleter, DartZoneSpecification, DartZone, DartTimer, runZoned, scheduleMicrotask, DartStream, DartStreamTransformer, DartEventSink, DartStreamSink, DartStreamController, dartAsync, stream, toDartStream };
+export { Future, DartCompleter, DartZoneSpecification, DartZone, DartTimer, runZoned, scheduleMicrotask, DartStream, DartStreamTransformer, DartEventSink, DartStreamSink, DartStreamController, dartAsync, stream, toDartStream, DartStreamSubscription };
