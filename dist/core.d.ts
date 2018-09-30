@@ -3974,6 +3974,7 @@ declare class DartPrimitives {
     static parseDouble(source: string, handleError: (source: string) => double): double;
     /** [: r"$".codeUnitAt(0) :] */
     static DOLLAR_CHAR_VALUE: int;
+    static extractStackTrace(error: DartError): DartStackTrace;
 }
 /**
  * Called by generated code to build a map literal. [keyValuePairs] is
@@ -3984,14 +3985,34 @@ export declare function getIndex(array: any, index: int): any;
 export declare function getLength(array: any): any;
 export declare function isJsArray(value: any): bool;
 declare class DartStackTrace {
-    protected _(): void;
-    protected static _: new () => DartStackTrace;
-    protected static _create(e: any): DartStackTrace;
-    constructor(e: any);
+    constructor();
+    DartStackTrace(): void;
+    static $fromString(stackTraceString: string): DartStackTrace;
+    static fromString: new (stackTraceString: string) => DartStackTrace;
     static readonly current: DartStackTrace;
+    toString(): string;
     protected static _fromError(e: Error): DartStackTrace;
     static fromError: new (e: Error) => DartStackTrace;
 }
+export declare class DartExceptionAndStackTrace {
+    dartException: any;
+    stackTrace: DartStackTrace;
+    constructor(dartException: any, stackTrace: DartStackTrace);
+}
+export declare class _StringStackTrace extends DartStackTrace {
+    _stackTrace: string;
+    constructor(_stackTrace: string);
+    _StringStackTrace(_stackTrace: string): void;
+    toString(): string;
+}
+export declare class _StackTrace extends DartStackTrace {
+    _exception: any;
+    _trace: string;
+    constructor(_exception: any);
+    _StackTrace(_exception: any): void;
+    toString(): string;
+}
+export declare var getTraceFromException: (exception: any) => DartStackTrace;
 declare class DartDuration implements DartComparable<DartDuration> {
     static ZERO: DartDuration;
     protected _duration: int;

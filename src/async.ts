@@ -185,7 +185,7 @@ class Future<T> implements Promise<T> {
     @namedFactory
     protected static _fromPromise<T>(p: Promise<T>): Future<T> {
         let f = new _Future<T>();
-        p.then((r) => f._complete(r), (e) => f._completeError(e, new DartStackTrace(e)));
+        p.then((r) => f._complete(r), (e) => f._completeError(e, new DartStackTrace.fromError(e)));
         return f;
     }
 
@@ -212,7 +212,7 @@ class Future<T> implements Promise<T> {
             try {
                 result._complete(computation());
             } catch (e /*, s*/) {
-                let s = new DartStackTrace(e);
+                let s = new DartStackTrace.fromError(e);
                 _completeWithErrorCallback(result, e, s /*s*/);
             }
         });
@@ -246,7 +246,7 @@ class Future<T> implements Promise<T> {
             try {
                 result._complete(computation());
             } catch (e/*, s*/) {
-                let s = new DartStackTrace(e);
+                let s = new DartStackTrace.fromError(e);
                 _completeWithErrorCallback(result, e, s);
             }
         });
@@ -280,7 +280,7 @@ class Future<T> implements Promise<T> {
                 return new _Future.value<T>(result as T);
             }
         } catch (error/*, stackTrace*/) {
-            let stackTrace = new DartStackTrace(error);
+            let stackTrace = new DartStackTrace.fromError(error);
 
             let future = new _Future<T>();
             let replacement: DartAsyncError = DartZone.current.errorCallback(error, stackTrace);
@@ -358,7 +358,7 @@ class Future<T> implements Promise<T> {
             try {
                 result._complete(computation && computation());
             } catch (e/*, s*/) {
-                let s = new DartStackTrace(e);
+                let s = new DartStackTrace.fromError(e);
                 _completeWithErrorCallback(result, e, s);
             }
         });
@@ -465,7 +465,7 @@ class Future<T> implements Promise<T> {
             }
             values = new DartList<T>(remaining);
         } catch (e) {
-            let st = new DartStackTrace(e);
+            let st = new DartStackTrace.fromError(e);
             // The error must have been thrown while iterating over the futures
             // list, or while installing a callback handler on the future.
             if (remaining == 0 || eagerError) {
@@ -578,7 +578,7 @@ class Future<T> implements Promise<T> {
                 try {
                     result = f();
                 } catch (error) {
-                    let stackTrace = new DartStackTrace(error);
+                    let stackTrace = new DartStackTrace.fromError(error);
                     // Cannot use _completeWithErrorCallback because it completes
                     // the future synchronously.
                     _asyncCompleteWithErrorCallback(doneSignal, error, stackTrace);
@@ -1655,7 +1655,7 @@ class _RootZone extends _Zone {
             }
             return _rootRun<R>(null, null, this, f);
         } catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             return this.handleUncaughtError<R>(e, s);
         }
     }
@@ -1667,7 +1667,7 @@ class _RootZone extends _Zone {
             }
             return _rootRunUnary<R, T>(null, null, this, f, arg);
         } catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             return this.handleUncaughtError<R>(e, s);
         }
     }
@@ -1679,7 +1679,7 @@ class _RootZone extends _Zone {
             }
             return _rootRunBinary<R, T1, T2>(null, null, this, f, arg1, arg2);
         } catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             return this.handleUncaughtError<R>(e, s);
         }
     }
@@ -2615,7 +2615,7 @@ class _Future<T> implements Future<T> {
                     }
                 });
         } catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             // This only happens if the `then` call threw synchronously when given
             // valid arguments.
             // That requires a non-conforming implementation of the Future interface,
@@ -2794,7 +2794,7 @@ class _Future<T> implements Future<T> {
                     try {
                         completeResult = listener.handleWhenComplete();
                     } catch (e) {
-                        let s = new DartStackTrace(e);
+                        let s = new DartStackTrace.fromError(e);
                         if (hasError && identical(source._error.error, e)) {
                             listenerValueOrError = source._error;
                         } else {
@@ -2825,7 +2825,7 @@ class _Future<T> implements Future<T> {
                     try {
                         listenerValueOrError = listener.handleValue(sourceResult);
                     } catch (e) {
-                        let s = new DartStackTrace(e);
+                        let s = new DartStackTrace.fromError(e);
                         listenerValueOrError = new DartAsyncError(e, s);
                         listenerHasError = true;
                     }
@@ -2840,7 +2840,7 @@ class _Future<T> implements Future<T> {
                             listenerHasError = false;
                         }
                     } catch (e) {
-                        let s = new DartStackTrace(e);
+                        let s = new DartStackTrace.fromError(e);
                         if (identical(source._error.error, e)) {
                             listenerValueOrError = source._error;
                         } else {
@@ -2917,7 +2917,7 @@ class _Future<T> implements Future<T> {
                 try {
                     result._complete(zone.run(onTimeout));
                 } catch (e) {
-                    let s = new DartStackTrace(e);
+                    let s = new DartStackTrace.fromError(e);
                     result._completeError(e, s);
                 }
             });
@@ -3854,7 +3854,7 @@ class _CustomZone extends _Zone {
         try {
             return this.run(f);
         } catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             return this.handleUncaughtError(e, s);
         }
     }
@@ -3863,7 +3863,7 @@ class _CustomZone extends _Zone {
         try {
             return this.runUnary(f, arg);
         } catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             return this.handleUncaughtError(e, s);
         }
     }
@@ -3872,7 +3872,7 @@ class _CustomZone extends _Zone {
         try {
             return this.runBinary(f, arg1, arg2);
         } catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             return this.handleUncaughtError(e, s);
         }
     }
@@ -4232,7 +4232,7 @@ function runZoned<R>(body: () => R,
                 //}
                 //return self.parent.runUnary(onError, error);
             } catch (e) {
-                let s = new DartStackTrace(e);
+                let s = new DartStackTrace.fromError(e);
                 if (identical(e, error)) {
                     return parent.handleUncaughtError(zone, error, stackTrace);
                 } else {
@@ -4754,7 +4754,7 @@ class DartStream<T> implements AsyncIterable<T> {
                 try {
                     data = computation(computationCount++);
                 } catch (e) {
-                    let s = new DartStackTrace(e);
+                    let s = new DartStackTrace.fromError(e);
                     controller.addError(e, s);
                     return;
                 }
@@ -4987,7 +4987,7 @@ class DartStream<T> implements AsyncIterable<T> {
                 try {
                     newValue = convert(event);
                 } catch (e) {
-                    let s = new DartStackTrace(e);
+                    let s = new DartStackTrace.fromError(e);
                     controller.addError(e, s);
                     return;
                 }
@@ -5051,7 +5051,7 @@ class DartStream<T> implements AsyncIterable<T> {
                     try {
                         newStream = convert(event);
                     } catch (e) {
-                        let s = new DartStackTrace(e);
+                        let s = new DartStackTrace.fromError(e);
                         controller.addError(e, s);
                         return;
                     }
@@ -5198,7 +5198,7 @@ class DartStream<T> implements AsyncIterable<T> {
                         try {
                             throw DartIterableElementError.noElement();
                         } catch (e) {
-                            let s = new DartStackTrace(e);
+                            let s = new DartStackTrace.fromError(e);
                             _completeWithErrorCallback(result, e, s);
                         }
                     } else {
@@ -5253,7 +5253,7 @@ class DartStream<T> implements AsyncIterable<T> {
             try {
                 buffer.write(element);
             } catch (e) {
-                let s = new DartStackTrace(e);
+                let s = new DartStackTrace.fromError(e);
                 _cancelAndErrorWithReplacement(subscription, result, e, s);
             }
         }, {
@@ -5604,7 +5604,7 @@ class DartStream<T> implements AsyncIterable<T> {
                     try {
                         throw DartIterableElementError.noElement();
                     } catch (e) {
-                        let s = new DartStackTrace(e);
+                        let s = new DartStackTrace.fromError(e);
                         _completeWithErrorCallback(future, e, s);
                     }
                 },
@@ -5640,7 +5640,7 @@ class DartStream<T> implements AsyncIterable<T> {
                     try {
                         throw DartIterableElementError.noElement();
                     } catch (e) {
-                        let s = new DartStackTrace(e);
+                        let s = new DartStackTrace.fromError(e);
                         _completeWithErrorCallback(future, e, s);
                     }
                 },
@@ -5669,7 +5669,7 @@ class DartStream<T> implements AsyncIterable<T> {
                     try {
                         throw DartIterableElementError.tooMany();
                     } catch (e) {
-                        let s = new DartStackTrace(e);
+                        let s = new DartStackTrace.fromError(e);
                         _cancelAndErrorWithReplacement(subscription, future, e, s);
                     }
                     return;
@@ -5686,7 +5686,7 @@ class DartStream<T> implements AsyncIterable<T> {
                     try {
                         throw DartIterableElementError.noElement();
                     } catch (e) {
-                        let s = new DartStackTrace(e);
+                        let s = new DartStackTrace.fromError(e);
                         _completeWithErrorCallback(future, e, s);
                     }
                 },
@@ -5737,7 +5737,7 @@ class DartStream<T> implements AsyncIterable<T> {
                     try {
                         throw DartIterableElementError.noElement();
                     } catch (e) {
-                        let s = new DartStackTrace(e);
+                        let s = new DartStackTrace.fromError(e);
 
                         _completeWithErrorCallback(future, e, s);
                     }
@@ -5782,7 +5782,7 @@ class DartStream<T> implements AsyncIterable<T> {
                     try {
                         throw DartIterableElementError.noElement();
                     } catch (e) {
-                        let s = new DartStackTrace(e);
+                        let s = new DartStackTrace.fromError(e);
                         _completeWithErrorCallback(future, e, s);
                     }
                 },
@@ -5810,7 +5810,7 @@ class DartStream<T> implements AsyncIterable<T> {
                             try {
                                 throw DartIterableElementError.tooMany();
                             } catch (e) {
-                                let s = new DartStackTrace(e);
+                                let s = new DartStackTrace.fromError(e);
                                 _cancelAndErrorWithReplacement(subscription, future, e, s);
                             }
                             return;
@@ -5830,7 +5830,7 @@ class DartStream<T> implements AsyncIterable<T> {
                         throw DartIterableElementError.noElement();
                     } catch (e) {
 
-                        let s = new DartStackTrace(e);
+                        let s = new DartStackTrace.fromError(e);
                         _completeWithErrorCallback(future, e, s);
                     }
                 },
@@ -7220,7 +7220,7 @@ class _IterablePendingEvents<T> extends _PendingEvents<T> {
         try {
             isDone = !this._iterator.moveNext();
         } catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             this._iterator = null;
             dispatch._sendError(e, s);
             return;
@@ -7790,7 +7790,7 @@ function _runUserCode<T>(
     try {
         onSuccess(userCode());
     } catch (e) {
-        let s = new DartStackTrace(e);
+        let s = new DartStackTrace.fromError(e);
         let replacement: DartAsyncError = DartZone.current.errorCallback(e, s);
         if (replacement == null) {
             onError(e, s);
@@ -7991,7 +7991,7 @@ class _WhereStream<T> extends _ForwardingStream<T, T> {
         try {
             satisfies = this._test(inputEvent);
         } catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             _addErrorWithReplacement(sink, e, s);
             return;
         }
@@ -8020,7 +8020,7 @@ class _MapStream<S, T> extends _ForwardingStream<S, T> {
         try {
             outputEvent = this._transform(inputEvent);
         } catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             _addErrorWithReplacement(sink, e, s);
             return;
         }
@@ -8046,7 +8046,7 @@ class _ExpandStream<S, T> extends _ForwardingStream<S, T> {
                 sink._add(value);
             }
         } catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             // If either _expand or iterating the generated iterator throws,
             // we abort the iteration.
             _addErrorWithReplacement(sink, e, s);
@@ -8077,7 +8077,7 @@ class _HandleErrorStream<T> extends _ForwardingStream<T, T> {
             try {
                 matches = this._test(error);
             } catch (e) {
-                let s = new DartStackTrace(e);
+                let s = new DartStackTrace.fromError(e);
                 _addErrorWithReplacement(sink, e, s);
                 return;
             }
@@ -8086,7 +8086,7 @@ class _HandleErrorStream<T> extends _ForwardingStream<T, T> {
             try {
                 _invokeErrorHandler(this._transform, error, stackTrace);
             } catch (e) {
-                let s = new DartStackTrace(e);
+                let s = new DartStackTrace.fromError(e);
                 if (identical(e, error)) {
                     sink._addError(error, stackTrace);
                 } else {
@@ -8192,7 +8192,7 @@ class _TakeWhileStream<T> extends _ForwardingStream<T, T> {
         try {
             satisfies = this._test(inputEvent);
         } catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             _addErrorWithReplacement(sink, e, s);
             // The test didn't say true. Didn't say false either, but we stop anyway.
             sink._close();
@@ -8260,7 +8260,7 @@ class _SkipWhileStream<T> extends _ForwardingStream<T, T> {
         try {
             satisfies = this._test(inputEvent);
         } catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             _addErrorWithReplacement(sink, e, s);
             // A failure to return a boolean is considered "not matching".
             subscription._flag = true;
@@ -8309,7 +8309,7 @@ class _DistinctStream<T> extends _ForwardingStream<T, T> {
                     isEqual = this._equals(previousEvent, inputEvent);
                 }
             } catch (e) {
-                let s = new DartStackTrace(e);
+                let s = new DartStackTrace.fromError(e);
                 _addErrorWithReplacement(sink, e, s);
                 return;
             }
@@ -9163,7 +9163,7 @@ class _StreamController<T> extends DartObject
                 try {
                     result = this.onCancel();
                 } catch (e) {
-                    let s = new DartStackTrace(e);
+                    let s = new DartStackTrace.fromError(e);
                     // Return the error in the returned future.
                     // Complete it asynchronously, so there is time for a listener
                     // to handle the error.
@@ -9287,7 +9287,7 @@ function _runGuarded(notificationHandler: _NotificationHandler): void {
     try {
         notificationHandler();
     } catch (e) {
-        let s = new DartStackTrace(e);
+        let s = new DartStackTrace.fromError(e);
         DartZone.current.handleUncaughtError(e, s);
     }
 }
@@ -10157,7 +10157,7 @@ class _SinkTransformerStreamSubscription<S, T>
         try {
             this._transformerSink.add(data);
         } catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             this._addError(e, s);
         }
     }
@@ -10166,7 +10166,7 @@ class _SinkTransformerStreamSubscription<S, T>
         try {
             this._transformerSink.addError(error, stackTrace);
         } catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             if (identical(e, error)) {
                 this._addError(error, stackTrace);
             } else {
@@ -10180,7 +10180,7 @@ class _SinkTransformerStreamSubscription<S, T>
             this._subscription = null;
             this._transformerSink.close();
         } catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             this._addError(e, s);
         }
     }
@@ -10610,7 +10610,7 @@ class JSStreamPendingEvents<X> extends _PendingEvents<X> {
                 dispatch._sendData(res.value);
             }
         }, (error) => {
-            dispatch._sendError(error, new DartStackTrace(error));
+            dispatch._sendError(error, new DartStackTrace.fromError(error));
         });
 
     }

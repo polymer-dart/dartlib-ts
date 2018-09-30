@@ -171,7 +171,7 @@ let Future = Future_1 = class Future {
     }
     static _fromPromise(p) {
         let f = new _Future();
-        p.then((r) => f._complete(r), (e) => f._completeError(e, new DartStackTrace(e)));
+        p.then((r) => f._complete(r), (e) => f._completeError(e, new DartStackTrace.fromError(e)));
         return f;
     }
     /**
@@ -195,7 +195,7 @@ let Future = Future_1 = class Future {
                 result._complete(computation());
             }
             catch (e /*, s*/) {
-                let s = new DartStackTrace(e);
+                let s = new DartStackTrace.fromError(e);
                 _completeWithErrorCallback(result, e, s /*s*/);
             }
         });
@@ -222,7 +222,7 @@ let Future = Future_1 = class Future {
                 result._complete(computation());
             }
             catch (e /*, s*/) {
-                let s = new DartStackTrace(e);
+                let s = new DartStackTrace.fromError(e);
                 _completeWithErrorCallback(result, e, s);
             }
         });
@@ -254,7 +254,7 @@ let Future = Future_1 = class Future {
             }
         }
         catch (error /*, stackTrace*/) {
-            let stackTrace = new DartStackTrace(error);
+            let stackTrace = new DartStackTrace.fromError(error);
             let future = new _Future();
             let replacement = DartZone.current.errorCallback(error, stackTrace);
             if (replacement != null) {
@@ -320,7 +320,7 @@ let Future = Future_1 = class Future {
                 result._complete(computation && computation());
             }
             catch (e /*, s*/) {
-                let s = new DartStackTrace(e);
+                let s = new DartStackTrace.fromError(e);
                 _completeWithErrorCallback(result, e, s);
             }
         });
@@ -425,7 +425,7 @@ let Future = Future_1 = class Future {
             values = new DartList(remaining);
         }
         catch (e) {
-            let st = new DartStackTrace(e);
+            let st = new DartStackTrace.fromError(e);
             // The error must have been thrown while iterating over the futures
             // list, or while installing a callback handler on the future.
             if (remaining == 0 || eagerError) {
@@ -540,7 +540,7 @@ let Future = Future_1 = class Future {
                     result = f();
                 }
                 catch (error) {
-                    let stackTrace = new DartStackTrace(error);
+                    let stackTrace = new DartStackTrace.fromError(error);
                     // Cannot use _completeWithErrorCallback because it completes
                     // the future synchronously.
                     _asyncCompleteWithErrorCallback(doneSignal, error, stackTrace);
@@ -1587,7 +1587,7 @@ let _RootZone = _RootZone_1 = class _RootZone extends _Zone {
             return _rootRun(null, null, this, f);
         }
         catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             return this.handleUncaughtError(e, s);
         }
     }
@@ -1599,7 +1599,7 @@ let _RootZone = _RootZone_1 = class _RootZone extends _Zone {
             return _rootRunUnary(null, null, this, f, arg);
         }
         catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             return this.handleUncaughtError(e, s);
         }
     }
@@ -1611,7 +1611,7 @@ let _RootZone = _RootZone_1 = class _RootZone extends _Zone {
             return _rootRunBinary(null, null, this, f, arg1, arg2);
         }
         catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             return this.handleUncaughtError(e, s);
         }
     }
@@ -2463,7 +2463,7 @@ let _Future = _Future_1 = class _Future {
             });
         }
         catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             // This only happens if the `then` call threw synchronously when given
             // valid arguments.
             // That requires a non-conforming implementation of the Future interface,
@@ -2631,7 +2631,7 @@ let _Future = _Future_1 = class _Future {
                         completeResult = listener.handleWhenComplete();
                     }
                     catch (e) {
-                        let s = new DartStackTrace(e);
+                        let s = new DartStackTrace.fromError(e);
                         if (hasError && identical(source._error.error, e)) {
                             listenerValueOrError = source._error;
                         }
@@ -2663,7 +2663,7 @@ let _Future = _Future_1 = class _Future {
                         listenerValueOrError = listener.handleValue(sourceResult);
                     }
                     catch (e) {
-                        let s = new DartStackTrace(e);
+                        let s = new DartStackTrace.fromError(e);
                         listenerValueOrError = new DartAsyncError(e, s);
                         listenerHasError = true;
                     }
@@ -2678,7 +2678,7 @@ let _Future = _Future_1 = class _Future {
                         }
                     }
                     catch (e) {
-                        let s = new DartStackTrace(e);
+                        let s = new DartStackTrace.fromError(e);
                         if (identical(source._error.error, e)) {
                             listenerValueOrError = source._error;
                         }
@@ -2760,7 +2760,7 @@ let _Future = _Future_1 = class _Future {
                     result._complete(zone.run(onTimeout));
                 }
                 catch (e) {
-                    let s = new DartStackTrace(e);
+                    let s = new DartStackTrace.fromError(e);
                     result._completeError(e, s);
                 }
             });
@@ -3444,7 +3444,7 @@ class _CustomZone extends _Zone {
             return this.run(f);
         }
         catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             return this.handleUncaughtError(e, s);
         }
     }
@@ -3453,7 +3453,7 @@ class _CustomZone extends _Zone {
             return this.runUnary(f, arg);
         }
         catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             return this.handleUncaughtError(e, s);
         }
     }
@@ -3462,7 +3462,7 @@ class _CustomZone extends _Zone {
             return this.runBinary(f, arg1, arg2);
         }
         catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             return this.handleUncaughtError(e, s);
         }
     }
@@ -3786,7 +3786,7 @@ function runZoned(body, _) {
                 //return self.parent.runUnary(onError, error);
             }
             catch (e) {
-                let s = new DartStackTrace(e);
+                let s = new DartStackTrace.fromError(e);
                 if (identical(e, error)) {
                     return parent.handleUncaughtError(zone, error, stackTrace);
                 }
@@ -4233,7 +4233,7 @@ let DartStream = class DartStream {
                     data = computation(computationCount++);
                 }
                 catch (e) {
-                    let s = new DartStackTrace(e);
+                    let s = new DartStackTrace.fromError(e);
                     controller.addError(e, s);
                     return;
                 }
@@ -4445,7 +4445,7 @@ let DartStream = class DartStream {
                     newValue = convert(event);
                 }
                 catch (e) {
-                    let s = new DartStackTrace(e);
+                    let s = new DartStackTrace.fromError(e);
                     controller.addError(e, s);
                     return;
                 }
@@ -4510,7 +4510,7 @@ let DartStream = class DartStream {
                     newStream = convert(event);
                 }
                 catch (e) {
-                    let s = new DartStackTrace(e);
+                    let s = new DartStackTrace.fromError(e);
                     controller.addError(e, s);
                     return;
                 }
@@ -4652,7 +4652,7 @@ let DartStream = class DartStream {
                         throw DartIterableElementError.noElement();
                     }
                     catch (e) {
-                        let s = new DartStackTrace(e);
+                        let s = new DartStackTrace.fromError(e);
                         _completeWithErrorCallback(result, e, s);
                     }
                 }
@@ -4707,7 +4707,7 @@ let DartStream = class DartStream {
                 buffer.write(element);
             }
             catch (e) {
-                let s = new DartStackTrace(e);
+                let s = new DartStackTrace.fromError(e);
                 _cancelAndErrorWithReplacement(subscription, result, e, s);
             }
         }, {
@@ -5034,7 +5034,7 @@ let DartStream = class DartStream {
                     throw DartIterableElementError.noElement();
                 }
                 catch (e) {
-                    let s = new DartStackTrace(e);
+                    let s = new DartStackTrace.fromError(e);
                     _completeWithErrorCallback(future, e, s);
                 }
             },
@@ -5069,7 +5069,7 @@ let DartStream = class DartStream {
                     throw DartIterableElementError.noElement();
                 }
                 catch (e) {
-                    let s = new DartStackTrace(e);
+                    let s = new DartStackTrace.fromError(e);
                     _completeWithErrorCallback(future, e, s);
                 }
             },
@@ -5097,7 +5097,7 @@ let DartStream = class DartStream {
                     throw DartIterableElementError.tooMany();
                 }
                 catch (e) {
-                    let s = new DartStackTrace(e);
+                    let s = new DartStackTrace.fromError(e);
                     _cancelAndErrorWithReplacement(subscription, future, e, s);
                 }
                 return;
@@ -5115,7 +5115,7 @@ let DartStream = class DartStream {
                     throw DartIterableElementError.noElement();
                 }
                 catch (e) {
-                    let s = new DartStackTrace(e);
+                    let s = new DartStackTrace.fromError(e);
                     _completeWithErrorCallback(future, e, s);
                 }
             },
@@ -5165,7 +5165,7 @@ let DartStream = class DartStream {
                     throw DartIterableElementError.noElement();
                 }
                 catch (e) {
-                    let s = new DartStackTrace(e);
+                    let s = new DartStackTrace.fromError(e);
                     _completeWithErrorCallback(future, e, s);
                 }
             },
@@ -5208,7 +5208,7 @@ let DartStream = class DartStream {
                     throw DartIterableElementError.noElement();
                 }
                 catch (e) {
-                    let s = new DartStackTrace(e);
+                    let s = new DartStackTrace.fromError(e);
                     _completeWithErrorCallback(future, e, s);
                 }
             },
@@ -5235,7 +5235,7 @@ let DartStream = class DartStream {
                             throw DartIterableElementError.tooMany();
                         }
                         catch (e) {
-                            let s = new DartStackTrace(e);
+                            let s = new DartStackTrace.fromError(e);
                             _cancelAndErrorWithReplacement(subscription, future, e, s);
                         }
                         return;
@@ -5255,7 +5255,7 @@ let DartStream = class DartStream {
                     throw DartIterableElementError.noElement();
                 }
                 catch (e) {
-                    let s = new DartStackTrace(e);
+                    let s = new DartStackTrace.fromError(e);
                     _completeWithErrorCallback(future, e, s);
                 }
             },
@@ -6355,7 +6355,7 @@ class _IterablePendingEvents extends _PendingEvents {
             isDone = !this._iterator.moveNext();
         }
         catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             this._iterator = null;
             dispatch._sendError(e, s);
             return;
@@ -6797,7 +6797,7 @@ function _runUserCode(userCode, onSuccess, onError) {
         onSuccess(userCode());
     }
     catch (e) {
-        let s = new DartStackTrace(e);
+        let s = new DartStackTrace.fromError(e);
         let replacement = DartZone.current.errorCallback(e, s);
         if (replacement == null) {
             onError(e, s);
@@ -6959,7 +6959,7 @@ let _WhereStream = class _WhereStream extends _ForwardingStream {
             satisfies = this._test(inputEvent);
         }
         catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             _addErrorWithReplacement(sink, e, s);
             return;
         }
@@ -6985,7 +6985,7 @@ let _MapStream = class _MapStream extends _ForwardingStream {
             outputEvent = this._transform(inputEvent);
         }
         catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             _addErrorWithReplacement(sink, e, s);
             return;
         }
@@ -7010,7 +7010,7 @@ let _ExpandStream = class _ExpandStream extends _ForwardingStream {
             }
         }
         catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             // If either _expand or iterating the generated iterator throws,
             // we abort the iteration.
             _addErrorWithReplacement(sink, e, s);
@@ -7037,7 +7037,7 @@ let _HandleErrorStream = class _HandleErrorStream extends _ForwardingStream {
                 matches = this._test(error);
             }
             catch (e) {
-                let s = new DartStackTrace(e);
+                let s = new DartStackTrace.fromError(e);
                 _addErrorWithReplacement(sink, e, s);
                 return;
             }
@@ -7047,7 +7047,7 @@ let _HandleErrorStream = class _HandleErrorStream extends _ForwardingStream {
                 _invokeErrorHandler(this._transform, error, stackTrace);
             }
             catch (e) {
-                let s = new DartStackTrace(e);
+                let s = new DartStackTrace.fromError(e);
                 if (identical(e, error)) {
                     sink._addError(error, stackTrace);
                 }
@@ -7139,7 +7139,7 @@ let _TakeWhileStream = class _TakeWhileStream extends _ForwardingStream {
             satisfies = this._test(inputEvent);
         }
         catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             _addErrorWithReplacement(sink, e, s);
             // The test didn't say true. Didn't say false either, but we stop anyway.
             sink._close();
@@ -7201,7 +7201,7 @@ let _SkipWhileStream = class _SkipWhileStream extends _ForwardingStream {
             satisfies = this._test(inputEvent);
         }
         catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             _addErrorWithReplacement(sink, e, s);
             // A failure to return a boolean is considered "not matching".
             subscription._flag = true;
@@ -7244,7 +7244,7 @@ let _DistinctStream = _DistinctStream_1 = class _DistinctStream extends _Forward
                 }
             }
             catch (e) {
-                let s = new DartStackTrace(e);
+                let s = new DartStackTrace.fromError(e);
                 _addErrorWithReplacement(sink, e, s);
                 return;
             }
@@ -7946,7 +7946,7 @@ class _StreamController extends DartObject {
                     result = this.onCancel();
                 }
                 catch (e) {
-                    let s = new DartStackTrace(e);
+                    let s = new DartStackTrace.fromError(e);
                     // Return the error in the returned future.
                     // Complete it asynchronously, so there is time for a listener
                     // to handle the error.
@@ -8098,7 +8098,7 @@ function _runGuarded(notificationHandler) {
         notificationHandler();
     }
     catch (e) {
-        let s = new DartStackTrace(e);
+        let s = new DartStackTrace.fromError(e);
         DartZone.current.handleUncaughtError(e, s);
     }
 }
@@ -8807,7 +8807,7 @@ class _SinkTransformerStreamSubscription extends _BufferingStreamSubscription {
             this._transformerSink.add(data);
         }
         catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             this._addError(e, s);
         }
     }
@@ -8816,7 +8816,7 @@ class _SinkTransformerStreamSubscription extends _BufferingStreamSubscription {
             this._transformerSink.addError(error, stackTrace);
         }
         catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             if (identical(e, error)) {
                 this._addError(error, stackTrace);
             }
@@ -8831,7 +8831,7 @@ class _SinkTransformerStreamSubscription extends _BufferingStreamSubscription {
             this._transformerSink.close();
         }
         catch (e) {
-            let s = new DartStackTrace(e);
+            let s = new DartStackTrace.fromError(e);
             this._addError(e, s);
         }
     }
@@ -9180,7 +9180,7 @@ class JSStreamPendingEvents extends _PendingEvents {
                 dispatch._sendData(res.value);
             }
         }, (error) => {
-            dispatch._sendError(error, new DartStackTrace(error));
+            dispatch._sendError(error, new DartStackTrace.fromError(error));
         });
     }
     clear() {

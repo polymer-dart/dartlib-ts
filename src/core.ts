@@ -23,7 +23,7 @@ import {
     With,
     num,
     OperatorMethods,
-    AbstractProperty, AbstractSymbols
+    AbstractProperty, AbstractSymbols, op
 } from "./utils";
 import _dart, {divide, isNot, is, nullOr} from './_common';
 import {printToConsole, printToZone} from "./_internal";
@@ -7817,7 +7817,7 @@ Implements(DartLinkedHashMap)(DartJsLinkedHashMap);
  * "package:collection/wrappers.dart" instead.
  */
 @Implements(DartList)
-@AbstractSymbols(OperatorMethods.INDEX,OperatorMethods.INDEX_EQ)
+@AbstractSymbols(OperatorMethods.INDEX, OperatorMethods.INDEX_EQ)
 class DartListMixin<E> implements DartList<E> {
     [Symbol.iterator](): Iterator<E> {
         return this.iterator;
@@ -12670,6 +12670,10 @@ class DartPrimitives {
     /** [: r"$".codeUnitAt(0) :] */
     static DOLLAR_CHAR_VALUE: int = 36;
 
+    static extractStackTrace(error: DartError): DartStackTrace {
+        return getTraceFromException((error as any).$thrownJsError || error);
+    }
+
 }
 
 /**
@@ -12718,42 +12722,121 @@ function _isToStringVisiting(o: any): bool {
     return false;
 }
 
+const _hasErrorStackProperty: boolean = new Error().stack != void 0;
+
 
 @DartClass
 class DartStackTrace {
-    @namedConstructor
-    protected _() {
-
+    constructor() {
     }
 
-    protected static _: new() => DartStackTrace;
+    @defaultConstructor
+    DartStackTrace() {
+    }
 
-    @defaultFactory
-    protected static _create(e: any): DartStackTrace {
-        if (e instanceof Error) {
-            return new DartStackTrace.fromError(e);
-        } else {
-            return new DartStackTrace._();
+    @namedFactory
+    static $fromString(stackTraceString: string): DartStackTrace {
+        return new _StringStackTrace(stackTraceString);
+    }
+
+    static fromString: new(stackTraceString: string) => DartStackTrace;
+
+    static get current(): DartStackTrace {
+        if (_hasErrorStackProperty) {
+            return getTraceFromException(new DartError());
+        }
+        // Fallback if new Error().stack does not exist.
+        // Currently only required for IE 11.
+        try {
+            throw '';
+        } catch (_) {
+            return new DartStackTrace.fromError(_);
         }
     }
 
-    constructor(e: any) {
-
-    }
-
-    static get current(): DartStackTrace {
-        return new DartStackTrace(new Error());
+    @Abstract
+    toString(): string {
+        throw 'abstract'
     }
 
     @namedFactory
     protected static _fromError(e: Error): DartStackTrace {
-        return new DartStackTrace._();
+        return DartPrimitives.extractStackTrace(e);
     }
 
     static fromError: new(e: Error) => DartStackTrace;
+}
 
+/// A wrapper around an exception, much like the one created by [wrapException]
+/// but with a pre-given stack-trace.
+export class DartExceptionAndStackTrace {
+    dartException: any;
+    stackTrace: DartStackTrace;
+
+    constructor(dartException: any, stackTrace: DartStackTrace) {
+        this.dartException = dartException;
+        this.stackTrace = stackTrace;
+    }
+}
+
+
+@DartClass
+@Implements(DartStackTrace)
+export class _StringStackTrace extends DartStackTrace {
+    _stackTrace: string;
+
+    constructor(_stackTrace: string) {
+        super();
+    }
+
+    @defaultConstructor
+    _StringStackTrace(_stackTrace: string) {
+        this._stackTrace = _stackTrace;
+    }
+
+    toString(): string {
+        return this._stackTrace;
+    }
 
 }
+
+
+@DartClass
+@Implements(DartStackTrace)
+export class _StackTrace extends DartStackTrace {
+    _exception;
+    _trace: string;
+
+    constructor(_exception: any) {
+        super();
+    }
+
+    @defaultConstructor
+    _StackTrace(_exception: any) {
+        this._exception = _exception;
+    }
+
+    toString(): string {
+        if (this._trace != null) return this._trace/* JS('String', '#', _trace) */;
+        let trace: string;
+        if (this._exception !== null/* JS('bool', '# !== null', _exception) */ && typeof this._exception === "object"/* JS('bool', 'typeof # === "object"', _exception) */) {
+            trace = this._exception.stack/* JS("String|Null", r"#.stack", _exception) */;
+        }
+        return this._trace = (trace == null) ? '' : trace;
+    }
+}
+
+export var getTraceFromException: (exception: any) => DartStackTrace = (exception: any): DartStackTrace => {
+    if (is(exception, DartExceptionAndStackTrace)) {
+        return exception.stackTrace;
+    }
+    if (op(Op.EQUALS, exception, null)) return new _StackTrace(exception);
+    let trace: _StackTrace = exception.$cachedTrace/* JS('_StackTrace|Null', r'#.$cachedTrace', exception) */;
+    if (trace != null) return trace;
+    trace = new _StackTrace(exception);
+    return exception.$cachedTrace = trace/* JS('_StackTrace', r'#.$cachedTrace = #', exception, trace) */;
+};
+
 
 // Copyright (c) 2011, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a

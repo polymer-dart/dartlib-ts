@@ -9,7 +9,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 var DartJsLinkedHashMap_1, _LinkedIdentityHashMap_1, DartConstantMap_1, DartMap_1, DartHashMap_1, DartHashSet_1, DartLinkedHashSet_1, DartList_1, DartLinkedHashMap_1, DartListMixin_1, DartStringBuffer_1, DartMappedIterable_1, DartSkipIterable_1, DartEfficientLengthSkipIterable_1, RangeError_1, JSArray_1, DartStackTrace_1, DartDuration_1, DartDateTime_1, JSSyntaxRegExp_1, DartString_1, JSString_1, DartNumber_1, JSNumber_1, JSInt_1, DartDouble_1, DartExpando_1;
 // Patch file for dart:collection classes.
-import { Abstract, AbstractMethods, DartClass, defaultConstructor, defaultFactory, Implements, namedConstructor, namedFactory, Op, Operator, With, OperatorMethods, AbstractProperty, AbstractSymbols } from "./utils";
+import { Abstract, AbstractMethods, DartClass, defaultConstructor, defaultFactory, Implements, namedConstructor, namedFactory, Op, Operator, With, OperatorMethods, AbstractProperty, AbstractSymbols, op } from "./utils";
 import _dart, { divide, isNot, is, nullOr } from './_common';
 import { printToConsole, printToZone } from "./_internal";
 const _USE_ES6_MAPS = true;
@@ -11520,6 +11520,9 @@ class DartPrimitives {
         }
         return result;
     }
+    static extractStackTrace(error) {
+        return getTraceFromException(error.$thrownJsError || error);
+    }
 }
 /** [: r"$".codeUnitAt(0) :] */
 DartPrimitives.DOLLAR_CHAR_VALUE = 36;
@@ -11563,38 +11566,114 @@ function _isToStringVisiting(o) {
     }
     return false;
 }
+const _hasErrorStackProperty = new Error().stack != void 0;
 let DartStackTrace = DartStackTrace_1 = class DartStackTrace {
-    constructor(e) {
+    constructor() {
     }
-    _() {
+    DartStackTrace() {
     }
-    static _create(e) {
-        if (e instanceof Error) {
-            return new DartStackTrace_1.fromError(e);
-        }
-        else {
-            return new DartStackTrace_1._();
-        }
+    static $fromString(stackTraceString) {
+        return new _StringStackTrace(stackTraceString);
     }
     static get current() {
-        return new DartStackTrace_1(new Error());
+        if (_hasErrorStackProperty) {
+            return getTraceFromException(new DartError());
+        }
+        // Fallback if new Error().stack does not exist.
+        // Currently only required for IE 11.
+        try {
+            throw '';
+        }
+        catch (_) {
+            return new DartStackTrace_1.fromError(_);
+        }
+    }
+    toString() {
+        throw 'abstract';
     }
     static _fromError(e) {
-        return new DartStackTrace_1._();
+        return DartPrimitives.extractStackTrace(e);
     }
 };
 __decorate([
-    namedConstructor
-], DartStackTrace.prototype, "_", null);
+    defaultConstructor
+], DartStackTrace.prototype, "DartStackTrace", null);
 __decorate([
-    defaultFactory
-], DartStackTrace, "_create", null);
+    Abstract
+], DartStackTrace.prototype, "toString", null);
+__decorate([
+    namedFactory
+], DartStackTrace, "$fromString", null);
 __decorate([
     namedFactory
 ], DartStackTrace, "_fromError", null);
 DartStackTrace = DartStackTrace_1 = __decorate([
     DartClass
 ], DartStackTrace);
+/// A wrapper around an exception, much like the one created by [wrapException]
+/// but with a pre-given stack-trace.
+export class DartExceptionAndStackTrace {
+    constructor(dartException, stackTrace) {
+        this.dartException = dartException;
+        this.stackTrace = stackTrace;
+    }
+}
+let _StringStackTrace = class _StringStackTrace extends DartStackTrace {
+    constructor(_stackTrace) {
+        super();
+    }
+    _StringStackTrace(_stackTrace) {
+        this._stackTrace = _stackTrace;
+    }
+    toString() {
+        return this._stackTrace;
+    }
+};
+__decorate([
+    defaultConstructor
+], _StringStackTrace.prototype, "_StringStackTrace", null);
+_StringStackTrace = __decorate([
+    DartClass,
+    Implements(DartStackTrace)
+], _StringStackTrace);
+export { _StringStackTrace };
+let _StackTrace = class _StackTrace extends DartStackTrace {
+    constructor(_exception) {
+        super();
+    }
+    _StackTrace(_exception) {
+        this._exception = _exception;
+    }
+    toString() {
+        if (this._trace != null)
+            return this._trace /* JS('String', '#', _trace) */;
+        let trace;
+        if (this._exception !== null /* JS('bool', '# !== null', _exception) */ && typeof this._exception === "object" /* JS('bool', 'typeof # === "object"', _exception) */) {
+            trace = this._exception.stack /* JS("String|Null", r"#.stack", _exception) */;
+        }
+        return this._trace = (trace == null) ? '' : trace;
+    }
+};
+__decorate([
+    defaultConstructor
+], _StackTrace.prototype, "_StackTrace", null);
+_StackTrace = __decorate([
+    DartClass,
+    Implements(DartStackTrace)
+], _StackTrace);
+export { _StackTrace };
+export var getTraceFromException = (exception) => {
+    if (is(exception, DartExceptionAndStackTrace)) {
+        return exception.stackTrace;
+    }
+    if (op(Op.EQUALS, exception, null))
+        return new _StackTrace(exception);
+    let trace = exception.$cachedTrace /* JS('_StackTrace|Null', r'#.$cachedTrace', exception) */;
+    if (trace != null)
+        return trace;
+    trace = new _StackTrace(exception);
+    return exception.$cachedTrace = trace /* JS('_StackTrace', r'#.$cachedTrace = #', exception, trace) */;
+};
 // Copyright (c) 2011, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
