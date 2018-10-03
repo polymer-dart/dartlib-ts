@@ -1,6 +1,5 @@
 node_modules
 *.iml
 dist/__tests__
-orig/.pub
-orig/.packages
-orig/.dart_tool
+orig
+.vscode

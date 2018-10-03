@@ -2811,37 +2811,35 @@ export var _startsWithData = (text, start) => {
 export var _stringOrNullLength = (s) => {
     return (s == null) ? 0 : s.length;
 };
-export class _Properties {
-    constructor() {
-        this._SPACE = 32;
-        this._PERCENT = 37;
-        this._AMPERSAND = 38;
-        this._PLUS = 43;
-        this._DOT = 46;
-        this._SLASH = 47;
-        this._COLON = 58;
-        this._EQUALS = 61;
-        this._UPPER_CASE_A = 65;
-        this._UPPER_CASE_Z = 90;
-        this._LEFT_BRACKET = 91;
-        this._BACKSLASH = 92;
-        this._RIGHT_BRACKET = 93;
-        this._LOWER_CASE_A = 97;
-        this._LOWER_CASE_F = 102;
-        this._LOWER_CASE_Z = 122;
-        this._hexDigits = "0123456789ABCDEF";
-        this._schemeEndIndex = 1;
-        this._hostStartIndex = 2;
-        this._portStartIndex = 3;
-        this._pathStartIndex = 4;
-        this._queryStartIndex = 5;
-        this._fragmentStartIndex = 6;
-        this._notSimpleIndex = 7;
-        this._uriStart = 0;
-        this._nonSimpleEndStates = 14;
-        this._schemeStart = 20;
-        this._scannerTables = _createTables();
-    }
+export class properties {
 }
-export const properties = new _Properties();
+properties._SPACE = 32;
+properties._PERCENT = 37;
+properties._AMPERSAND = 38;
+properties._PLUS = 43;
+properties._DOT = 46;
+properties._SLASH = 47;
+properties._COLON = 58;
+properties._EQUALS = 61;
+properties._UPPER_CASE_A = 65;
+properties._UPPER_CASE_Z = 90;
+properties._LEFT_BRACKET = 91;
+properties._BACKSLASH = 92;
+properties._RIGHT_BRACKET = 93;
+properties._LOWER_CASE_A = 97;
+properties._LOWER_CASE_F = 102;
+properties._LOWER_CASE_Z = 122;
+properties._hexDigits = "0123456789ABCDEF";
+properties._schemeEndIndex = 1;
+properties._hostStartIndex = 2;
+properties._portStartIndex = 3;
+properties._pathStartIndex = 4;
+properties._queryStartIndex = 5;
+properties._fragmentStartIndex = 6;
+properties._notSimpleIndex = 7;
+properties._uriStart = 0;
+properties._nonSimpleEndStates = 14;
+properties._schemeStart = 20;
+properties._scannerTables = _createTables();
+//export const properties : properties = new properties();
 //# sourceMappingURL=uri.js.map
