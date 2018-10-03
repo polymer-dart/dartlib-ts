@@ -1537,9 +1537,41 @@ export class _Uri extends Uri {
         parsePair(start,equalsIndex,i);
         return result;
     }
-    static _uriEncode(canonicalTable : core.DartList<number>,text : string,encoding : any,spaceToPlus : boolean) : string {
-        throw "external";
+
+
+    private static __$_needsNoEncoding : core.DartRegExp;
+    static get _needsNoEncoding() : core.DartRegExp {
+        if (this.__$_needsNoEncoding===undefined) {
+            this.__$_needsNoEncoding = new core.DartRegExp('^[\-\.0-9A-Z_a-z~]*$');
+        }
+        return this.__$_needsNoEncoding;
     }
+    static set _needsNoEncoding(__$value : core.DartRegExp)  {
+        this.__$_needsNoEncoding = __$value;
+    }
+
+    static _uriEncode(canonicalTable : core.DartList<number>,text : string,encoding : any,spaceToPlus : boolean) : string {
+        if (core.identical(encoding,convert.properties.UTF8) && _Uri._needsNoEncoding.hasMatch(text)) {
+            return text;
+        }
+        let result : core.DartStringBuffer = new core.DartStringBuffer('');
+        let bytes = encoding.encode(text);
+        for(let i : number = 0; i < bytes.length; i++){
+            let byte : number = op(Op.INDEX,bytes,i);
+            if (byte < 128 && ((canonicalTable[byte >> 4] & (1 << (byte & 15))) != 0)) {
+                result.writeCharCode(byte);
+            }else if (spaceToPlus && byte == properties._SPACE) {
+                result.write('+');
+            }else {
+                let hexDigits : string = '0123456789ABCDEF';
+                result.write('%');
+                result.write(hexDigits[(byte >> 4) & 15]);
+                result.write(hexDigits[byte & 15]);
+            }
+        }
+        return result.toString();
+    }
+
     static _hexCharPairToByte(s : string,pos : number) : number {
         let byte : number = 0;
         for(let i : number = 0; i < 2; i++){

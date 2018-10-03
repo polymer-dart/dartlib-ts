@@ -262,6 +262,8 @@ export declare class _Uri extends Uri {
     static _splitQueryStringAll(query: string, _namedArguments?: {
         encoding?: any;
     }): core.DartMap<any, any>;
+    private static __$_needsNoEncoding;
+    static _needsNoEncoding: core.DartRegExp;
     static _uriEncode(canonicalTable: core.DartList<number>, text: string, encoding: any, spaceToPlus: boolean): string;
     static _hexCharPairToByte(s: string, pos: number): number;
     static _uriDecode(text: string, start: number, end: number, encoding: any, plusToSpace: boolean): string;

@@ -1,9 +1,9 @@
 /** Library asset:sample_project/lib/math/math.dart */
-import {is,equals} from "_common";
-import {defaultConstructor,namedConstructor,namedFactory,defaultFactory,DartClass,Implements,op,Op,OperatorMethods,DartClassAnnotation,DartMethodAnnotation,DartPropertyAnnotation,Abstract,AbstractProperty} from "utils";
-import * as _common from "_common";
-import * as core from "core";
-import * as async from "async";
+import {is,isNot,equals} from "@dart2ts/dart/_common";
+import {defaultConstructor,namedConstructor,namedFactory,defaultFactory,DartClass,Implements,With,op,Op,OperatorMethods,DartClassAnnotation,DartMethodAnnotation,DartPropertyAnnotation,Abstract,AbstractProperty,int,bool,double} from "@dart2ts/dart/utils";
+import * as _common from "@dart2ts/dart/_common";
+import * as core from "@dart2ts/dart/core";
+import * as async from "@dart2ts/dart/async";
 
 export var min : <T extends number>(a : T,b : T) => T = <T extends number>(a : T,b : T) : T =>  {
 };
@@ -66,7 +66,7 @@ export class Point<T extends number>  {
         return `Point(${this.x}, ${this.y})`;
     }
     [OperatorMethods.EQUALS](other : any) : boolean {
-        if (is(other, Point<any>)) return false;
+        if (isNot(other, Point<any>)) return false;
         return op(Op.EQUALS,this.x,other.x) && op(Op.EQUALS,this.y,other.y);
     }
     get hashCode() : number {
@@ -101,10 +101,10 @@ export class Random {
     constructor(seed? : number) {
     }
     @defaultFactory
-    static _Random(seed? : number) : Random {
+    static $Random(seed? : number) : Random {
     }
     @namedFactory
-    static _secure() : Random {
+    static $secure() : Random {
     }
     static secure : new() => Random;
     @Abstract
@@ -140,7 +140,7 @@ export class _RectangleBase<T extends number>  {
         return `Rectangle (${this.left}, ${this.top}) ${this.width} x ${this.height}`;
     }
     [OperatorMethods.EQUALS](other : any) : boolean {
-        if (is(other, Rectangle<any>)) return false;
+        if (isNot(other, Rectangle<any>)) return false;
         return op(Op.EQUALS,this.left,other.left) && op(Op.EQUALS,this.top,other.top) && op(Op.EQUALS,this.right,other.right) && op(Op.EQUALS,this.bottom,other.bottom);
     }
     get hashCode() : number {
@@ -206,7 +206,7 @@ export class Rectangle<T extends number>  extends _RectangleBase<T> {
         this.top = top;
     }
     @namedFactory
-    static _fromPoints<T extends number>(a : Point<T>,b : Point<T>) : Rectangle<T> {
+    static $fromPoints<T extends number>(a : Point<T>,b : Point<T>) : Rectangle<T> {
         let left : T = min(a.x,b.x);
         let width : T = op(Op.MINUS,max(a.x,b.x),left);
         let top : T = min(a.y,b.y);
@@ -235,7 +235,7 @@ export class MutableRectangle<T extends number>  extends _RectangleBase<T> imple
         this.top = top;
     }
     @namedFactory
-    static _fromPoints<T extends number>(a : Point<T>,b : Point<T>) : MutableRectangle<T> {
+    static $fromPoints<T extends number>(a : Point<T>,b : Point<T>) : MutableRectangle<T> {
         let left : T = min(a.x,b.x);
         let width : T = op(Op.MINUS,max(a.x,b.x),left);
         let top : T = min(a.y,b.y);
@@ -263,14 +263,93 @@ export var _clampToZero : <T extends number>(value : T) => T = <T extends number
     /* TODO (AssertStatementImpl) : assert (value < 0); */;
     return op(Op.NEG,value) * 0;
 };
-export class _Properties {
-    E : double = 2.718281828459045;
-    LN10 : double = 2.302585092994046;
-    LN2 : double = 0.6931471805599453;
-    LOG2E : double = 1.4426950408889634;
-    LOG10E : double = 0.4342944819032518;
-    PI : double = 3.141592653589793;
-    SQRT1_2 : double = 0.7071067811865476;
-    SQRT2 : double = 1.4142135623730951;
+export class properties {
+    private static __$E : double;
+    static get E() : double { 
+        if (this.__$E===undefined) {
+            this.__$E = 2.718281828459045;
+        }
+        return this.__$E;
+    }
+    static set E(__$value : double)  { 
+        this.__$E = __$value;
+    }
+
+    private static __$LN10 : double;
+    static get LN10() : double { 
+        if (this.__$LN10===undefined) {
+            this.__$LN10 = 2.302585092994046;
+        }
+        return this.__$LN10;
+    }
+    static set LN10(__$value : double)  { 
+        this.__$LN10 = __$value;
+    }
+
+    private static __$LN2 : double;
+    static get LN2() : double { 
+        if (this.__$LN2===undefined) {
+            this.__$LN2 = 0.6931471805599453;
+        }
+        return this.__$LN2;
+    }
+    static set LN2(__$value : double)  { 
+        this.__$LN2 = __$value;
+    }
+
+    private static __$LOG2E : double;
+    static get LOG2E() : double { 
+        if (this.__$LOG2E===undefined) {
+            this.__$LOG2E = 1.4426950408889634;
+        }
+        return this.__$LOG2E;
+    }
+    static set LOG2E(__$value : double)  { 
+        this.__$LOG2E = __$value;
+    }
+
+    private static __$LOG10E : double;
+    static get LOG10E() : double { 
+        if (this.__$LOG10E===undefined) {
+            this.__$LOG10E = 0.4342944819032518;
+        }
+        return this.__$LOG10E;
+    }
+    static set LOG10E(__$value : double)  { 
+        this.__$LOG10E = __$value;
+    }
+
+    private static __$PI : double;
+    static get PI() : double { 
+        if (this.__$PI===undefined) {
+            this.__$PI = 3.141592653589793;
+        }
+        return this.__$PI;
+    }
+    static set PI(__$value : double)  { 
+        this.__$PI = __$value;
+    }
+
+    private static __$SQRT1_2 : double;
+    static get SQRT1_2() : double { 
+        if (this.__$SQRT1_2===undefined) {
+            this.__$SQRT1_2 = 0.7071067811865476;
+        }
+        return this.__$SQRT1_2;
+    }
+    static set SQRT1_2(__$value : double)  { 
+        this.__$SQRT1_2 = __$value;
+    }
+
+    private static __$SQRT2 : double;
+    static get SQRT2() : double { 
+        if (this.__$SQRT2===undefined) {
+            this.__$SQRT2 = 1.4142135623730951;
+        }
+        return this.__$SQRT2;
+    }
+    static set SQRT2(__$value : double)  { 
+        this.__$SQRT2 = __$value;
+    }
+
 }
-export const properties : _Properties = new _Properties();

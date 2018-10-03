@@ -1724,8 +1724,37 @@ let _Uri = _Uri_1 = class _Uri extends Uri {
         parsePair(start, equalsIndex, i);
         return result;
     }
+    static get _needsNoEncoding() {
+        if (this.__$_needsNoEncoding === undefined) {
+            this.__$_needsNoEncoding = new core.DartRegExp('^[\-\.0-9A-Z_a-z~]*$');
+        }
+        return this.__$_needsNoEncoding;
+    }
+    static set _needsNoEncoding(__$value) {
+        this.__$_needsNoEncoding = __$value;
+    }
     static _uriEncode(canonicalTable, text, encoding, spaceToPlus) {
-        throw "external";
+        if (core.identical(encoding, convert.properties.UTF8) && _Uri_1._needsNoEncoding.hasMatch(text)) {
+            return text;
+        }
+        let result = new core.DartStringBuffer('');
+        let bytes = encoding.encode(text);
+        for (let i = 0; i < bytes.length; i++) {
+            let byte = op(Op.INDEX, bytes, i);
+            if (byte < 128 && ((canonicalTable[byte >> 4] & (1 << (byte & 15))) != 0)) {
+                result.writeCharCode(byte);
+            }
+            else if (spaceToPlus && byte == properties._SPACE) {
+                result.write('+');
+            }
+            else {
+                let hexDigits = '0123456789ABCDEF';
+                result.write('%');
+                result.write(hexDigits[(byte >> 4) & 15]);
+                result.write(hexDigits[byte & 15]);
+            }
+        }
+        return result.toString();
     }
     static _hexCharPairToByte(s, pos) {
         let byte = 0;

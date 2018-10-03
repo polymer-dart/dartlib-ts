@@ -12830,7 +12830,7 @@ export var getTraceFromException: (exception: any) => DartStackTrace = (exceptio
     if (is(exception, DartExceptionAndStackTrace)) {
         return exception.stackTrace;
     }
-    if (op(Op.EQUALS, exception, null)) return new _StackTrace(exception);
+    if (op(Op.EQUALS, exception, null) || typeof exception != 'object') return new _StackTrace(exception);
     let trace: _StackTrace = exception.$cachedTrace/* JS('_StackTrace|Null', r'#.$cachedTrace', exception) */;
     if (trace != null) return trace;
     trace = new _StackTrace(exception);

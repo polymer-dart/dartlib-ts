@@ -1,4 +1,4 @@
-import {DartDuration, DartDateTime, print, DartList} from "../core";
+import {DartDuration, DartDateTime, print, DartList, DartStackTrace, DartError} from "../core";
 import * as math from '../math';
 import {callMethod} from "../js_util";
 
@@ -49,6 +49,34 @@ describe('core', () => {
             spyOn(console,'log');
             callMethod(console,'log',new DartList.literal('hi'));
             expect(console.log).toBeCalledWith('hi');
+        })
+    });
+
+    describe('stacktrace',()=>{
+        it('works with non object exception',()=>{
+            let st:DartStackTrace;
+            try {
+                throw 'error'
+            } catch (error) {
+                st = new DartStackTrace.fromError(error);
+            }
+
+            expect(st).not.toBeNull();
+            console.log(st.toString());
+
+        })
+
+        it('works with non error exception',()=>{
+            let st:DartStackTrace;
+            try {
+                throw new DartError('error');
+            } catch (error) {
+                st = new DartStackTrace.fromError(error);
+            }
+
+            expect(st).not.toBeNull();
+            console.log(st.toString());
+
         })
     });
 });
