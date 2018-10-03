@@ -1,4 +1,22 @@
-import {mixin, DartClass, defaultConstructor, namedConstructor, DartConstructor, Abstract, With, AbstractProperty, AbstractMethods, Implements, isA, Operator, Op, OperatorMethods, defaultFactory, AbstractSymbols} from "../utils"
+import {
+    mixin,
+    DartClass,
+    defaultConstructor,
+    namedConstructor,
+    DartConstructor,
+    Abstract,
+    With,
+    AbstractProperty,
+    AbstractMethods,
+    Implements,
+    isA,
+    Operator,
+    Op,
+    OperatorMethods,
+    defaultFactory,
+    AbstractSymbols,
+    namedFactory
+} from "../utils"
 import _dart from '../_common';
 
 describe("Utils", () => {
@@ -395,6 +413,26 @@ describe("Utils", () => {
         expect(y.method()).toEqual('Hi John');
         expect(Derived.staticMethod()).toEqual('STATIC');
         expect(Derived.otherStaticMethod()).toEqual('BYE');
+    });
+
+    it('works with named factory',()=>{
+        @DartClass
+        class MyFactory {
+            name:string;
+            @namedFactory
+            static $hi(name:string):MyFactory {
+                return new MyFactory(`Hi ${name}`);
+            }
+
+            static hi: new(name:string)=>MyFactory;
+
+            constructor(name:string) {
+                this.name = name;
+            }
+        }
+
+        expect(new MyFactory.hi('Jhon').name).toEqual('Hi Jhon');
+
     });
 
     it('deletes abstract methods', () => {

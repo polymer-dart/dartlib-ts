@@ -252,8 +252,8 @@ export function DartConstructor(_: { default?: boolean, factory?: boolean, name?
             let ctor;
             let name: string | symbol = _name;
             if (factory) {
-                if (typeof methodName == 'string' && (name === undefined || name === null) && methodName.startsWith('_')) {
-                    name = methodName.substring(1);   // remove prefix '_' from method name
+                if (typeof methodName == 'string' && (name === undefined || name === null) && methodName.match(/^[_$]/)) {
+                    name = methodName.substring(1);   // remove prefix '_/$' from method name
                 }
 
 
@@ -415,7 +415,7 @@ export function _equals(a: any, b: any) {
 const defaultOps: Map<Op, Function> = new Map([
     [Op.INDEX, (t, i) => t[i]],
     [Op.INDEX_ASSIGN, (t, i, v) => t[i] = v],
-    [Op.EQUALS, (l, r) => l==null && r==null || l === r],
+    [Op.EQUALS, (l, r) => l == null && r == null || l === r],
     [Op.PLUS, (l, r) => l + r],
     [Op.MINUS, (l, r) => l - r],
     [Op.TIMES, (l, r) => l * r],

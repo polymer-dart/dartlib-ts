@@ -194,8 +194,8 @@ export function DartConstructor(_) {
             let ctor;
             let name = _name;
             if (factory) {
-                if (typeof methodName == 'string' && (name === undefined || name === null) && methodName.startsWith('_')) {
-                    name = methodName.substring(1); // remove prefix '_' from method name
+                if (typeof methodName == 'string' && (name === undefined || name === null) && methodName.match(/^[_$]/)) {
+                    name = methodName.substring(1); // remove prefix '_/$' from method name
                 }
                 // use that as constructor
                 ctor = function (...args) {
