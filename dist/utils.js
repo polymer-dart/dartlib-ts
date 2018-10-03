@@ -360,14 +360,11 @@ const defaultOps = new Map([
  * @param rest
  */
 export function op(o, first, ...rest) {
-    if (typeof o == 'string' || typeof o == 'number') {
+    let sym = OpSymbolMap.get(o);
+    if (typeof first !== 'object' || first == null || !first[sym]) {
         let _args = [first];
         _args.push(...rest);
         return defaultOps.get(o)(..._args);
-    }
-    let sym = OpSymbolMap.get(o);
-    if (!first[sym]) {
-        throw `No operator ${o} in ${first}`;
     }
     return first[OpSymbolMap.get(o)](...rest);
 }
