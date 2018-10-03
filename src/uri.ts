@@ -132,14 +132,14 @@ export class Uri {
     normalizePath() : Uri{ throw 'abstract'}
     static parse(uri : string,start? : number,end? : number) : Uri {
         start = start || 0;
-        end = uri.length;
+        end = end || new core.DartString(uri).length;
         if (end >= start + 5) {
             let dataDelta : number = _startsWithData(uri,start);
             if (dataDelta == 0) {
-                if (start > 0 || end < uri.length) uri = uri.substring(start,end);
+                if (start > 0 || end < new core.DartString(uri).length) uri = new core.DartString(uri).substring(start,end);
                 return UriData._parse(uri,5,null).uri;
             }else if (dataDelta == 32) {
-                return UriData._parse(uri.substring(start + 5,end),0,null).uri;
+                return UriData._parse(new core.DartString(uri).substring(start + 5,end),0,null).uri;
             }
         }
         let indices = new core.DartList<number>(8);
@@ -190,101 +190,101 @@ export class Uri {
                 isSimple = false;
             }else if (portStart > start && portStart + 1 == pathStart) {
                 isSimple = false;
-            }else if (queryStart < end && (queryStart == pathStart + 2 && uri.startsWith("..",pathStart)) || (queryStart > pathStart + 2 && uri.startsWith("/..",queryStart - 3))) {
+            }else if (queryStart < end && (queryStart == pathStart + 2 && new core.DartString(uri).startsWith(new core.DartString(".."),pathStart)) || (queryStart > pathStart + 2 && new core.DartString(uri).startsWith(new core.DartString("/.."),queryStart - 3))) {
                 isSimple = false;
             }else {
                 if (schemeEnd == start + 4) {
-                    if (uri.startsWith("file",start)) {
+                    if (new core.DartString(uri).startsWith(new core.DartString("file"),start)) {
                         scheme = "file";
                         if (hostStart <= start) {
                             let schemeAuth : string = "file://";
                             let delta : number = 2;
-                            if (!uri.startsWith("/",pathStart)) {
+                            if (!new core.DartString(uri).startsWith(new core.DartString("/"),pathStart)) {
                                 schemeAuth = "file:///";
                                 delta = 3;
                             }
-                            uri = schemeAuth + uri.substring(pathStart,end);
-                            schemeEnd = start;
+                            uri = schemeAuth + new core.DartString(uri).substring(pathStart,end);
+                            schemeEnd -= start;
                             hostStart = 7;
                             portStart = 7;
                             pathStart = 7;
-                            queryStart = delta - start;
-                            fragmentStart = delta - start;
+                            queryStart += delta - start;
+                            fragmentStart += delta - start;
                             start = 0;
-                            end = uri.length;
+                            end = new core.DartString(uri).length;
                         }else if (pathStart == queryStart) {
-                            if (start == 0 && end == uri.length) {
+                            if (start == 0 && end == new core.DartString(uri).length) {
                                 uri = new core.DartString(uri).replaceRange(pathStart,queryStart,"/");
-                                queryStart = 1;
-                                fragmentStart = 1;
-                                end = 1;
+                                queryStart += 1;
+                                fragmentStart += 1;
+                                end += 1;
                             }else {
-                                uri = `${uri.substring(start,pathStart)}/` + `${uri.substring(queryStart,end)}`;
-                                schemeEnd = start;
-                                hostStart = start;
-                                portStart = start;
-                                pathStart = start;
-                                queryStart = 1 - start;
-                                fragmentStart = 1 - start;
+                                uri = `${new core.DartString(uri).substring(start,pathStart)}/` + `${new core.DartString(uri).substring(queryStart,end)}`;
+                                schemeEnd -= start;
+                                hostStart -= start;
+                                portStart -= start;
+                                pathStart -= start;
+                                queryStart += 1 - start;
+                                fragmentStart += 1 - start;
                                 start = 0;
-                                end = uri.length;
+                                end = new core.DartString(uri).length;
                             }
                         }
-                    }else if (uri.startsWith("http",start)) {
+                    }else if (new core.DartString(uri).startsWith(new core.DartString("http"),start)) {
                         scheme = "http";
-                        if (portStart > start && portStart + 3 == pathStart && uri.startsWith("80",portStart + 1)) {
-                            if (start == 0 && end == uri.length) {
+                        if (portStart > start && portStart + 3 == pathStart && new core.DartString(uri).startsWith(new core.DartString("80"),portStart + 1)) {
+                            if (start == 0 && end == new core.DartString(uri).length) {
                                 uri = new core.DartString(uri).replaceRange(portStart,pathStart,"");
-                                pathStart = 3;
-                                queryStart = 3;
-                                fragmentStart = 3;
-                                end = 3;
+                                pathStart -= 3;
+                                queryStart -= 3;
+                                fragmentStart -= 3;
+                                end -= 3;
                             }else {
-                                uri = uri.substring(start,portStart) + uri.substring(pathStart,end);
-                                schemeEnd = start;
-                                hostStart = start;
-                                portStart = start;
-                                pathStart = 3 + start;
-                                queryStart = 3 + start;
-                                fragmentStart = 3 + start;
+                                uri = new core.DartString(uri).substring(start,portStart) + new core.DartString(uri).substring(pathStart,end);
+                                schemeEnd -= start;
+                                hostStart -= start;
+                                portStart -= start;
+                                pathStart -= 3 + start;
+                                queryStart -= 3 + start;
+                                fragmentStart -= 3 + start;
                                 start = 0;
-                                end = uri.length;
+                                end = new core.DartString(uri).length;
                             }
                         }
                     }
-                }else if (schemeEnd == start + 5 && uri.startsWith("https",start)) {
+                }else if (schemeEnd == start + 5 && new core.DartString(uri).startsWith(new core.DartString("https"),start)) {
                     scheme = "https";
-                    if (portStart > start && portStart + 4 == pathStart && uri.startsWith("443",portStart + 1)) {
-                        if (start == 0 && end == uri.length) {
+                    if (portStart > start && portStart + 4 == pathStart && new core.DartString(uri).startsWith(new core.DartString("443"),portStart + 1)) {
+                        if (start == 0 && end == new core.DartString(uri).length) {
                             uri = new core.DartString(uri).replaceRange(portStart,pathStart,"");
-                            pathStart = 4;
-                            queryStart = 4;
-                            fragmentStart = 4;
-                            end = 3;
+                            pathStart -= 4;
+                            queryStart -= 4;
+                            fragmentStart -= 4;
+                            end -= 3;
                         }else {
-                            uri = uri.substring(start,portStart) + uri.substring(pathStart,end);
-                            schemeEnd = start;
-                            hostStart = start;
-                            portStart = start;
-                            pathStart = 4 + start;
-                            queryStart = 4 + start;
-                            fragmentStart = 4 + start;
+                            uri = new core.DartString(uri).substring(start,portStart) + new core.DartString(uri).substring(pathStart,end);
+                            schemeEnd -= start;
+                            hostStart -= start;
+                            portStart -= start;
+                            pathStart -= 4 + start;
+                            queryStart -= 4 + start;
+                            fragmentStart -= 4 + start;
                             start = 0;
-                            end = uri.length;
+                            end = new core.DartString(uri).length;
                         }
                     }
                 }
             }
         }
         if (isSimple) {
-            if (start > 0 || end < uri.length) {
-                uri = uri.substring(start,end);
-                schemeEnd = start;
-                hostStart = start;
-                portStart = start;
-                pathStart = start;
-                queryStart = start;
-                fragmentStart = start;
+            if (start > 0 || end < new core.DartString(uri).length) {
+                uri = new core.DartString(uri).substring(start,end);
+                schemeEnd -= start;
+                hostStart -= start;
+                portStart -= start;
+                pathStart -= start;
+                queryStart -= start;
+                fragmentStart -= start;
             }
             return new _SimpleUri(uri,schemeEnd,hostStart,portStart,pathStart,queryStart,fragmentStart,scheme);
         }

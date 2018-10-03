@@ -62,9 +62,9 @@ describe('core', () => {
             }
 
             expect(st).not.toBeNull();
-            console.log(st.toString());
+           // console.log(st.toString());
 
-        })
+        });
 
         it('works with non error exception',()=>{
             let st:DartStackTrace;
@@ -75,8 +75,8 @@ describe('core', () => {
             }
 
             expect(st).not.toBeNull();
-            console.log(st.toString());
+          //  console.log(st.toString());
 
-        })
+        });
     });
 });
