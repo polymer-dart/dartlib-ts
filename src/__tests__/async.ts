@@ -1,5 +1,5 @@
 import {DartDateTime, DartDuration, DartIterable, DartList} from "../core";
-import {dartAsync, DartStream, Future, stream} from "../async";
+import {dartAsync, DartCompleter, DartStream, Future, stream} from "../async";
 import {$with} from "../utils";
 
 describe("async", () => {
@@ -116,5 +116,19 @@ describe("async", () => {
 
         });
 
+    });
+
+    describe('completer', () => {
+        it('creates a future', async () => {
+
+            let c = new DartCompleter<string>();
+
+            new Future.delayed(new DartDuration({seconds: 1})).then((_) => c.complete('hi'));
+
+
+            let res = await c.future;
+
+            expect(res).toEqual('hi');
+        });
     });
 });

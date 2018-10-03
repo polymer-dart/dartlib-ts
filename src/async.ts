@@ -874,6 +874,7 @@ class DartTimeoutException extends Error {
  *       }
  *     }
  */
+@DartClass
 class DartCompleter<T> {
     /**
      * Creates a new completer.

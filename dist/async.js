@@ -807,7 +807,7 @@ class DartTimeoutException extends Error {
  *       }
  *     }
  */
-class DartCompleter {
+let DartCompleter = class DartCompleter {
     constructor() {
     }
     /**
@@ -936,7 +936,7 @@ class DartCompleter {
     get isCompleted() {
         throw 'abstract';
     }
-}
+};
 __decorate([
     AbstractProperty
 ], DartCompleter.prototype, "future", null);
@@ -955,6 +955,9 @@ __decorate([
 __decorate([
     namedFactory
 ], DartCompleter, "_sync", null);
+DartCompleter = __decorate([
+    DartClass
+], DartCompleter);
 // Helper function completing a _Future with error, but checking the zone
 // for error replacement first.
 function _completeWithErrorCallback(result, error, stackTrace) {
