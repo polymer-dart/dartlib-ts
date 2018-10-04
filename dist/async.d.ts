@@ -1034,7 +1034,7 @@ declare class _Future<T> implements Future<T> {
     _setChained(source: _Future<any>): void;
     then<E>(f: (value: T) => FutureOr<E>, _?: {
         onError?: Function;
-    }): Future<E>;
+    } | Function): Future<E>;
     _thenNoZoneRegistration<E>(f: (value: T) => FutureOr<E>, onError: Function): Future<E>;
     catchError(onError: Function, _?: {
         test: (error: any) => bool;

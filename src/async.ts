@@ -2410,7 +2410,10 @@ class _Future<T> implements Future<T> {
     }
 
 
-    then<E>(f: (value: T) => FutureOr<E>, _?: { onError?: Function }): Future<E> {
+    then<E>(f: (value: T) => FutureOr<E>, _?: { onError?: Function }|Function): Future<E> {
+        if (typeof _ === 'function') {
+            _ = {onError:_};
+        }
         let {onError} = Object.assign({}, _);
         let currentZone: DartZone = DartZone.current;
         if (!identical(currentZone, _ROOT_ZONE)) {

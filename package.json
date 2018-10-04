@@ -5,7 +5,8 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "test": "jest"
+    "test": "jest",
+    "publish_local": "cd dist;npm publish --registry http://localhost:4873"
   },
   "author": "",
   "license": "ISC",

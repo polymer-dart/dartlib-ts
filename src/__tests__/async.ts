@@ -66,6 +66,20 @@ describe("async", () => {
             let str = new Future.delayed(new DartDuration({seconds: 4}), () => '4 secs');
             expect(await str).toEqual('4 secs');
         });
+
+        it('catches async errors',async()=>{
+            let error = "not";
+            try {
+                let c = new DartCompleter();
+                await new Future.delayed(new DartDuration({seconds:1})).then(()=>{
+                    c.completeError("error");
+                });
+                await c.future;
+            } catch (er) {
+                error=er;
+            }
+            expect(error).toEqual('error');
+        });
     });
 
     describe('stream', () => {
@@ -131,4 +145,5 @@ describe("async", () => {
             expect(res).toEqual('hi');
         });
     });
+
 });

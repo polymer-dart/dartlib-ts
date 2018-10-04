@@ -2278,6 +2278,9 @@ let _Future = _Future_1 = class _Future {
         this._resultOrListeners = source;
     }
     then(f, _) {
+        if (typeof _ === 'function') {
+            _ = { onError: _ };
+        }
         let { onError } = Object.assign({}, _);
         let currentZone = DartZone.current;
         if (!identical(currentZone, _ROOT_ZONE)) {
