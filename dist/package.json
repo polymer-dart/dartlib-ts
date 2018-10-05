@@ -1,14 +1,13 @@
 {
   "name": "@dart2ts/dart",
   "version": "0.1.14",
-  "description": "",
+  "description": "dart2ts core support library",
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "test": "jest",
-    "publish_local": "npm publish --registry http://localhost:4873"
+    "test": "jest"
   },
-  "author": "",
+  "author": "vittorio.ballestra@gmail.com",
   "license": "ISC",
   "dependencies": {},
   "devDependencies": {
