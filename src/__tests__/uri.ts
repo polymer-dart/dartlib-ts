@@ -1,4 +1,5 @@
 import { Uri } from "../uri";
+import { DartMap } from "../core";
 
 describe('uri', () => {
     it('can parse some uri', () => {
@@ -12,5 +13,12 @@ describe('uri', () => {
         expect(uri.scheme).toEqual('https');
         expect(uri.host).toEqual('elys.drafintech.it');
         expect(uri.port).toEqual(443);
+    });
+
+    it('allows for array params',()=>{
+        let uri:Uri = new Uri.http("somewhere","/somePath",new DartMap.literal<string,any>([
+            ["arg",["value1","value2"]]
+        ]));
+        expect(uri.toString()).toEqual("http://somewhere/somePath?arg=value1&arg=value2");
     });
 });
