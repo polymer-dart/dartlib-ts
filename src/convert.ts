@@ -642,7 +642,7 @@ export class Base64Codec extends Codec<core.DartList<number>, string> {
             if (char == percent) {
                 if (i + 2 <= end) {
                     char = _internal.parseHexByte(source, i);
-                    i = 2;
+                    i += 2;
                     if (char == percent) char = -1;
                 } else {
                     char = -1;
@@ -662,7 +662,7 @@ export class Base64Codec extends Codec<core.DartList<number>, string> {
                     if (originalChar == equals) continue;
                 }
                 if (value != _Base64Decoder._invalid) {
-                    buffer = new core.DartStringBuffer();
+                    buffer = buffer || new core.DartStringBuffer();
                     buffer.write(source.substring(sliceStart, sliceEnd));
                     buffer.writeCharCode(char);
                     sliceStart = i;
@@ -802,7 +802,7 @@ export class _Base64Encoder {
         let partialChunkLength: number = byteCount - fullChunks * 3;
         let bufferLength: number = fullChunks * 4;
         if (isLast && partialChunkLength > 0) {
-            bufferLength = 4;
+            bufferLength += 4;
         }
         let output = this.createBuffer(bufferLength);
         this._state = _Base64Encoder.encodeChunk(this._alphabet, bytes, start, end, isLast, output, 0, this._state);
@@ -1104,7 +1104,7 @@ export class _Base64Decoder {
                     op(Op.INDEX_ASSIGN, output, outIndex++, bits >> 4);
                 }
                 let expectedPadding: number = (3 - count) * 3;
-                if (char == _Base64Decoder._char_percent) expectedPadding = 2;
+                if (char == _Base64Decoder._char_percent) expectedPadding += 2;
                 state = _Base64Decoder._encodePaddingState(expectedPadding);
                 return _Base64Decoder._checkPadding(input, i + 1, end, state);
             }
@@ -1129,7 +1129,7 @@ export class _Base64Decoder {
         let bufferLength: number = (length >> 2) * 3;
         let remainderLength: number = length & 3;
         if (remainderLength != 0 && paddingStart < end) {
-            bufferLength = remainderLength - 1;
+            bufferLength += remainderLength - 1;
         }
         if (bufferLength > 0) return new typed_data.Uint8List(bufferLength);
         return null;
@@ -1182,7 +1182,7 @@ export class _Base64Decoder {
             let char: number = new core.DartString(input).codeUnitAt(start);
             if (expectedPadding == 3) {
                 if (char == properties._paddingChar) {
-                    expectedPadding = 3;
+                    expectedPadding -= 3;
                     start++;
                     break;
                 }
@@ -1196,7 +1196,7 @@ export class _Base64Decoder {
                 }
             }
             let expectedPartialPadding: number = expectedPadding;
-            if (expectedPartialPadding > 3) expectedPartialPadding = 3;
+            if (expectedPartialPadding > 3) expectedPartialPadding -= 3;
             if (expectedPartialPadding == 2) {
                 if (char != _Base64Decoder._char_3) break;
                 start++;
@@ -1304,7 +1304,7 @@ export class _ByteCallbackSink extends ByteConversionSinkBase {
             this._buffer = grown;
         }
         this._buffer.setRange(this._bufferIndex, this._bufferIndex + chunk.length, chunk);
-        this._bufferIndex = chunk.length;
+        this._bufferIndex += chunk.length;
     }
 
     static _roundToPowerOf2(v: number): number {
@@ -1790,7 +1790,7 @@ export class JsonUtf8Encoder extends Converter<core.DartObject, core.DartList<nu
         if (bytes.length == 1) return bytes[0];
         let length: number = 0;
         for (let i: number = 0; i < bytes.length; i++) {
-            length = bytes[i].length;
+            length += bytes[i].length;
         }
         let result: typed_data.Uint8List = new typed_data.Uint8List(length);
         for (let i: number = 0, offset: number = 0; i < bytes.length; i++) {
@@ -2426,7 +2426,7 @@ export class _JsonStringifier {
         if (!allStringKeys) return false;
         this.writeString('{');
         let separator: string = '"';
-        for (let i: number = 0; i < keyValueList.length; i = 2) {
+        for (let i: number = 0; i < keyValueList.length; i += 2) {
             this.writeString(separator);
             separator = ',"';
             this.writeStringContent(keyValueList[i]);
@@ -2487,7 +2487,7 @@ export class _JsonPrettyPrintMixin extends _JsonStringifier {
         this.writeString('{\n');
         this._indentLevel++;
         let separator: string = "";
-        for (let i: number = 0; i < keyValueList.length; i = 2) {
+        for (let i: number = 0; i < keyValueList.length; i += 2) {
             this.writeString(separator);
             separator = ",\n";
             this.writeIndentation(this._indentLevel);
@@ -2715,7 +2715,7 @@ export class _JsonUtf8StringifierPretty extends _JsonUtf8Stringifier {
             let char: number = indent[0];
             while (count > 0) {
                 this.writeByte(char);
-                count = 1;
+                count -= 1;
             }
             return;
         }
@@ -3019,7 +3019,7 @@ export class _LineSplitterSink extends StringConversionSinkBase {
             this._carry = null;
         } else if (this._skipLeadingLF) {
             if (new core.DartString(chunk).codeUnitAt(start) == properties._LF) {
-                start = 1;
+                start += 1;
             }
             this._skipLeadingLF = false;
         }
@@ -3509,15 +3509,15 @@ export class _Utf8Encoder {
 
     @defaultConstructor
     _Utf8Encoder() {
-        this._carry =0;
-        this._bufferIndex=0;
+        this._carry = 0;
+        this._bufferIndex = 0;
         this.withBufferSize(_Utf8Encoder._DEFAULT_BYTE_BUFFER_SIZE);
     }
 
     @namedConstructor
     withBufferSize(bufferSize: number) {
-        this._carry =0;
-        this._bufferIndex=0;
+        this._carry = 0;
+        this._bufferIndex = 0;
         this._buffer = _Utf8Encoder._createBuffer(bufferSize);
     }
 
@@ -3820,7 +3820,7 @@ export class _Utf8Decoder {
                     if (oneBytes > 0) {
                         this._isFirstCharacter = false;
                         addSingleBytes(i, i + oneBytes);
-                        i = oneBytes;
+                        i += oneBytes;
                         if (i == endIndex) break;
                     }
                     let unit: number = codeUnits[i++];
