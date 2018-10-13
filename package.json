@@ -6,8 +6,7 @@
   "scripts": {
     "build": "tsc",
     "test": "jest",
-    "publish_local": "cd dist;npm publish --registry http://localhost:4873",
-    "publish": "cd dist;npm publish --registry https://npm.dart-polymer.com"
+    "dist": "cd dist;npm publish"
   },
   "author": "",
   "license": "ISC",

@@ -61,40 +61,100 @@ let Uri = Uri_1 = class Uri {
         });
         return data.uri;
     }
-    get scheme() { throw 'abstract'; }
-    get authority() { throw 'abstract'; }
-    get userInfo() { throw 'abstract'; }
-    get host() { throw 'abstract'; }
-    get port() { throw 'abstract'; }
-    get path() { throw 'abstract'; }
-    get query() { throw 'abstract'; }
-    get fragment() { throw 'abstract'; }
-    get pathSegments() { throw 'abstract'; }
-    get queryParameters() { throw 'abstract'; }
-    get queryParametersAll() { throw 'abstract'; }
-    get isAbsolute() { throw 'abstract'; }
+    get scheme() {
+        throw 'abstract';
+    }
+    get authority() {
+        throw 'abstract';
+    }
+    get userInfo() {
+        throw 'abstract';
+    }
+    get host() {
+        throw 'abstract';
+    }
+    get port() {
+        throw 'abstract';
+    }
+    get path() {
+        throw 'abstract';
+    }
+    get query() {
+        throw 'abstract';
+    }
+    get fragment() {
+        throw 'abstract';
+    }
+    get pathSegments() {
+        throw 'abstract';
+    }
+    get queryParameters() {
+        throw 'abstract';
+    }
+    get queryParametersAll() {
+        throw 'abstract';
+    }
+    get isAbsolute() {
+        throw 'abstract';
+    }
     get hasScheme() {
         return new core.DartString(this.scheme).isNotEmpty;
     }
-    get hasAuthority() { throw 'abstract'; }
-    get hasPort() { throw 'abstract'; }
-    get hasQuery() { throw 'abstract'; }
-    get hasFragment() { throw 'abstract'; }
-    get hasEmptyPath() { throw 'abstract'; }
-    get hasAbsolutePath() { throw 'abstract'; }
-    get origin() { throw 'abstract'; }
-    isScheme(scheme) { throw 'abstract'; }
-    toFilePath(_namedArguments) { throw 'abstract'; }
-    get data() { throw 'abstract'; }
-    get hashCode() { throw 'abstract'; }
+    get hasAuthority() {
+        throw 'abstract';
+    }
+    get hasPort() {
+        throw 'abstract';
+    }
+    get hasQuery() {
+        throw 'abstract';
+    }
+    get hasFragment() {
+        throw 'abstract';
+    }
+    get hasEmptyPath() {
+        throw 'abstract';
+    }
+    get hasAbsolutePath() {
+        throw 'abstract';
+    }
+    get origin() {
+        throw 'abstract';
+    }
+    isScheme(scheme) {
+        throw 'abstract';
+    }
+    toFilePath(_namedArguments) {
+        throw 'abstract';
+    }
+    get data() {
+        throw 'abstract';
+    }
+    get hashCode() {
+        throw 'abstract';
+    }
     //@Abstract
-    [OperatorMethods.EQUALS](other) { throw 'abstract'; }
-    toString() { throw 'abstract'; }
-    replace(_namedArguments) { throw 'abstract'; }
-    removeFragment() { throw 'abstract'; }
-    resolve(reference) { throw 'abstract'; }
-    resolveUri(reference) { throw 'abstract'; }
-    normalizePath() { throw 'abstract'; }
+    [OperatorMethods.EQUALS](other) {
+        throw 'abstract';
+    }
+    toString() {
+        throw 'abstract';
+    }
+    replace(_namedArguments) {
+        throw 'abstract';
+    }
+    removeFragment() {
+        throw 'abstract';
+    }
+    resolve(reference) {
+        throw 'abstract';
+    }
+    resolveUri(reference) {
+        throw 'abstract';
+    }
+    normalizePath() {
+        throw 'abstract';
+    }
     static parse(uri, start, end) {
         start = start || 0;
         end = end || new core.DartString(uri).length;
@@ -147,12 +207,18 @@ let Uri = Uri_1 = class Uri {
         }
         if (portStart < hostStart)
             portStart = pathStart;
-        /* TODO (AssertStatementImpl) : assert (hostStart == start || schemeEnd <= hostStart); */ ;
-        /* TODO (AssertStatementImpl) : assert (hostStart <= portStart); */ ;
-        /* TODO (AssertStatementImpl) : assert (schemeEnd <= pathStart); */ ;
-        /* TODO (AssertStatementImpl) : assert (portStart <= pathStart); */ ;
-        /* TODO (AssertStatementImpl) : assert (pathStart <= queryStart); */ ;
-        /* TODO (AssertStatementImpl) : assert (queryStart <= fragmentStart); */ ;
+        /* TODO (AssertStatementImpl) : assert (hostStart == start || schemeEnd <= hostStart); */
+        ;
+        /* TODO (AssertStatementImpl) : assert (hostStart <= portStart); */
+        ;
+        /* TODO (AssertStatementImpl) : assert (schemeEnd <= pathStart); */
+        ;
+        /* TODO (AssertStatementImpl) : assert (portStart <= pathStart); */
+        ;
+        /* TODO (AssertStatementImpl) : assert (pathStart <= queryStart); */
+        ;
+        /* TODO (AssertStatementImpl) : assert (queryStart <= fragmentStart); */
+        ;
         let isSimple = indices[properties._notSimpleIndex] < start;
         if (isSimple) {
             if (hostStart > schemeEnd + 3) {
@@ -440,13 +506,13 @@ let Uri = Uri_1 = class Uri {
                 for (let j = 0; j < wildCardLength; j++) {
                     bytes[index] = 0;
                     bytes[index + 1] = 0;
-                    index = 2;
+                    index += 2;
                 }
             }
             else {
                 bytes[index] = value >> 8;
                 bytes[index + 1] = value & 255;
-                index = 2;
+                index += 2;
             }
         }
         return bytes;
@@ -1032,7 +1098,7 @@ let _Uri = _Uri_1 = class _Uri extends Uri {
             if (char == properties._PERCENT) {
                 let replacement = _Uri_1._normalizeEscape(host, index, true);
                 if (replacement == null && isNormalized) {
-                    index = 3;
+                    index += 3;
                     continue;
                 }
                 if (op(Op.EQUALS, buffer, null))
@@ -1050,7 +1116,7 @@ let _Uri = _Uri_1 = class _Uri extends Uri {
                     sourceLength = 1;
                 }
                 buffer.write(replacement);
-                index = sourceLength;
+                index += sourceLength;
                 sectionStart = index;
                 isNormalized = true;
             }
@@ -1085,7 +1151,7 @@ let _Uri = _Uri_1 = class _Uri extends Uri {
                     slice = slice.toLowerCase();
                 buffer.write(slice);
                 buffer.write(_Uri_1._escapeChar(char));
-                index = sourceLength;
+                index += sourceLength;
                 sectionStart = index;
             }
         }
@@ -1209,7 +1275,8 @@ let _Uri = _Uri_1 = class _Uri extends Uri {
         return _Uri_1._normalizeOrSubstring(fragment, start, end, _Uri_1._queryCharTable);
     }
     static _normalizeEscape(source, index, lowerCase) {
-        /* TODO (AssertStatementImpl) : assert (new core.DartString(source).codeUnitAt(index) == _PERCENT); */ ;
+        /* TODO (AssertStatementImpl) : assert (new core.DartString(source).codeUnitAt(index) == _PERCENT); */
+        ;
         if (index + 2 >= source.length) {
             return "%";
         }
@@ -1233,7 +1300,8 @@ let _Uri = _Uri_1 = class _Uri extends Uri {
         return null;
     }
     static _escapeChar(char) {
-        /* TODO (AssertStatementImpl) : assert (char <= 0x10ffff); */ ;
+        /* TODO (AssertStatementImpl) : assert (char <= 0x10ffff); */
+        ;
         let codeUnits;
         if (char < 128) {
             codeUnits = new core.DartList(3);
@@ -1259,7 +1327,7 @@ let _Uri = _Uri_1 = class _Uri extends Uri {
                 codeUnits[index] = properties._PERCENT;
                 codeUnits[index + 1] = new core.DartString(properties._hexDigits).codeUnitAt(byte >> 4);
                 codeUnits[index + 2] = new core.DartString(properties._hexDigits).codeUnitAt(byte & 15);
-                index = 3;
+                index += 3;
                 flag = 128;
             }
         }
@@ -1286,7 +1354,7 @@ let _Uri = _Uri_1 = class _Uri extends Uri {
                 if (char == properties._PERCENT) {
                     replacement = _Uri_1._normalizeEscape(component, index, false);
                     if (replacement == null) {
-                        index = 3;
+                        index += 3;
                         continue;
                     }
                     if ("%" == replacement) {
@@ -1317,7 +1385,7 @@ let _Uri = _Uri_1 = class _Uri extends Uri {
                     buffer = new core.DartStringBuffer();
                 buffer.write(component.substring(sectionStart, index));
                 buffer.write(replacement);
-                index = sourceLength;
+                index += sourceLength;
                 sectionStart = index;
             }
         }
@@ -1342,7 +1410,7 @@ let _Uri = _Uri_1 = class _Uri extends Uri {
         let backCount = 0;
         let refStart = 0;
         while (reference.startsWith("../", refStart)) {
-            refStart = 3;
+            refStart += 3;
             backCount++;
         }
         let baseEnd = base.lastIndexOf('/');
@@ -1369,7 +1437,8 @@ let _Uri = _Uri_1 = class _Uri extends Uri {
     static _removeDotSegments(path) {
         if (!_Uri_1._mayContainDotSegments(path))
             return path;
-        /* TODO (AssertStatementImpl) : assert (new core.DartString(path).isNotEmpty); */ ;
+        /* TODO (AssertStatementImpl) : assert (new core.DartString(path).isNotEmpty); */
+        ;
         let output = new core.DartList.literal();
         let appendSlash = false;
         for (let segment of path.split("/")) {
@@ -1395,13 +1464,15 @@ let _Uri = _Uri_1 = class _Uri extends Uri {
         return output.join("/");
     }
     static _normalizeRelativePath(path, allowScheme) {
-        /* TODO (AssertStatementImpl) : assert (!path.startsWith('/')); */ ;
+        /* TODO (AssertStatementImpl) : assert (!path.startsWith('/')); */
+        ;
         if (!_Uri_1._mayContainDotSegments(path)) {
             if (!allowScheme)
                 path = _Uri_1._escapeScheme(path);
             return path;
         }
-        /* TODO (AssertStatementImpl) : assert (path.isNotEmpty); */ ;
+        /* TODO (AssertStatementImpl) : assert (path.isNotEmpty); */
+        ;
         let output = new core.DartList.literal();
         let appendSlash = false;
         for (let segment of path.split("/")) {
@@ -1634,10 +1705,11 @@ let _Uri = _Uri_1 = class _Uri extends Uri {
         return (this.scheme == "data") ? new UriData.fromUri(this) : null;
     }
     toString() {
-        return this._text = this._initializeText();
+        return this._text = this._text || this._initializeText();
     }
     _initializeText() {
-        /* TODO (AssertStatementImpl) : assert (_text == null); */ ;
+        /* TODO (AssertStatementImpl) : assert (_text == null); */
+        ;
         let sb = new core.DartStringBuffer();
         if (new core.DartString(this.scheme).isNotEmpty)
             ((_) => {
@@ -1680,7 +1752,7 @@ let _Uri = _Uri_1 = class _Uri extends Uri {
         return false;
     }
     get hashCode() {
-        return this._hashCodeCache = new core.DartString(this.toString()).hashCode;
+        return this._hashCodeCache = this._hashCodeCache || new core.DartString(this.toString()).hashCode;
     }
     static _createList() {
         return new core.DartList.literal();
@@ -1776,10 +1848,14 @@ let _Uri = _Uri_1 = class _Uri extends Uri {
         return byte;
     }
     static _uriDecode(text, start, end, encoding, plusToSpace) {
-        /* TODO (AssertStatementImpl) : assert (0 <= start); */ ;
-        /* TODO (AssertStatementImpl) : assert (start <= end); */ ;
-        /* TODO (AssertStatementImpl) : assert (end <= text.length); */ ;
-        /* TODO (AssertStatementImpl) : assert (encoding != null); */ ;
+        /* TODO (AssertStatementImpl) : assert (0 <= start); */
+        ;
+        /* TODO (AssertStatementImpl) : assert (start <= end); */
+        ;
+        /* TODO (AssertStatementImpl) : assert (end <= text.length); */
+        ;
+        /* TODO (AssertStatementImpl) : assert (encoding != null); */
+        ;
         let simple = true;
         for (let i = start; i < end; i++) {
             let codeUnit = new core.DartString(text).codeUnitAt(i);
@@ -1809,7 +1885,7 @@ let _Uri = _Uri_1 = class _Uri extends Uri {
                         throw new core.ArgumentError('Truncated URI');
                     }
                     bytes.add(_Uri_1._hexCharPairToByte(text, i + 1));
-                    i = 2;
+                    i += 2;
                 }
                 else if (plusToSpace && codeUnit == properties._PLUS) {
                     bytes.add(properties._SPACE);
@@ -1891,7 +1967,7 @@ let UriData = UriData_1 = class UriData {
         else if (charsetName == null) {
             encodingName = encoding.name;
         }
-        encoding = convert.properties.ASCII;
+        encoding = encoding || convert.properties.ASCII;
         UriData_1._writeUri(mimeType, encodingName, parameters, buffer, indices);
         indices.add(buffer.length);
         if (base64) {
@@ -2039,9 +2115,9 @@ let UriData = UriData_1 = class UriData {
         let parameterStart = 1;
         let parameterEnd = this._separatorIndices.length - 1;
         if (this.isBase64) {
-            parameterEnd = 1;
+            parameterEnd -= 1;
         }
-        for (let i = parameterStart; i < parameterEnd; i = 2) {
+        for (let i = parameterStart; i < parameterEnd; i += 2) {
             let keyStart = this._separatorIndices[i] + 1;
             let keyEnd = this._separatorIndices[i + 1];
             if (keyEnd == keyStart + 7 && this._text.startsWith("charset", keyStart)) {
@@ -2067,8 +2143,8 @@ let UriData = UriData_1 = class UriData {
         for (let i = start; i < text.length; i++) {
             let codeUnit = new core.DartString(text).codeUnitAt(i);
             if (codeUnit == percent) {
-                i = 2;
-                length = 2;
+                i += 2;
+                length -= 2;
             }
         }
         let result = new typed_data.Uint8List(length);
@@ -2087,14 +2163,15 @@ let UriData = UriData_1 = class UriData {
                     let byte = _internal.parseHexByte(text, i + 1);
                     if (byte >= 0) {
                         op(Op.INDEX_ASSIGN, result, index++, byte);
-                        i = 2;
+                        i += 2;
                         continue;
                     }
                 }
                 throw new core.FormatException("Invalid percent escape", text, i);
             }
         }
-        /* TODO (AssertStatementImpl) : assert (index == result.length); */ ;
+        /* TODO (AssertStatementImpl) : assert (index == result.length); */
+        ;
         return result;
     }
     contentAsString(_namedArguments) {
@@ -2116,7 +2193,7 @@ let UriData = UriData_1 = class UriData {
     }
     get parameters() {
         let result = new core.DartMap();
-        for (let i = 3; i < this._separatorIndices.length; i = 2) {
+        for (let i = 3; i < this._separatorIndices.length; i += 2) {
             let start = this._separatorIndices[i - 2] + 1;
             let equals = this._separatorIndices[i - 1];
             let end = this._separatorIndices[i];
@@ -2127,8 +2204,10 @@ let UriData = UriData_1 = class UriData {
         return result;
     }
     static _parse(text, start, sourceUri) {
-        /* TODO (AssertStatementImpl) : assert (start == 0 || start == 5); */ ;
-        /* TODO (AssertStatementImpl) : assert ((start == 5) == text.startsWith("data:")); */ ;
+        /* TODO (AssertStatementImpl) : assert (start == 0 || start == 5); */
+        ;
+        /* TODO (AssertStatementImpl) : assert ((start == 5) == text.startsWith("data:")); */
+        ;
         let comma = 44;
         let slash = 47;
         let semicolon = 59;
@@ -2421,7 +2500,8 @@ export var _createTables = () => {
 };
 export var _scan = (uri, start, end, state, indices) => {
     let tables = properties._scannerTables;
-    /* TODO (AssertStatementImpl) : assert (end <= uri.length); */ ;
+    /* TODO (AssertStatementImpl) : assert (end <= uri.length); */
+    ;
     for (let i = start; i < end; i++) {
         let table = tables[state];
         let char = new core.DartString(uri).codeUnitAt(i) ^ 96;
@@ -2721,7 +2801,7 @@ let _SimpleUri = _SimpleUri_1 = class _SimpleUri {
         if (base.hasEmptyPath && base.hasAuthority) {
             let refStart = ref._pathStart;
             while (ref._uri.startsWith("../", refStart)) {
-                refStart = 3;
+                refStart += 3;
             }
             let delta = base._pathStart - refStart + 1;
             let newUri = `${base._uri.substring(0, base._pathStart)}/` + `${ref._uri.substring(refStart)}`;
@@ -2732,13 +2812,13 @@ let _SimpleUri = _SimpleUri_1 = class _SimpleUri {
         let baseStart = base._pathStart;
         let baseEnd = base._queryStart;
         while (baseUri.startsWith("../", baseStart))
-            baseStart = 3;
+            baseStart += 3;
         let refStart = ref._pathStart;
         let refEnd = ref._queryStart;
         let backCount = 0;
         while (refStart + 3 <= refEnd && refUri.startsWith("../", refStart)) {
-            refStart = 3;
-            backCount = 1;
+            refStart += 3;
+            backCount += 1;
         }
         let insert = "";
         while (baseEnd > baseStart) {
@@ -2753,7 +2833,7 @@ let _SimpleUri = _SimpleUri_1 = class _SimpleUri {
         }
         if (baseEnd == baseStart && !base.hasScheme && !base.hasAbsolutePath) {
             insert = "";
-            refStart = backCount * 3;
+            refStart -= backCount * 3;
         }
         let delta = baseEnd - refStart + insert.length;
         let newUri = `${base._uri.substring(0, baseEnd)}${insert}` + `${ref._uri.substring(refStart)}`;
@@ -2781,11 +2861,12 @@ let _SimpleUri = _SimpleUri_1 = class _SimpleUri {
         return this.path;
     }
     get data() {
-        /* TODO (AssertStatementImpl) : assert (scheme != "data"); */ ;
+        /* TODO (AssertStatementImpl) : assert (scheme != "data"); */
+        ;
         return null;
     }
     get hashCode() {
-        return this._hashCodeCache = new core.DartString(this._uri).hashCode;
+        return this._hashCodeCache = this._hashCodeCache || new core.DartString(this._uri).hashCode;
     }
     [OperatorMethods.EQUALS](other) {
         if (core.identical(this, other))

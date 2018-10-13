@@ -652,7 +652,7 @@ let Base64Codec = Base64Codec_1 = class Base64Codec extends Codec {
             if (char == percent) {
                 if (i + 2 <= end) {
                     char = _internal.parseHexByte(source, i);
-                    i = 2;
+                    i += 2;
                     if (char == percent)
                         char = -1;
                 }
@@ -677,7 +677,7 @@ let Base64Codec = Base64Codec_1 = class Base64Codec extends Codec {
                         continue;
                 }
                 if (value != _Base64Decoder._invalid) {
-                    buffer = new core.DartStringBuffer();
+                    buffer = buffer || new core.DartStringBuffer();
                     buffer.write(source.substring(sliceStart, sliceEnd));
                     buffer.writeCharCode(char);
                     sliceStart = i;
@@ -810,7 +810,7 @@ let _Base64Encoder = _Base64Encoder_1 = class _Base64Encoder {
         let partialChunkLength = byteCount - fullChunks * 3;
         let bufferLength = fullChunks * 4;
         if (isLast && partialChunkLength > 0) {
-            bufferLength = 4;
+            bufferLength += 4;
         }
         let output = this.createBuffer(bufferLength);
         this._state = _Base64Encoder_1.encodeChunk(this._alphabet, bytes, start, end, isLast, output, 0, this._state);
@@ -1112,7 +1112,7 @@ let _Base64Decoder = _Base64Decoder_1 = class _Base64Decoder {
                 }
                 let expectedPadding = (3 - count) * 3;
                 if (char == _Base64Decoder_1._char_percent)
-                    expectedPadding = 2;
+                    expectedPadding += 2;
                 state = _Base64Decoder_1._encodePaddingState(expectedPadding);
                 return _Base64Decoder_1._checkPadding(input, i + 1, end, state);
             }
@@ -1137,7 +1137,7 @@ let _Base64Decoder = _Base64Decoder_1 = class _Base64Decoder {
         let bufferLength = (length >> 2) * 3;
         let remainderLength = length & 3;
         if (remainderLength != 0 && paddingStart < end) {
-            bufferLength = remainderLength - 1;
+            bufferLength += remainderLength - 1;
         }
         if (bufferLength > 0)
             return new typed_data.Uint8List(bufferLength);
@@ -1190,7 +1190,7 @@ let _Base64Decoder = _Base64Decoder_1 = class _Base64Decoder {
             let char = new core.DartString(input).codeUnitAt(start);
             if (expectedPadding == 3) {
                 if (char == properties._paddingChar) {
-                    expectedPadding = 3;
+                    expectedPadding -= 3;
                     start++;
                     break;
                 }
@@ -1207,7 +1207,7 @@ let _Base64Decoder = _Base64Decoder_1 = class _Base64Decoder {
             }
             let expectedPartialPadding = expectedPadding;
             if (expectedPartialPadding > 3)
-                expectedPartialPadding = 3;
+                expectedPartialPadding -= 3;
             if (expectedPartialPadding == 2) {
                 if (char != _Base64Decoder_1._char_3)
                     break;
@@ -1326,7 +1326,7 @@ let _ByteCallbackSink = _ByteCallbackSink_1 = class _ByteCallbackSink extends By
             this._buffer = grown;
         }
         this._buffer.setRange(this._bufferIndex, this._bufferIndex + chunk.length, chunk);
-        this._bufferIndex = chunk.length;
+        this._bufferIndex += chunk.length;
     }
     static _roundToPowerOf2(v) {
         /* TODO (AssertStatementImpl) : assert (v > 0); */
@@ -1793,7 +1793,7 @@ let JsonUtf8Encoder = JsonUtf8Encoder_1 = class JsonUtf8Encoder extends Converte
             return bytes[0];
         let length = 0;
         for (let i = 0; i < bytes.length; i++) {
-            length = bytes[i].length;
+            length += bytes[i].length;
         }
         let result = new typed_data.Uint8List(length);
         for (let i = 0, offset = 0; i < bytes.length; i++) {
@@ -2389,7 +2389,7 @@ let _JsonStringifier = _JsonStringifier_1 = class _JsonStringifier {
             return false;
         this.writeString('{');
         let separator = '"';
-        for (let i = 0; i < keyValueList.length; i = 2) {
+        for (let i = 0; i < keyValueList.length; i += 2) {
             this.writeString(separator);
             separator = ',"';
             this.writeStringContent(keyValueList[i]);
@@ -2481,7 +2481,7 @@ let _JsonPrettyPrintMixin = class _JsonPrettyPrintMixin extends _JsonStringifier
         this.writeString('{\n');
         this._indentLevel++;
         let separator = "";
-        for (let i = 0; i < keyValueList.length; i = 2) {
+        for (let i = 0; i < keyValueList.length; i += 2) {
             this.writeString(separator);
             separator = ",\n";
             this.writeIndentation(this._indentLevel);
@@ -2697,7 +2697,7 @@ let _JsonUtf8StringifierPretty = class _JsonUtf8StringifierPretty extends _JsonU
             let char = indent[0];
             while (count > 0) {
                 this.writeByte(char);
-                count = 1;
+                count -= 1;
             }
             return;
         }
@@ -3010,7 +3010,7 @@ let _LineSplitterSink = class _LineSplitterSink extends StringConversionSinkBase
         }
         else if (this._skipLeadingLF) {
             if (new core.DartString(chunk).codeUnitAt(start) == properties._LF) {
-                start = 1;
+                start += 1;
             }
             this._skipLeadingLF = false;
         }
@@ -3791,7 +3791,7 @@ let _Utf8Decoder = _Utf8Decoder_1 = class _Utf8Decoder {
                 if (oneBytes > 0) {
                     this._isFirstCharacter = false;
                     addSingleBytes(i, i + oneBytes);
-                    i = oneBytes;
+                    i += oneBytes;
                     if (i == endIndex)
                         break;
                 }
