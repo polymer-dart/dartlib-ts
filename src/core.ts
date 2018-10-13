@@ -14997,11 +14997,17 @@ const firstMatchAfter = (regExp: JSSyntaxRegExp, string: string, start: int): Da
  *   for String examples and recipes.
  * * [Dart Up and Running](https://www.dartlang.org/docs/dart-up-and-running/ch03.html#strings-and-regular-expressions)
  */
+
+
+
 @DartClass
 @Implements(DartPattern)
 class DartString implements DartComparable<DartString>, DartPattern {
     @defaultFactory
     protected static fromJs(s: string): DartString {
+        if (s===null || s===undefined) {
+           return nullString;
+        }
         return new JSString(s);
     }
 
@@ -15721,6 +15727,157 @@ class DartString implements DartComparable<DartString>, DartPattern {
 
 }
 
+
+class NullString implements DartString {
+    private static throwNull():any {
+        throw "Null string cannot be accessed";
+    }
+
+    allMatches(string: string, start?: int): DartIterable<DartMatch> {
+        return NullString.throwNull();
+    }
+
+    charAt(index: int): string {
+        return NullString.throwNull();
+    }
+
+    codeUnitAt(index: int): int {
+        return NullString.throwNull();
+    }
+
+    get codeUnits(): DartList<int> {
+        return NullString.throwNull();
+    }
+
+    compareTo(other: DartString): int {
+        return NullString.throwNull();
+    }
+
+    concat(other: string): string {
+        return NullString.throwNull();
+    }
+
+    contains(other: DartPattern, startIndex?: int): bool {
+        return NullString.throwNull();
+    }
+
+    endsWith(other: string): bool {
+        return NullString.throwNull();
+    }
+
+    equals(other: any): bool {
+        return NullString.throwNull();
+    }
+
+    get hashCode(): int {
+        return NullString.throwNull();
+    }
+
+    indexOf(pattern: DartPattern, start?: int): int {
+        return NullString.throwNull();
+    }
+
+    get isEmpty(): bool {
+        return NullString.throwNull();
+    }
+
+    get isNotEmpty(): bool {
+        return NullString.throwNull();
+    }
+
+    lastIndexOf(pattern: DartPattern, start?: int): int {
+        return NullString.throwNull();
+    }
+
+    get length(): int {
+        return NullString.throwNull();
+    }
+
+    matchAsPrefix(string: string, start?: int): DartMatch {
+        return NullString.throwNull();
+    }
+
+    padLeft(width: int, padding?: string): string {
+        return NullString.throwNull();
+    }
+
+    padRight(width: int, padding?: string): string {
+        return NullString.throwNull();
+    }
+
+    repeat(times: int): string {
+        return NullString.throwNull();
+    }
+
+    replaceAll(from: DartPattern, replace: string): string {
+        return NullString.throwNull();
+    }
+
+    replaceAllMapped(from: DartPattern, replace: (match: DartMatch) => string): string {
+        return NullString.throwNull();
+    }
+
+    replaceFirst(from: DartPattern, to: string, startIndex?: int): string {
+        return NullString.throwNull();
+    }
+
+    replaceFirstMapped(from: DartPattern, replace: (match: DartMatch) => string, startIndex?: int): string {
+        return NullString.throwNull();
+    }
+
+    replaceRange(start: int, end: int, replacement: string): string {
+        return NullString.throwNull();
+    }
+
+    get runes(): DartRunes {
+        return NullString.throwNull();
+    }
+
+    split(pattern: DartPattern): DartList<String> {
+        return NullString.throwNull();
+    }
+
+    splitMapJoin(pattern: DartPattern, _?: { onMatch?: (match: DartMatch) => string; onNonMatch?: (nonMatch: string) => string }): string {
+        return NullString.throwNull();
+    }
+
+    startsWith(pattern: DartPattern, index?: int): bool {
+        return NullString.throwNull();
+    }
+
+    substring(startIndex: int, endIndex?: int): string {
+        return NullString.throwNull();
+    }
+
+    toLowerCase(): string {
+        return NullString.throwNull();
+    }
+
+    toUpperCase(): string {
+        return NullString.throwNull();
+    }
+
+    trim(): string {
+        return NullString.throwNull();
+    }
+
+    trimLeft(): string {
+        return NullString.throwNull();
+    }
+
+    trimRight(): string {
+        return NullString.throwNull();
+    }
+
+    valueOf(): string {
+        return NullString.throwNull();
+    }
+
+
+
+}
+var nullString = new NullString();
+
 /**
  * The runes (integer Unicode code points) of a [String].
  */
@@ -15958,7 +16115,6 @@ class JSString extends String implements DartString, JSIndexable<string> {
     equals(other) {
         return this == other;
     }
-
 
     codeUnitAt(index: int): int {
         if (isNot(index, 'int')) throw diagnoseIndexError(this, index);

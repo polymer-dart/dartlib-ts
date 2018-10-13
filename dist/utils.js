@@ -8,6 +8,7 @@ export var OperatorMethods;
     OperatorMethods.DIVIDE = Symbol('/');
     OperatorMethods.QUOTIENT = Symbol('~/');
     OperatorMethods.EQUALS = Symbol('==');
+    OperatorMethods.NOT_EQUALS = Symbol('!=');
     OperatorMethods.LT = Symbol('<');
     OperatorMethods.GT = Symbol('>');
     OperatorMethods.LEQ = Symbol('<=');
@@ -29,25 +30,27 @@ export var Op;
     Op[Op["DIVIDE"] = 3] = "DIVIDE";
     Op[Op["QUOTIENT"] = 4] = "QUOTIENT";
     Op[Op["EQUALS"] = 5] = "EQUALS";
-    Op[Op["INDEX"] = 6] = "INDEX";
-    Op[Op["INDEX_ASSIGN"] = 7] = "INDEX_ASSIGN";
-    Op[Op["LT"] = 8] = "LT";
-    Op[Op["GT"] = 9] = "GT";
-    Op[Op["LEQ"] = 10] = "LEQ";
-    Op[Op["GEQ"] = 11] = "GEQ";
-    Op[Op["NEG"] = 12] = "NEG";
-    Op[Op["BITNEG"] = 13] = "BITNEG";
-    Op[Op["XOR"] = 14] = "XOR";
-    Op[Op["BITOR"] = 15] = "BITOR";
-    Op[Op["BITAND"] = 16] = "BITAND";
-    Op[Op["SHIFTRIGHT"] = 17] = "SHIFTRIGHT";
-    Op[Op["SHIFTLEFT"] = 18] = "SHIFTLEFT";
-    Op[Op["MODULE"] = 19] = "MODULE";
+    Op[Op["NOT_EQUALS"] = 6] = "NOT_EQUALS";
+    Op[Op["INDEX"] = 7] = "INDEX";
+    Op[Op["INDEX_ASSIGN"] = 8] = "INDEX_ASSIGN";
+    Op[Op["LT"] = 9] = "LT";
+    Op[Op["GT"] = 10] = "GT";
+    Op[Op["LEQ"] = 11] = "LEQ";
+    Op[Op["GEQ"] = 12] = "GEQ";
+    Op[Op["NEG"] = 13] = "NEG";
+    Op[Op["BITNEG"] = 14] = "BITNEG";
+    Op[Op["XOR"] = 15] = "XOR";
+    Op[Op["BITOR"] = 16] = "BITOR";
+    Op[Op["BITAND"] = 17] = "BITAND";
+    Op[Op["SHIFTRIGHT"] = 18] = "SHIFTRIGHT";
+    Op[Op["SHIFTLEFT"] = 19] = "SHIFTLEFT";
+    Op[Op["MODULE"] = 20] = "MODULE";
 })(Op || (Op = {}));
 const OpSymbolMap = new Map([
     [Op.INDEX, OperatorMethods.INDEX],
     [Op.INDEX_ASSIGN, OperatorMethods.INDEX_EQ],
     [Op.EQUALS, OperatorMethods.EQUALS],
+    [Op.NOT_EQUALS, OperatorMethods.NOT_EQUALS],
     [Op.PLUS, OperatorMethods.PLUS],
     [Op.MINUS, OperatorMethods.MINUS],
     [Op.TIMES, OperatorMethods.MULTIPLY],
@@ -335,6 +338,7 @@ const defaultOps = new Map([
     [Op.INDEX, (t, i) => t[i]],
     [Op.INDEX_ASSIGN, (t, i, v) => t[i] = v],
     [Op.EQUALS, (l, r) => l == null && r == null || l === r],
+    [Op.NOT_EQUALS, (l, r) => !(l == null && r == null || l === r)],
     [Op.PLUS, (l, r) => l + r],
     [Op.MINUS, (l, r) => l - r],
     [Op.TIMES, (l, r) => l * r],

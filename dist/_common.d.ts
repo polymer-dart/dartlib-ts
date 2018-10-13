@@ -1,5 +1,5 @@
 import { int, _equals } from "./utils";
-declare type BaseType<X> = X extends 'string' ? string : (X extends 'number' ? number : (X extends 'int' ? number : (X extends 'num' ? number : (X extends 'float' ? number : (X extends 'double' ? number : (X extends 'bool' ? boolean : (X extends (new (...args: any[]) => infer T) ? T : (X extends 'boolean' ? boolean : any))))))));
+declare type BaseType<X> = X extends 'string' ? string : (X extends 'number' ? number : (X extends 'int' ? number : (X extends 'num' ? number : (X extends 'float' ? number : (X extends 'double' ? number : (X extends 'bool' ? boolean : (X extends 'boolean' ? boolean : (X extends (new (...args: any[]) => infer T) ? T : any))))))));
 /**
  * TODO: more complex
  * @param a

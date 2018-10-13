@@ -13620,6 +13620,9 @@ let DartString = DartString_1 = class DartString {
     constructor(s) {
     }
     static fromJs(s) {
+        if (s === null || s === undefined) {
+            return nullString;
+        }
         return new JSString(s);
     }
     valueOf() {
@@ -14343,6 +14346,117 @@ DartString = DartString_1 = __decorate([
     DartClass,
     Implements(DartPattern)
 ], DartString);
+class NullString {
+    static throwNull() {
+        throw "Null string cannot be accessed";
+    }
+    allMatches(string, start) {
+        return NullString.throwNull();
+    }
+    charAt(index) {
+        return NullString.throwNull();
+    }
+    codeUnitAt(index) {
+        return NullString.throwNull();
+    }
+    get codeUnits() {
+        return NullString.throwNull();
+    }
+    compareTo(other) {
+        return NullString.throwNull();
+    }
+    concat(other) {
+        return NullString.throwNull();
+    }
+    contains(other, startIndex) {
+        return NullString.throwNull();
+    }
+    endsWith(other) {
+        return NullString.throwNull();
+    }
+    equals(other) {
+        return NullString.throwNull();
+    }
+    get hashCode() {
+        return NullString.throwNull();
+    }
+    indexOf(pattern, start) {
+        return NullString.throwNull();
+    }
+    get isEmpty() {
+        return NullString.throwNull();
+    }
+    get isNotEmpty() {
+        return NullString.throwNull();
+    }
+    lastIndexOf(pattern, start) {
+        return NullString.throwNull();
+    }
+    get length() {
+        return NullString.throwNull();
+    }
+    matchAsPrefix(string, start) {
+        return NullString.throwNull();
+    }
+    padLeft(width, padding) {
+        return NullString.throwNull();
+    }
+    padRight(width, padding) {
+        return NullString.throwNull();
+    }
+    repeat(times) {
+        return NullString.throwNull();
+    }
+    replaceAll(from, replace) {
+        return NullString.throwNull();
+    }
+    replaceAllMapped(from, replace) {
+        return NullString.throwNull();
+    }
+    replaceFirst(from, to, startIndex) {
+        return NullString.throwNull();
+    }
+    replaceFirstMapped(from, replace, startIndex) {
+        return NullString.throwNull();
+    }
+    replaceRange(start, end, replacement) {
+        return NullString.throwNull();
+    }
+    get runes() {
+        return NullString.throwNull();
+    }
+    split(pattern) {
+        return NullString.throwNull();
+    }
+    splitMapJoin(pattern, _) {
+        return NullString.throwNull();
+    }
+    startsWith(pattern, index) {
+        return NullString.throwNull();
+    }
+    substring(startIndex, endIndex) {
+        return NullString.throwNull();
+    }
+    toLowerCase() {
+        return NullString.throwNull();
+    }
+    toUpperCase() {
+        return NullString.throwNull();
+    }
+    trim() {
+        return NullString.throwNull();
+    }
+    trimLeft() {
+        return NullString.throwNull();
+    }
+    trimRight() {
+        return NullString.throwNull();
+    }
+    valueOf() {
+        return NullString.throwNull();
+    }
+}
+var nullString = new NullString();
 /**
  * The runes (integer Unicode code points) of a [String].
  */

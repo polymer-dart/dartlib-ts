@@ -7,6 +7,7 @@ export namespace OperatorMethods {
     export const DIVIDE = Symbol('/');
     export const QUOTIENT = Symbol('~/');
     export const EQUALS = Symbol('==');
+    export const NOT_EQUALS = Symbol('!=');
     export const LT = Symbol('<');
     export const GT = Symbol('>');
     export const LEQ = Symbol('<=');
@@ -28,6 +29,7 @@ export enum Op {
     DIVIDE,
     QUOTIENT,
     EQUALS,
+    NOT_EQUALS,
     INDEX,
     INDEX_ASSIGN,
     LT,
@@ -48,6 +50,7 @@ const OpSymbolMap: Map<Op, symbol> = new Map([
     [Op.INDEX, OperatorMethods.INDEX],
     [Op.INDEX_ASSIGN, OperatorMethods.INDEX_EQ],
     [Op.EQUALS, OperatorMethods.EQUALS],
+    [Op.NOT_EQUALS, OperatorMethods.NOT_EQUALS],
     [Op.PLUS, OperatorMethods.PLUS],
     [Op.MINUS, OperatorMethods.MINUS],
     [Op.TIMES, OperatorMethods.MULTIPLY],
@@ -101,7 +104,7 @@ export function safeCallOriginal(target: any, name: string | symbol, ...args: an
 }
 
 export function copyProps(s: any, t: any, _?: { excludes?: Set<string | symbol>, dstMeta?: Metadata, overwrite?: boolean }): void {
-    let {excludes, dstMeta, overwrite} = Object.assign({excludes: new Set(['constructor']), overwrite: true}, _);
+    let { excludes, dstMeta, overwrite } = Object.assign({ excludes: new Set(['constructor']), overwrite: true }, _);
     //excludes = excludes || new Set(['constructor']);
 
     Object.getOwnPropertySymbols(s).forEach(n => {
@@ -151,7 +154,7 @@ export function mixin<Mixin extends {}, Base extends {}>(mixin: Constructor<Mixi
 
     copyProps(mixin.prototype, Class.prototype);
 
-    return Class as  Constructor<Mixin & Base>;
+    return Class as Constructor<Mixin & Base>;
 }
 
 const META_DATA = Symbol('META_DATA');
@@ -170,8 +173,8 @@ export function With(...mixins: Constructor<any>[]): ClassDecorator {
             let excludesFromPrototype = new Set<string | symbol>(srcMeta.abstracts.keys());
             excludesFromPrototype.add('constructor');
 
-            copyProps(mixin.prototype, ctor.prototype, {excludes: excludesFromPrototype, dstMeta, overwrite: false});
-            copyProps(mixin, ctor, {excludes: new Set(['constructor', 'prototype', META_DATA]), overwrite: false});
+            copyProps(mixin.prototype, ctor.prototype, { excludes: excludesFromPrototype, dstMeta, overwrite: false });
+            copyProps(mixin, ctor, { excludes: new Set(['constructor', 'prototype', META_DATA]), overwrite: false });
             getMetadata(ctor).implements.push(mixin);
         });
     };
@@ -185,7 +188,7 @@ export function applyMixin<T, X extends {}, M extends Constructor<X>>(t: T, m: M
     let excludesFromPrototype = new Set<string | symbol>(srcMeta.abstracts.keys());
     excludesFromPrototype.add('constructor');
 
-    copyProps(mixin.prototype, t, {excludes: excludesFromPrototype, dstMeta, overwrite: false});
+    copyProps(mixin.prototype, t, { excludes: excludesFromPrototype, dstMeta, overwrite: false });
 
     return t as T & X;
 }
@@ -239,7 +242,7 @@ function callConstructor(ctor: any, name: string, target: any, ...args: any[]) {
 
 
 export function DartConstructor(_: { default?: boolean, factory?: boolean, name?: string }): MethodDecorator {
-    let {default: isDefault, factory, name: _name} = Object.assign({default: false, factory: false, name: undefined}, _);
+    let { default: isDefault, factory, name: _name } = Object.assign({ default: false, factory: false, name: undefined }, _);
     return (tgt: any, methodName: PropertyKey, descriptor: TypedPropertyDescriptor<any>) => {
         // save it int the constructor table
 
@@ -247,7 +250,7 @@ export function DartConstructor(_: { default?: boolean, factory?: boolean, name?
         let meta = getMetadata(T);
 
         if (isDefault) {
-            meta.constructors.set('', {ctor: descriptor.value, factory: factory});
+            meta.constructors.set('', { ctor: descriptor.value, factory: factory });
         } else {
             let ctor;
             let name: string | symbol = _name;
@@ -270,17 +273,17 @@ export function DartConstructor(_: { default?: boolean, factory?: boolean, name?
             Object.setPrototypeOf(ctor, Object.getPrototypeOf(tgt.constructor));
             copyProps(tgt.constructor, ctor);
 
-            meta.constructors.set(methodName as string, {ctor: ctor, factory: factory});
+            meta.constructors.set(methodName as string, { ctor: ctor, factory: factory });
             T[name || methodName] = ctor;
         }
     };
 }
 
-export const defaultConstructor = DartConstructor({default: true});
-export const defaultFactory = DartConstructor({default: true, factory: true});
-export const NamedConstructor = (name?: string) => DartConstructor({default: false, name: name});
+export const defaultConstructor = DartConstructor({ default: true });
+export const defaultFactory = DartConstructor({ default: true, factory: true });
+export const NamedConstructor = (name?: string) => DartConstructor({ default: false, name: name });
 export const namedConstructor = NamedConstructor();
-export const NamedFactory = (name?: string) => DartConstructor({default: false, factory: true, name: name});
+export const NamedFactory = (name?: string) => DartConstructor({ default: false, factory: true, name: name });
 export const namedFactory = NamedFactory();
 
 
@@ -416,6 +419,7 @@ const defaultOps: Map<Op, Function> = new Map([
     [Op.INDEX, (t, i) => t[i]],
     [Op.INDEX_ASSIGN, (t, i, v) => t[i] = v],
     [Op.EQUALS, (l, r) => l == null && r == null || l === r],
+    [Op.NOT_EQUALS, (l, r) => !(l == null && r == null || l === r)],
     [Op.PLUS, (l, r) => l + r],
     [Op.MINUS, (l, r) => l - r],
     [Op.TIMES, (l, r) => l * r],

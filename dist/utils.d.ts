@@ -7,6 +7,7 @@ export declare namespace OperatorMethods {
     const DIVIDE: unique symbol;
     const QUOTIENT: unique symbol;
     const EQUALS: unique symbol;
+    const NOT_EQUALS: unique symbol;
     const LT: unique symbol;
     const GT: unique symbol;
     const LEQ: unique symbol;
@@ -27,20 +28,21 @@ export declare enum Op {
     DIVIDE = 3,
     QUOTIENT = 4,
     EQUALS = 5,
-    INDEX = 6,
-    INDEX_ASSIGN = 7,
-    LT = 8,
-    GT = 9,
-    LEQ = 10,
-    GEQ = 11,
-    NEG = 12,
-    BITNEG = 13,
-    XOR = 14,
-    BITOR = 15,
-    BITAND = 16,
-    SHIFTRIGHT = 17,
-    SHIFTLEFT = 18,
-    MODULE = 19
+    NOT_EQUALS = 6,
+    INDEX = 7,
+    INDEX_ASSIGN = 8,
+    LT = 9,
+    GT = 10,
+    LEQ = 11,
+    GEQ = 12,
+    NEG = 13,
+    BITNEG = 14,
+    XOR = 15,
+    BITOR = 16,
+    BITAND = 17,
+    SHIFTRIGHT = 18,
+    SHIFTLEFT = 19,
+    MODULE = 20
 }
 export declare type int = number;
 export declare type long = number;
