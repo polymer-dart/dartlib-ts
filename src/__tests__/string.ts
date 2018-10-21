@@ -10,9 +10,17 @@ describe("DartString", () => {
         expect(x).toEqual('Ciao');
     });
 
-    it('null strings will throw',()=> {
-       let x:DartString = new DartString(null);
-       expect(()=>x.length).toThrow('Null string cannot be accessed');
+    it('null strings will throw', () => {
+        let x: DartString = new DartString(null);
+        expect(() => x.length).toThrow('Null string cannot be accessed');
+    });
+
+    it('accepts pattern or string', () => {
+
+        let s1 = new DartString('hi pino');
+        expect(s1.contains('pino')).toBe(true);
+        expect(s1.contains(new DartString('pino'))).toBe(true);
+
     });
 
     it('works with compare', () => {

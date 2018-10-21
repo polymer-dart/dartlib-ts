@@ -15221,7 +15221,7 @@ class DartString implements DartComparable<DartString>, DartPattern {
      *     string.startsWith(new RegExp(r'art'), 1);     // true
      */
     @Abstract
-    startsWith(pattern: DartPattern, index?: int): bool {
+    startsWith(pattern: DartPattern|string, index?: int): bool {
         throw 'abstract';
     }
 
@@ -15240,7 +15240,7 @@ class DartString implements DartComparable<DartString>, DartPattern {
      * [start] must be non-negative and not greater than [length].
      */
     @Abstract
-    indexOf(pattern: DartPattern, start?: int): int {
+    indexOf(pattern: DartPattern|string, start?: int): int {
         throw 'abstract';
     }
 
@@ -15259,7 +15259,7 @@ class DartString implements DartComparable<DartString>, DartPattern {
      * The [start] must be non-negative and not greater than [length].
      */
     @Abstract
-    lastIndexOf(pattern: DartPattern, start?: int): int {
+    lastIndexOf(pattern: DartPattern|string, start?: int): int {
         throw 'abstract';
     }
 
@@ -15434,7 +15434,7 @@ class DartString implements DartComparable<DartString>, DartPattern {
      * [startIndex] must not be negative or greater than [length].
      */
     @Abstract
-    contains(other: DartPattern, startIndex?: int): bool {
+    contains(other: DartPattern|string, startIndex?: int): bool {
         throw 'abstract';
     }
 
@@ -15447,7 +15447,7 @@ class DartString implements DartComparable<DartString>, DartPattern {
      *     '0.0001'.replaceFirst(new RegExp(r'0'), '7', 1); // '0.7001'
      */
     @Abstract
-    replaceFirst(from: DartPattern, to: string, startIndex?: int): string {
+    replaceFirst(from: DartPattern|string, to: string, startIndex?: int): string {
         throw 'abstract';
     }
 
@@ -15467,7 +15467,7 @@ class DartString implements DartComparable<DartString>, DartPattern {
      * then return a string.
      */
     @Abstract
-    replaceFirstMapped(from: DartPattern, replace: (match: DartMatch) => string,
+    replaceFirstMapped(from: DartPattern|string, replace: (match: DartMatch) => string,
                        startIndex?: int): string {
         throw 'abstract';
     }
@@ -15487,7 +15487,7 @@ class DartString implements DartComparable<DartString>, DartPattern {
      * the [replaceAllMapped] method instead.
      */
     @Abstract
-    replaceAll(from: DartPattern, replace: string): string {
+    replaceAll(from: DartPattern|string, replace: string): string {
         throw 'abstract';
     }
 
@@ -15516,7 +15516,7 @@ class DartString implements DartComparable<DartString>, DartPattern {
      *     pigLatin('I have a secret now!'); // 'Iway avehay away ecretsay ownay!'
      */
     @Abstract
-    replaceAllMapped(from: DartPattern, replace: (match: DartMatch) => string): string {
+    replaceAllMapped(from: DartPattern|string, replace: (match: DartMatch) => string): string {
         throw 'abstract';
     }
 
@@ -15585,7 +15585,7 @@ class DartString implements DartComparable<DartString>, DartPattern {
      *     string.runes.map((rune) => new String.fromCharCode(rune)).toList();
      */
     @Abstract
-    split(pattern: DartPattern): DartList<String> {
+    split(pattern: DartPattern|string): DartList<string> {
         throw 'abstract';
     }
 
@@ -15609,7 +15609,7 @@ class DartString implements DartComparable<DartString>, DartPattern {
      *         onNonMatch: (n) => '*'); // *shoots*
      */
     @Abstract
-    splitMapJoin(pattern: DartPattern,
+    splitMapJoin(pattern: DartPattern|string,
                  _?: { onMatch?: (match: DartMatch) => string, onNonMatch?: (nonMatch: string) => string }): string {
         throw 'abstract';
     }
@@ -15757,7 +15757,7 @@ class NullString implements DartString {
         return NullString.throwNull();
     }
 
-    contains(other: DartPattern, startIndex?: int): bool {
+    contains(other: DartPattern|string, startIndex?: int): bool {
         return NullString.throwNull();
     }
 
@@ -15773,7 +15773,7 @@ class NullString implements DartString {
         return NullString.throwNull();
     }
 
-    indexOf(pattern: DartPattern, start?: int): int {
+    indexOf(pattern: DartPattern|string, start?: int): int {
         return NullString.throwNull();
     }
 
@@ -15785,7 +15785,7 @@ class NullString implements DartString {
         return NullString.throwNull();
     }
 
-    lastIndexOf(pattern: DartPattern, start?: int): int {
+    lastIndexOf(pattern: DartPattern|string, start?: int): int {
         return NullString.throwNull();
     }
 
@@ -15809,19 +15809,19 @@ class NullString implements DartString {
         return NullString.throwNull();
     }
 
-    replaceAll(from: DartPattern, replace: string): string {
+    replaceAll(from: DartPattern|string, replace: string): string {
         return NullString.throwNull();
     }
 
-    replaceAllMapped(from: DartPattern, replace: (match: DartMatch) => string): string {
+    replaceAllMapped(from: DartPattern|string, replace: (match: DartMatch) => string): string {
         return NullString.throwNull();
     }
 
-    replaceFirst(from: DartPattern, to: string, startIndex?: int): string {
+    replaceFirst(from: DartPattern|string, to: string, startIndex?: int): string {
         return NullString.throwNull();
     }
 
-    replaceFirstMapped(from: DartPattern, replace: (match: DartMatch) => string, startIndex?: int): string {
+    replaceFirstMapped(from: DartPattern|string, replace: (match: DartMatch) => string, startIndex?: int): string {
         return NullString.throwNull();
     }
 
@@ -15833,15 +15833,15 @@ class NullString implements DartString {
         return NullString.throwNull();
     }
 
-    split(pattern: DartPattern): DartList<String> {
+    split(pattern: DartPattern|string): DartList<string> {
         return NullString.throwNull();
     }
 
-    splitMapJoin(pattern: DartPattern, _?: { onMatch?: (match: DartMatch) => string; onNonMatch?: (nonMatch: string) => string }): string {
+    splitMapJoin(pattern: DartPattern|string, _?: { onMatch?: (match: DartMatch) => string; onNonMatch?: (nonMatch: string) => string }): string {
         return NullString.throwNull();
     }
 
-    startsWith(pattern: DartPattern, index?: int): bool {
+    startsWith(pattern: DartPattern|string, index?: int): bool {
         return NullString.throwNull();
     }
 
@@ -16167,23 +16167,23 @@ class JSString extends String implements DartString, JSIndexable<string> {
         return other == this.substring(this.length - otherLength);
     }
 
-    replaceAll(from: DartPattern, to: string): string {
+    replaceAll(from: DartPattern|string, to: string): string {
         checkString(to);
         return stringReplaceAllUnchecked(this.valueOf(), from, to);
     }
 
-    replaceAllMapped(from: DartPattern, convert: (match: DartMatch) => string): string {
+    replaceAllMapped(from: DartPattern|string, convert: (match: DartMatch) => string): string {
         return this.splitMapJoin(from, {onMatch: convert});
     }
 
-    splitMapJoin(from: DartPattern,
+    splitMapJoin(from: DartPattern|string,
                  _?: { onMatch?: (match: DartMatch) => string, onNonMatch?: (nonMatch: string) => string }): string {
 
         let {onMatch, onNonMatch} = Object.assign({}, _);
         return stringReplaceAllFuncUnchecked(this.valueOf(), from, onMatch, onNonMatch);
     }
 
-    replaceFirst(from: DartPattern, to: string, startIndex?: int): string {
+    replaceFirst(from: DartPattern|string, to: string, startIndex?: int): string {
         startIndex = nullOr(startIndex, 0);
         checkString(to);
         checkInt(startIndex);
@@ -16191,7 +16191,7 @@ class JSString extends String implements DartString, JSIndexable<string> {
         return stringReplaceFirstUnchecked(this.valueOf(), from, to, startIndex);
     }
 
-    replaceFirstMapped(from: DartPattern, replace: (match: DartMatch) => string,
+    replaceFirstMapped(from: DartPattern|string, replace: (match: DartMatch) => string,
                        startIndex?: int): string {
         startIndex = nullOr(startIndex, 0);
         checkNull(replace);
@@ -16202,7 +16202,7 @@ class JSString extends String implements DartString, JSIndexable<string> {
 
     // TODO : add Symbol.split to DartPattern as well as the other (search,replace, ecc.)
     split(...args: any[]): any
-    split(pattern: DartPattern): DartList<string> {
+    split(pattern: DartPattern|string): DartList<string> {
         // handle default case
         if (pattern[Symbol.split] != null) return new DartList.fromArray<string>(super.split(pattern as any));
         checkNull(pattern);
@@ -16224,13 +16224,16 @@ class JSString extends String implements DartString, JSIndexable<string> {
         return stringReplaceRangeUnchecked(this.valueOf(), start, end, replacement);
     }
 
-    _defaultSplit(pattern: DartPattern): DartList<string> {
+    _defaultSplit(pattern: DartPattern|string): DartList<string> {
         let result = new DartList<string>();
         // End of most recent match. That is, start of next part to add to result.
         let start = 0;
         // Length of most recent match.
         // Set >0, so no match on the empty string causes the result to be [""].
         let length = 1;
+        if (typeof pattern ==='string') {
+            pattern = new DartString(pattern);
+        }
         for (let match of pattern.allMatches(this.valueOf())) {
             let matchStart = match.start;
             let matchEnd = match.end;
@@ -16551,7 +16554,7 @@ class JSString extends String implements DartString, JSIndexable<string> {
         return -1;
     }
 
-    contains(other: DartPattern, startIndex?: int): bool {
+    contains(other: DartPattern|string, startIndex?: int): bool {
         startIndex = nullOr(startIndex, 0);
         checkNull(other);
         if (startIndex < 0 || startIndex > this.length) {
@@ -16907,7 +16910,10 @@ function stringReplaceFirstUnchecked(receiver: string, pattern: string | JSSynta
     return new DartString(receiver).replaceRange(match.start, match.end, replacement);
 }
 
-function stringReplaceFirstMappedUnchecked(receiver: string, pattern: DartPattern, replace, startIndex: int): string {
+function stringReplaceFirstMappedUnchecked(receiver: string, pattern: DartPattern|string, replace, startIndex: int): string {
+    if (typeof pattern ==='string') {
+        pattern = new DartString(pattern);
+    }
     let matches: DartIterator<DartMatch> = pattern.allMatches(receiver, startIndex).iterator;
     if (!matches.moveNext()) return receiver;
     let match = matches.current;
