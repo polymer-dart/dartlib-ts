@@ -14765,6 +14765,9 @@ let JSString = JSString_1 = class JSString extends String {
         // Length of most recent match.
         // Set >0, so no match on the empty string causes the result to be [""].
         let length = 1;
+        if (typeof pattern === 'string') {
+            pattern = new DartString(pattern);
+        }
         for (let match of pattern.allMatches(this.valueOf())) {
             let matchStart = match.start;
             let matchEnd = match.end;
@@ -15410,6 +15413,9 @@ function stringReplaceFirstUnchecked(receiver, pattern, replacement, startIndex)
     return new DartString(receiver).replaceRange(match.start, match.end, replacement);
 }
 function stringReplaceFirstMappedUnchecked(receiver, pattern, replace, startIndex) {
+    if (typeof pattern === 'string') {
+        pattern = new DartString(pattern);
+    }
     let matches = pattern.allMatches(receiver, startIndex).iterator;
     if (!matches.moveNext())
         return receiver;

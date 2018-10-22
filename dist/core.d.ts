@@ -5239,7 +5239,7 @@ declare class DartString implements DartComparable<DartString>, DartPattern {
      *     string.startsWith(new RegExp(r'^art'), 1);    // false
      *     string.startsWith(new RegExp(r'art'), 1);     // true
      */
-    startsWith(pattern: DartPattern, index?: int): bool;
+    startsWith(pattern: DartPattern | string, index?: int): bool;
     /**
      * Returns the position of the first match of [pattern] in this string,
      * starting at [start], inclusive:
@@ -5254,7 +5254,7 @@ declare class DartString implements DartComparable<DartString>, DartPattern {
      *
      * [start] must be non-negative and not greater than [length].
      */
-    indexOf(pattern: DartPattern, start?: int): int;
+    indexOf(pattern: DartPattern | string, start?: int): int;
     /**
      * Returns the position of the last match [pattern] in this string, searching
      * backward starting at [start], inclusive:
@@ -5269,7 +5269,7 @@ declare class DartString implements DartComparable<DartString>, DartPattern {
      *
      * The [start] must be non-negative and not greater than [length].
      */
-    lastIndexOf(pattern: DartPattern, start?: int): int;
+    lastIndexOf(pattern: DartPattern | string, start?: int): int;
     /**
      * Returns true if this string is empty.
      */
@@ -5399,7 +5399,7 @@ declare class DartString implements DartComparable<DartString>, DartPattern {
      *
      * [startIndex] must not be negative or greater than [length].
      */
-    contains(other: DartPattern, startIndex?: int): bool;
+    contains(other: DartPattern | string, startIndex?: int): bool;
     /**
      * Returns a new string in which the first occurrence of [from] in this string
      * is replaced with [to], starting from [startIndex]:
@@ -5407,7 +5407,7 @@ declare class DartString implements DartComparable<DartString>, DartPattern {
      *     '0.0001'.replaceFirst(new RegExp(r'0'), ''); // '.0001'
      *     '0.0001'.replaceFirst(new RegExp(r'0'), '7', 1); // '0.7001'
      */
-    replaceFirst(from: DartPattern, to: string, startIndex?: int): string;
+    replaceFirst(from: DartPattern | string, to: string, startIndex?: int): string;
     /**
      * Replace the first occurrence of [from] in this string.
      *
@@ -5422,7 +5422,7 @@ declare class DartString implements DartComparable<DartString>, DartPattern {
      * is converted to a `String` using its `toString` method, which must
      * then return a string.
      */
-    replaceFirstMapped(from: DartPattern, replace: (match: DartMatch) => string, startIndex?: int): string;
+    replaceFirstMapped(from: DartPattern | string, replace: (match: DartMatch) => string, startIndex?: int): string;
     /**
      * Replaces all substrings that match [from] with [replace].
      *
@@ -5436,7 +5436,7 @@ declare class DartString implements DartComparable<DartString>, DartPattern {
      * depends on the match (for example on a [RegExp]'s capture groups), use
      * the [replaceAllMapped] method instead.
      */
-    replaceAll(from: DartPattern, replace: string): string;
+    replaceAll(from: DartPattern | string, replace: string): string;
     /**
      * Replace all substrings that match [from] by a string computed from the
      * match.
@@ -5460,7 +5460,7 @@ declare class DartString implements DartComparable<DartString>, DartPattern {
      *
      *     pigLatin('I have a secret now!'); // 'Iway avehay away ecretsay ownay!'
      */
-    replaceAllMapped(from: DartPattern, replace: (match: DartMatch) => string): string;
+    replaceAllMapped(from: DartPattern | string, replace: (match: DartMatch) => string): string;
     /**
      * Replaces the substring from [start] to [end] with [replacement].
      *
@@ -5519,7 +5519,7 @@ declare class DartString implements DartComparable<DartString>, DartPattern {
      *
      *     string.runes.map((rune) => new String.fromCharCode(rune)).toList();
      */
-    split(pattern: DartPattern): DartList<String>;
+    split(pattern: DartPattern | string): DartList<string>;
     /**
      * Splits the string, converts its parts, and combines them into a new
      * string.
@@ -5538,7 +5538,7 @@ declare class DartString implements DartComparable<DartString>, DartPattern {
      *         onMatch:    (m) => '${m.group(0)}',
      *         onNonMatch: (n) => '*'); // *shoots*
      */
-    splitMapJoin(pattern: DartPattern, _?: {
+    splitMapJoin(pattern: DartPattern | string, _?: {
         onMatch?: (match: DartMatch) => string;
         onNonMatch?: (nonMatch: string) => string;
     }): string;
