@@ -14998,11 +14998,14 @@ const firstMatchAfter = (regExp: JSSyntaxRegExp, string: string, start: int): Da
  * * [Dart Up and Running](https://www.dartlang.org/docs/dart-up-and-running/ch03.html#strings-and-regular-expressions)
  */
 
-
+interface MixedStringConstructor {
+    (...codes: number[]): string;
+    new (code:int):DartString;
+}
 
 @DartClass
 @Implements(DartPattern)
-class DartString implements DartComparable<DartString>, DartPattern {
+class DartString extends String implements DartComparable<DartString>, DartPattern {
     @defaultFactory
     protected static fromJs(s: string): DartString {
         if (s===null || s===undefined) {
@@ -15012,7 +15015,7 @@ class DartString implements DartComparable<DartString>, DartPattern {
     }
 
     constructor(s: string) {
-
+        super(s);
     }
 
     @Abstract
@@ -15073,7 +15076,7 @@ class DartString implements DartComparable<DartString>, DartPattern {
         return new DartString(DartPrimitives.stringFromCharCode(charCode));
     }
 
-    static fromCharCode: new(charCode: int) => DartString;
+    static fromCharCode: MixedStringConstructor;
 
     /**
      * Returns the string value of the environment declaration [name].
@@ -15584,6 +15587,7 @@ class DartString implements DartComparable<DartString>, DartPattern {
      *
      *     string.runes.map((rune) => new String.fromCharCode(rune)).toList();
      */
+    split(...args:any[])
     @Abstract
     split(pattern: DartPattern|string): DartList<string> {
         throw 'abstract';
@@ -15733,6 +15737,8 @@ class NullString implements DartString {
         throw "Null string cannot be accessed";
     }
 
+
+
     allMatches(string: string, start?: int): DartIterable<DartMatch> {
         return NullString.throwNull();
     }
@@ -15833,9 +15839,7 @@ class NullString implements DartString {
         return NullString.throwNull();
     }
 
-    split(pattern: DartPattern|string): DartList<string> {
-        return NullString.throwNull();
-    }
+
 
     splitMapJoin(pattern: DartPattern|string, _?: { onMatch?: (match: DartMatch) => string; onNonMatch?: (nonMatch: string) => string }): string {
         return NullString.throwNull();
@@ -15873,6 +15877,130 @@ class NullString implements DartString {
         return NullString.throwNull();
     }
 
+    [index: number]: string;
+
+    [Symbol.iterator](): IterableIterator<string> {
+        return undefined;
+    }
+
+    anchor(name: string): string {
+        return "";
+    }
+
+    big(): string {
+        return "";
+    }
+
+    blink(): string {
+        return "";
+    }
+
+    bold(): string {
+        return "";
+    }
+
+    charCodeAt(index: number): number {
+        return 0;
+    }
+
+    codePointAt(pos: number): number | undefined {
+        return undefined;
+    }
+
+    fixed(): string {
+        return "";
+    }
+
+    fontcolor(color: string): string {
+        return "";
+    }
+
+    fontsize(size: number): string;
+    fontsize(size: string): string;
+    fontsize(size: number | string): string {
+        return "";
+    }
+
+    includes(searchString: string, position?: number): boolean {
+        return false;
+    }
+
+    italics(): string {
+        return "";
+    }
+
+    link(url: string): string {
+        return "";
+    }
+
+    localeCompare(that: string): number;
+    localeCompare(that: string, locales?: string | string[], options?: Intl.CollatorOptions): number;
+    localeCompare(that: string, locales?: string | string[], options?: Intl.CollatorOptions): number {
+        return 0;
+    }
+
+    match(regexp: string | RegExp): RegExpMatchArray | null;
+    match(matcher: { [Symbol.match](string: string): (RegExpMatchArray | null) }): RegExpMatchArray | null;
+    match(regexp: string | RegExp | { [Symbol.match](string: string): (RegExpMatchArray | null) }): RegExpMatchArray | null {
+        return undefined;
+    }
+
+    normalize(form: "NFC" | "NFD" | "NFKC" | "NFKD"): string;
+    normalize(form?: string): string;
+    normalize(form?: "NFC" | "NFD" | "NFKC" | "NFKD" | string): string {
+        return "";
+    }
+
+    replace(searchValue: string | RegExp, replaceValue: string): string;
+    replace(searchValue: string | RegExp, replacer: (substring: string, ...args: any[]) => string): string;
+    replace(searchValue: { [Symbol.replace](string: string, replaceValue: string): string }, replaceValue: string): string;
+    replace(searchValue: { [Symbol.replace](string: string, replacer: (substring: string, ...args: any[]) => string): string }, replacer: (substring: string, ...args: any[]) => string): string;
+    replace(searchValue: string | RegExp | { [Symbol.replace](string: string, replaceValue: string): string } | { [Symbol.replace](string: string, replacer: (substring: string, ...args: any[]) => string): string }, replaceValue: string | ((substring: string, ...args: any[]) => string)): string {
+        return "";
+    }
+
+    search(regexp: string | RegExp): number;
+    search(searcher: { [Symbol.search](string: string): number }): number;
+    search(regexp: string | RegExp | { [Symbol.search](string: string): number }): number {
+        return 0;
+    }
+
+    slice(start?: number, end?: number): string {
+        return "";
+    }
+
+    small(): string {
+        return "";
+    }
+
+    split(...args:any[]): any
+    split(pattern: DartPattern|string): DartList<string> {
+        return NullString.throwNull();
+    }
+
+    strike(): string {
+        return "";
+    }
+
+    sub(): string {
+        return "";
+    }
+
+    substr(from: number, length?: number): string {
+        return "";
+    }
+
+    sup(): string {
+        return "";
+    }
+
+    toLocaleLowerCase(): string {
+        return "";
+    }
+
+    toLocaleUpperCase(): string {
+        return "";
+    }
 
 
 }

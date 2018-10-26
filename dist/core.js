@@ -13527,97 +13527,9 @@ _AllMatchesIterator = __decorate([
 const firstMatchAfter = (regExp, string, start) => {
     return regExp._execGlobal(string, start);
 };
-// Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
-// for details. All rights reserved. Use of this source code is governed by a
-// BSD-style license that can be found in the LICENSE file.
-//part of dart.core;
-/**
- * A sequence of characters.
- *
- * A string can be either single or multiline. Single line strings are
- * written using matching single or double quotes, and multiline strings are
- * written using triple quotes. The following are all valid Dart strings:
- *
- *     'Single quotes';
- *     "Double quotes";
- *     'Double quotes in "single" quotes';
- *     "Single quotes in 'double' quotes";
- *
- *     '''A
- *     multiline
- *     string''';
- *
- *     """
- *     Another
- *     multiline
- *     string""";
- *
- * Strings are immutable. Although you cannot change a string, you can perform
- * an operation on a string and assign the result to a new string:
- *
- *     var string = 'Dart is fun';
- *     var newString = string.substring(0, 5);
- *
- * You can use the plus (`+`) operator to concatenate strings:
- *
- *     'Dart ' + 'is ' + 'fun!'; // 'Dart is fun!'
- *
- * You can also use adjacent string literals for concatenation:
- *
- *     'Dart ' 'is ' 'fun!';    // 'Dart is fun!'
- *
- * You can use `${}` to interpolate the value of Dart expressions
- * within strings. The curly braces can be omitted when evaluating identifiers:
- *
- *     string = 'dartlang';
- *     '$string has ${string.length} letters'; // 'dartlang has 8 letters'
- *
- * A string is represented by a sequence of Unicode UTF-16 code units
- * accessible through the [codeUnitAt] or the [codeUnits] members:
- *
- *     string = 'Dart';
- *     string.codeUnitAt(0); // 68
- *     string.codeUnits;     // [68, 97, 114, 116]
- *
- * The string representation of code units is accessible through the index
- * operator:
- *
- *     string[0];            // 'D'
- *
- * The characters of a string are encoded in UTF-16. Decoding UTF-16, which
- * combines surrogate pairs, yields Unicode code points. Following a similar
- * terminology to Go, we use the name 'rune' for an integer representing a
- * Unicode code point. Use the [runes] property to get the runes of a string:
- *
- *     string.runes.toList(); // [68, 97, 114, 116]
- *
- * For a character outside the Basic Multilingual Plane (plane 0) that is
- * composed of a surrogate pair, [runes] combines the pair and returns a
- * single integer.  For example, the Unicode character for a
- * musical G-clef ('𝄞') with rune value 0x1D11E consists of a UTF-16 surrogate
- * pair: `0xD834` and `0xDD1E`. Using [codeUnits] returns the surrogate pair,
- * and using `runes` returns their combined value:
- *
- *     var clef = '\u{1D11E}';
- *     clef.codeUnits;         // [0xD834, 0xDD1E]
- *     clef.runes.toList();    // [0x1D11E]
- *
- * The String class can not be extended or implemented. Attempting to do so
- * yields a compile-time error.
- *
- * ## Other resources
- *
- * See [StringBuffer] to efficiently build a string incrementally. See
- * [RegExp] to work with regular expressions.
- *
- * Also see:
-
- * * [Dart Cookbook](https://www.dartlang.org/docs/cookbook/#strings)
- *   for String examples and recipes.
- * * [Dart Up and Running](https://www.dartlang.org/docs/dart-up-and-running/ch03.html#strings-and-regular-expressions)
- */
-let DartString = DartString_1 = class DartString {
+let DartString = DartString_1 = class DartString extends String {
     constructor(s) {
+        super(s);
     }
     static fromJs(s) {
         if (s === null || s === undefined) {
@@ -14068,52 +13980,6 @@ let DartString = DartString_1 = class DartString {
     replaceRange(start, end, replacement) {
         throw 'abstract';
     }
-    /**
-     * Splits the string at matches of [pattern] and returns a list of substrings.
-     *
-     * Finds all the matches of `pattern` in this string,
-     * and returns the list of the substrings between the matches.
-     *
-     *     var string = "Hello world!";
-     *     string.split(" ");                      // ['Hello', 'world!'];
-     *
-     * Empty matches at the beginning and end of the strings are ignored,
-     * and so are empty matches right after another match.
-     *
-     *     var string = "abba";
-     *     string.split(new RegExp(r"b*"));        // ['a', 'a']
-     *                                             // not ['', 'a', 'a', '']
-     *
-     * If this string is empty, the result is an empty list if `pattern` matches
-     * the empty string, and it is `[""]` if the pattern doesn't match.
-     *
-     *     var string = '';
-     *     string.split('');                       // []
-     *     string.split("a");                      // ['']
-     *
-     * Splitting with an empty pattern splits the string into single-code unit
-     * strings.
-     *
-     *     var string = 'Pub';
-     *     string.split('');                       // ['P', 'u', 'b']
-     *
-     *     string.codeUnits.map((unit) {
-     *       return new String.fromCharCode(unit);
-     *     }).toList();                            // ['P', 'u', 'b']
-     *
-     * Splitting happens at UTF-16 code unit boundaries,
-     * and not at rune boundaries:
-     *
-     *     // String made up of two code units, but one rune.
-     *     string = '\u{1D11E}';
-     *     string.split('').length;                 // 2 surrogate values
-     *
-     * To get a list of strings containing the individual runes of a string,
-     * you should not use split. You can instead map each rune to a string
-     * as follows:
-     *
-     *     string.runes.map((rune) => new String.fromCharCode(rune)).toList();
-     */
     split(pattern) {
         throw 'abstract';
     }
@@ -14425,9 +14291,6 @@ class NullString {
     get runes() {
         return NullString.throwNull();
     }
-    split(pattern) {
-        return NullString.throwNull();
-    }
     splitMapJoin(pattern, _) {
         return NullString.throwNull();
     }
@@ -14454,6 +14317,87 @@ class NullString {
     }
     valueOf() {
         return NullString.throwNull();
+    }
+    [Symbol.iterator]() {
+        return undefined;
+    }
+    anchor(name) {
+        return "";
+    }
+    big() {
+        return "";
+    }
+    blink() {
+        return "";
+    }
+    bold() {
+        return "";
+    }
+    charCodeAt(index) {
+        return 0;
+    }
+    codePointAt(pos) {
+        return undefined;
+    }
+    fixed() {
+        return "";
+    }
+    fontcolor(color) {
+        return "";
+    }
+    fontsize(size) {
+        return "";
+    }
+    includes(searchString, position) {
+        return false;
+    }
+    italics() {
+        return "";
+    }
+    link(url) {
+        return "";
+    }
+    localeCompare(that, locales, options) {
+        return 0;
+    }
+    match(regexp) {
+        return undefined;
+    }
+    normalize(form) {
+        return "";
+    }
+    replace(searchValue, replaceValue) {
+        return "";
+    }
+    search(regexp) {
+        return 0;
+    }
+    slice(start, end) {
+        return "";
+    }
+    small() {
+        return "";
+    }
+    split(pattern) {
+        return NullString.throwNull();
+    }
+    strike() {
+        return "";
+    }
+    sub() {
+        return "";
+    }
+    substr(from, length) {
+        return "";
+    }
+    sup() {
+        return "";
+    }
+    toLocaleLowerCase() {
+        return "";
+    }
+    toLocaleUpperCase() {
+        return "";
     }
 }
 var nullString = new NullString();

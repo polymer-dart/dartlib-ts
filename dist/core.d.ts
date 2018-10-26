@@ -5092,7 +5092,11 @@ declare class DartRegExp implements DartPattern {
  *   for String examples and recipes.
  * * [Dart Up and Running](https://www.dartlang.org/docs/dart-up-and-running/ch03.html#strings-and-regular-expressions)
  */
-declare class DartString implements DartComparable<DartString>, DartPattern {
+interface MixedStringConstructor {
+    (...codes: number[]): string;
+    new (code: int): DartString;
+}
+declare class DartString extends String implements DartComparable<DartString>, DartPattern {
     protected static fromJs(s: string): DartString;
     constructor(s: string);
     valueOf(): string;
@@ -5129,7 +5133,7 @@ declare class DartString implements DartComparable<DartString>, DartPattern {
      * Creating a String with half of a surrogate pair is allowed.
      */
     protected static _fromCharCode(charCode: int): DartString;
-    static fromCharCode: new (charCode: int) => DartString;
+    static fromCharCode: MixedStringConstructor;
     /**
      * Returns the string value of the environment declaration [name].
      *
@@ -5519,7 +5523,7 @@ declare class DartString implements DartComparable<DartString>, DartPattern {
      *
      *     string.runes.map((rune) => new String.fromCharCode(rune)).toList();
      */
-    split(pattern: DartPattern | string): DartList<string>;
+    split(...args: any[]): any;
     /**
      * Splits the string, converts its parts, and combines them into a new
      * string.
