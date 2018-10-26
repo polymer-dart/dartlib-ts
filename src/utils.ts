@@ -20,6 +20,7 @@ export namespace OperatorMethods {
     export const SHIFTRIGHT = Symbol('<<');
     export const SHIFTLEFT = Symbol('>>');
     export const MODULE = Symbol('%');
+    export const NOT = Symbol('!');
 }
 
 export enum Op {
@@ -44,6 +45,7 @@ export enum Op {
     SHIFTRIGHT,
     SHIFTLEFT,
     MODULE,
+    NOT
 }
 
 const OpSymbolMap: Map<Op, symbol> = new Map([
@@ -68,6 +70,7 @@ const OpSymbolMap: Map<Op, symbol> = new Map([
     [Op.SHIFTRIGHT, OperatorMethods.SHIFTRIGHT],
     [Op.SHIFTLEFT, OperatorMethods.SHIFTLEFT],
     [Op.MODULE, OperatorMethods.MODULE],
+    [Op.NOT, OperatorMethods.NOT],
 ]);
 
 export type int = number;
@@ -104,7 +107,7 @@ export function safeCallOriginal(target: any, name: string | symbol, ...args: an
 }
 
 export function copyProps(s: any, t: any, _?: { excludes?: Set<string | symbol>, dstMeta?: Metadata, overwrite?: boolean }): void {
-    let { excludes, dstMeta, overwrite } = Object.assign({ excludes: new Set(['constructor']), overwrite: true }, _);
+    let {excludes, dstMeta, overwrite} = Object.assign({excludes: new Set(['constructor']), overwrite: true}, _);
     //excludes = excludes || new Set(['constructor']);
 
     Object.getOwnPropertySymbols(s).forEach(n => {
@@ -173,8 +176,8 @@ export function With(...mixins: Constructor<any>[]): ClassDecorator {
             let excludesFromPrototype = new Set<string | symbol>(srcMeta.abstracts.keys());
             excludesFromPrototype.add('constructor');
 
-            copyProps(mixin.prototype, ctor.prototype, { excludes: excludesFromPrototype, dstMeta, overwrite: false });
-            copyProps(mixin, ctor, { excludes: new Set(['constructor', 'prototype', META_DATA]), overwrite: false });
+            copyProps(mixin.prototype, ctor.prototype, {excludes: excludesFromPrototype, dstMeta, overwrite: false});
+            copyProps(mixin, ctor, {excludes: new Set(['constructor', 'prototype', META_DATA]), overwrite: false});
             getMetadata(ctor).implements.push(mixin);
         });
     };
@@ -188,7 +191,7 @@ export function applyMixin<T, X extends {}, M extends Constructor<X>>(t: T, m: M
     let excludesFromPrototype = new Set<string | symbol>(srcMeta.abstracts.keys());
     excludesFromPrototype.add('constructor');
 
-    copyProps(mixin.prototype, t, { excludes: excludesFromPrototype, dstMeta, overwrite: false });
+    copyProps(mixin.prototype, t, {excludes: excludesFromPrototype, dstMeta, overwrite: false});
 
     return t as T & X;
 }
@@ -242,7 +245,7 @@ function callConstructor(ctor: any, name: string, target: any, ...args: any[]) {
 
 
 export function DartConstructor(_: { default?: boolean, factory?: boolean, name?: string }): MethodDecorator {
-    let { default: isDefault, factory, name: _name } = Object.assign({ default: false, factory: false, name: undefined }, _);
+    let {default: isDefault, factory, name: _name} = Object.assign({default: false, factory: false, name: undefined}, _);
     return (tgt: any, methodName: PropertyKey, descriptor: TypedPropertyDescriptor<any>) => {
         // save it int the constructor table
 
@@ -250,7 +253,7 @@ export function DartConstructor(_: { default?: boolean, factory?: boolean, name?
         let meta = getMetadata(T);
 
         if (isDefault) {
-            meta.constructors.set('', { ctor: descriptor.value, factory: factory });
+            meta.constructors.set('', {ctor: descriptor.value, factory: factory});
         } else {
             let ctor;
             let name: string | symbol = _name;
@@ -273,17 +276,17 @@ export function DartConstructor(_: { default?: boolean, factory?: boolean, name?
             Object.setPrototypeOf(ctor, Object.getPrototypeOf(tgt.constructor));
             copyProps(tgt.constructor, ctor);
 
-            meta.constructors.set(methodName as string, { ctor: ctor, factory: factory });
+            meta.constructors.set(methodName as string, {ctor: ctor, factory: factory});
             T[name || methodName] = ctor;
         }
     };
 }
 
-export const defaultConstructor = DartConstructor({ default: true });
-export const defaultFactory = DartConstructor({ default: true, factory: true });
-export const NamedConstructor = (name?: string) => DartConstructor({ default: false, name: name });
+export const defaultConstructor = DartConstructor({default: true});
+export const defaultFactory = DartConstructor({default: true, factory: true});
+export const NamedConstructor = (name?: string) => DartConstructor({default: false, name: name});
 export const namedConstructor = NamedConstructor();
-export const NamedFactory = (name?: string) => DartConstructor({ default: false, factory: true, name: name });
+export const NamedFactory = (name?: string) => DartConstructor({default: false, factory: true, name: name});
 export const namedFactory = NamedFactory();
 
 
@@ -416,28 +419,31 @@ export function _equals(a: any, b: any) {
 }
 
 const defaultOps: Map<Op, Function> = new Map([
-    [Op.INDEX, (t, i) => t[i]],
-    [Op.INDEX_ASSIGN, (t, i, v) => t[i] = v],
-    [Op.EQUALS, (l, r) => l == null && r == null || l === r],
-    [Op.NOT_EQUALS, (l, r) => !(l == null && r == null || l === r)],
-    [Op.PLUS, (l, r) => l + r],
-    [Op.MINUS, (l, r) => l - r],
-    [Op.TIMES, (l, r) => l * r],
-    [Op.DIVIDE, (l, r) => l / r],
-    [Op.QUOTIENT, (l, r) => Math.floor(l / r)],
-    [Op.LT, (l, r) => l < r],
-    [Op.GT, (l, r) => l > r],
-    [Op.LEQ, (l, r) => l <= r],
-    [Op.GEQ, (l, r) => l >= r],
-    [Op.NEG, (l) => -l],
-    [Op.BITNEG, (l) => ~l],
-    [Op.XOR, (l, r) => l ^ r],
-    [Op.BITOR, (l, r) => l | r],
-    [Op.BITAND, (l, r) => l & r],
-    [Op.SHIFTRIGHT, (l, r) => l >> r],
-    [Op.SHIFTLEFT, (l, r) => l << r],
-    [Op.MODULE, (l, r) => l % r],
-]);
+        [Op.INDEX, (t, i) => t[i]],
+        [Op.INDEX_ASSIGN, (t, i, v) => t[i] = v],
+        [Op.EQUALS, (l, r) => l == null && r == null || l === r],
+        [Op.NOT_EQUALS, (l, r) => !(l == null && r == null || l === r)],
+        [Op.PLUS, (l, r) => l + r],
+        [Op.MINUS, (l, r) => l - r],
+        [Op.TIMES, (l, r) => l * r],
+        [Op.DIVIDE, (l, r) => l / r],
+        [Op.QUOTIENT, (l, r) => Math.floor(l / r)],
+        [Op.LT, (l, r) => l < r],
+        [Op.GT, (l, r) => l > r],
+        [Op.LEQ, (l, r) => l <= r],
+        [Op.GEQ, (l, r) => l >= r],
+        [Op.NEG, (l) => -l],
+        [Op.NOT, (v) => !v],
+        [Op.BITNEG, (l) => ~l],
+        [Op.XOR, (l, r) => l ^ r],
+        [Op.BITOR, (l, r) => l | r],
+        [Op.BITAND, (l, r) => l & r],
+        [Op.SHIFTRIGHT, (l, r) => l >> r],
+        [Op.SHIFTLEFT, (l, r) => l << r],
+        [Op.MODULE, (l, r) => l % r],
+
+    ])
+;
 
 /**
  * Apply operator o to arguments
