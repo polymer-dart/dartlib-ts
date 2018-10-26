@@ -20,6 +20,7 @@ export declare namespace OperatorMethods {
     const SHIFTRIGHT: unique symbol;
     const SHIFTLEFT: unique symbol;
     const MODULE: unique symbol;
+    const NOT: unique symbol;
 }
 export declare enum Op {
     PLUS = 0,
@@ -42,7 +43,8 @@ export declare enum Op {
     BITAND = 17,
     SHIFTRIGHT = 18,
     SHIFTLEFT = 19,
-    MODULE = 20
+    MODULE = 20,
+    NOT = 21
 }
 export declare type int = number;
 export declare type long = number;
