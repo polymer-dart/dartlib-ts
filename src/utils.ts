@@ -21,6 +21,7 @@ export namespace OperatorMethods {
     export const SHIFTLEFT = Symbol('>>');
     export const MODULE = Symbol('%');
     export const NOT = Symbol('!');
+    export const INCR = Symbol('++');
 }
 
 export enum Op {
@@ -45,7 +46,8 @@ export enum Op {
     SHIFTRIGHT,
     SHIFTLEFT,
     MODULE,
-    NOT
+    NOT,
+    INCR
 }
 
 const OpSymbolMap: Map<Op, symbol> = new Map([
@@ -71,6 +73,7 @@ const OpSymbolMap: Map<Op, symbol> = new Map([
     [Op.SHIFTLEFT, OperatorMethods.SHIFTLEFT],
     [Op.MODULE, OperatorMethods.MODULE],
     [Op.NOT, OperatorMethods.NOT],
+    [Op.INCR, OperatorMethods.INCR]
 ]);
 
 export type int = number;
@@ -441,6 +444,7 @@ const defaultOps: Map<Op, Function> = new Map([
         [Op.SHIFTRIGHT, (l, r) => l >> r],
         [Op.SHIFTLEFT, (l, r) => l << r],
         [Op.MODULE, (l, r) => l % r],
+        [Op.INCR, (l) => ++l]
 
     ])
 ;
@@ -527,3 +531,10 @@ export function DartPropertyAnnotation(anno: IAnnotation): PropertyDecorator {
         registerPropAnno(anno, target, name);
     }
 }
+
+export type feature = string | symbol | number;
+//export type StringLiteralDiff<T extends feature, U extends feature> = ({ [P in T]: P } & { [P in U]: never }& { [x: string]: never } )[T];
+export type StringLiteralDiff<T extends feature, U extends feature> = ({ [P in T]: P } & { [P in U]: never })[T];
+export type Omit<T, K extends keyof T> = Pick<T, StringLiteralDiff<keyof T, K>>;
+
+

@@ -22,6 +22,7 @@ export var OperatorMethods;
     OperatorMethods.SHIFTLEFT = Symbol('>>');
     OperatorMethods.MODULE = Symbol('%');
     OperatorMethods.NOT = Symbol('!');
+    OperatorMethods.INCR = Symbol('++');
 })(OperatorMethods || (OperatorMethods = {}));
 export var Op;
 (function (Op) {
@@ -47,6 +48,7 @@ export var Op;
     Op[Op["SHIFTLEFT"] = 19] = "SHIFTLEFT";
     Op[Op["MODULE"] = 20] = "MODULE";
     Op[Op["NOT"] = 21] = "NOT";
+    Op[Op["INCR"] = 22] = "INCR";
 })(Op || (Op = {}));
 const OpSymbolMap = new Map([
     [Op.INDEX, OperatorMethods.INDEX],
@@ -71,6 +73,7 @@ const OpSymbolMap = new Map([
     [Op.SHIFTLEFT, OperatorMethods.SHIFTLEFT],
     [Op.MODULE, OperatorMethods.MODULE],
     [Op.NOT, OperatorMethods.NOT],
+    [Op.INCR, OperatorMethods.INCR]
 ]);
 export const UNINITIALIZED = Symbol('_uninitialized_');
 const OLD_DEFS = Symbol('OLD_DEFS');
@@ -360,6 +363,7 @@ const defaultOps = new Map([
     [Op.SHIFTRIGHT, (l, r) => l >> r],
     [Op.SHIFTLEFT, (l, r) => l << r],
     [Op.MODULE, (l, r) => l % r],
+    [Op.INCR, (l) => ++l]
 ]);
 /**
  * Apply operator o to arguments

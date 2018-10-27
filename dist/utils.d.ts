@@ -21,6 +21,7 @@ export declare namespace OperatorMethods {
     const SHIFTLEFT: unique symbol;
     const MODULE: unique symbol;
     const NOT: unique symbol;
+    const INCR: unique symbol;
 }
 export declare enum Op {
     PLUS = 0,
@@ -44,7 +45,8 @@ export declare enum Op {
     SHIFTRIGHT = 18,
     SHIFTLEFT = 19,
     MODULE = 20,
-    NOT = 21
+    NOT = 21,
+    INCR = 22
 }
 export declare type int = number;
 export declare type long = number;
@@ -134,4 +136,11 @@ export interface IAnnotation {
 export declare function DartClassAnnotation(anno: IAnnotation): ClassDecorator;
 export declare function DartMethodAnnotation(anno: IAnnotation): MethodDecorator;
 export declare function DartPropertyAnnotation(anno: IAnnotation): PropertyDecorator;
+export declare type feature = string | symbol | number;
+export declare type StringLiteralDiff<T extends feature, U extends feature> = ({
+    [P in T]: P;
+} & {
+    [P in U]: never;
+})[T];
+export declare type Omit<T, K extends keyof T> = Pick<T, StringLiteralDiff<keyof T, K>>;
 export {};
