@@ -532,6 +532,10 @@ export declare class DartIterator<E> implements Iterator<E> {
     readonly current: E;
     next(value?: any): IteratorResult<E>;
 }
+export declare namespace DartIterator {
+    type Constructors = never;
+    type Interfaces<X> = Omit<DartIterator<X>, Constructors>;
+}
 declare class DartJsLinkedHashMap<K, V> implements DartLinkedHashMap<K, V> {
     _length: int;
     protected _strings: any;

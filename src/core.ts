@@ -1251,6 +1251,10 @@ export class DartIterator<E> implements Iterator<E> {
     }
 }
 
+export namespace DartIterator {
+    export type Constructors = never;
+    export type Interfaces<X> = Omit<DartIterator<X>, Constructors>;
+}
 
 @Implements(DartIterator)
 class _HashMapKeyIterator<E> implements DartIterator<E> {
