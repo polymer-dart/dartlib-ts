@@ -1,6 +1,6 @@
 {
   "name": "@dart2ts/dart",
-  "version": "0.1.20",
+  "version": "0.1.21",
   "description": "dart2ts core support library",
   "main": "index.js",
   "scripts": {
