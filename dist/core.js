@@ -1019,6 +1019,7 @@ __decorate([
 DartIterable = __decorate([
     DartClass
 ], DartIterable);
+export { DartIterable };
 /**
  * Marker interface for [Iterable] subclasses that have an efficient
  * [length] implementation.
@@ -6843,6 +6844,7 @@ DartList = DartList_1 = __decorate([
     DartClass,
     Implements(DartEfficientLengthIterable)
 ], DartList);
+export { DartList };
 /**
  * Convert elments of [iterable] to strings and store them in [parts].
  */
@@ -7761,6 +7763,7 @@ DartListMixin = DartListMixin_1 = __decorate([
     Implements(DartList),
     AbstractSymbols(OperatorMethods.INDEX, OperatorMethods.INDEX_EQ)
 ], DartListMixin);
+export { DartListMixin };
 /**
  * Abstract implementation of a list.
  *
@@ -17414,7 +17417,7 @@ __decorate([
 DartExpando = DartExpando_1 = __decorate([
     DartClass
 ], DartExpando);
-export { DartIterable, DartEfficientLengthIterable, DartSetMixin, AbstractDartMap, DartConstantMap, DartHashMap, DartHashSet, DartLinkedHashSet, DartList, DartLinkedHashMap, DartMap, DartSet, DartStringBuffer, ArgumentError, ConcurrentModificationError, DartArrayIterator, DartConstantMapView, DartEfficientLengthMappedIterable, DartError, DartEs6LinkedHashMap, DartExpandIterable, DartExpandIterator, DartIterableBase, DartIterableMixin, DartJsLinkedHashMap, DartLinkedHashMapKeyIterable, DartLinkedHashMapKeyIterator, DartListBase, DartListIterator, DartListMapView, DartListMixin, DartMapBase, DartMapMixin, DartMappedIterable, DartMappedListIterable, DartPrimitives, DartRandom, DartReversedListIterable, DartFixedLengthListMixin, DartSetBase, DartSkipIterable, DartSkipWhileIterable, DartSort, DartSubListIterable, DartTakeIterable, DartTakeWhileIterable, DartUnmodifiableListBase, DartUnmodifiableListMixin, DartUnmodifiableMapView, DartWhereIterable, DartWhereIterator, FixedLengthListBase, IndexError, JSFixedArray, JSMutableArray, JSUnmodifiableArray, LinkedHashMapCell, RangeError, StateError, UnmodifiableMapBase, UnsupportedError, DartObject, DartStackTrace, DartDuration, DartIntegerDivisionByZeroException, NullThrownError, DartSink, DartStopwatch, DartDateTime, FormatException, DartPattern, DartRegExp, DartMatch, DartBidirectionalIterator, 
+export { DartEfficientLengthIterable, DartSetMixin, AbstractDartMap, DartConstantMap, DartHashMap, DartHashSet, DartLinkedHashSet, DartLinkedHashMap, DartMap, DartSet, DartStringBuffer, ArgumentError, ConcurrentModificationError, DartArrayIterator, DartConstantMapView, DartEfficientLengthMappedIterable, DartError, DartEs6LinkedHashMap, DartExpandIterable, DartExpandIterator, DartIterableBase, DartIterableMixin, DartJsLinkedHashMap, DartLinkedHashMapKeyIterable, DartLinkedHashMapKeyIterator, DartListBase, DartListIterator, DartListMapView, DartMapBase, DartMapMixin, DartMappedIterable, DartMappedListIterable, DartPrimitives, DartRandom, DartReversedListIterable, DartFixedLengthListMixin, DartSetBase, DartSkipIterable, DartSkipWhileIterable, DartSort, DartSubListIterable, DartTakeIterable, DartTakeWhileIterable, DartUnmodifiableListBase, DartUnmodifiableListMixin, DartUnmodifiableMapView, DartWhereIterable, DartWhereIterator, FixedLengthListBase, IndexError, JSFixedArray, JSMutableArray, JSUnmodifiableArray, LinkedHashMapCell, RangeError, StateError, UnmodifiableMapBase, UnsupportedError, DartObject, DartStackTrace, DartDuration, DartIntegerDivisionByZeroException, NullThrownError, DartSink, DartStopwatch, DartDateTime, FormatException, DartPattern, DartRegExp, DartMatch, DartBidirectionalIterator, 
 //JSSyntaxRegExp, regExpCaptureCount, regExpGetNative, regExpGetGlobalNative, firstMatchAfter,
 DartString, DartStringMatch, DartRunes, DartRuneIterator, DartCodeUnits, JSNumber, JSInt, JSDouble, DartNumber, DartInt, DartDouble, iter, toDartIterable, JSIterable, JSIterator, print, DartExpando, DartMapView };
 //# sourceMappingURL=core.js.map

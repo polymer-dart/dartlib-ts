@@ -1,4 +1,4 @@
-import { bool, int, double, num, OperatorMethods } from "./utils";
+import { bool, int, double, num, OperatorMethods, Omit } from "./utils";
 export declare type PropertySetter<K, V> = (key: K, value: V) => void;
 export declare type PropertyGetter<K, V> = (key: K) => V;
 /**
@@ -76,7 +76,7 @@ export declare type PropertyGetter<K, V> = (key: K) => V;
  * argument function on every iteration, so those functions should also not
  * have side effects.
  */
-declare class DartIterable<E> implements Iterable<E> {
+export declare class DartIterable<E> implements Iterable<E> {
     /**
      * A Dart Iterable is also a JS iterable and can be used in for loop syntax
      */
@@ -458,6 +458,10 @@ declare class DartIterable<E> implements Iterable<E> {
      * a hundred elements.
      */
     toString(): string;
+}
+export declare namespace DartIterable {
+    type Constructors = never;
+    type Interface<E> = Omit<DartIterable<E>, Constructors>;
 }
 /**
  * Marker interface for [Iterable] subclasses that have an efficient
@@ -1726,7 +1730,7 @@ declare class DartIterableBase<E> extends DartIterable<E> {
  * directly or through iterating an [Iterable] that is backed by the list, will
  * break the iteration.
  */
-declare class DartList<E> implements DartEfficientLengthIterable<E> {
+export declare class DartList<E> implements DartEfficientLengthIterable<E> {
     readonly iterator: DartIterator<E>;
     /**
      * Returns a new lazy [Iterable] with elements that are created by
@@ -2458,6 +2462,10 @@ declare class DartList<E> implements DartEfficientLengthIterable<E> {
     }): DartList<E>;
     protected static _unmodifiable<E>(elements: DartIterable<E>): DartList<E>;
 }
+export declare namespace DartList {
+    type Constructors = never;
+    type Interface<X> = Omit<DartList<X>, Constructors>;
+}
 /**
  * A hash-table based implementation of [Map].
  *
@@ -2625,9 +2633,9 @@ declare class DartLinkedHashMap<K, V> implements DartHashMap<K, V> {
  * to the growable list, or, if possible, use `DelegatingList` from
  * "package:collection/wrappers.dart" instead.
  */
-declare class DartListMixin<E> implements DartList<E> {
+export declare class DartListMixin<E> implements DartList<E> {
     [Symbol.iterator](): Iterator<E>;
-    protected DartListMixin(): void;
+    DartListMixin(): void;
     constructor();
     length: int;
     [OperatorMethods.INDEX](index: number): E;
@@ -2696,6 +2704,10 @@ declare class DartListMixin<E> implements DartList<E> {
     readonly reversed: DartIterable<E>;
     toString(): string;
 }
+export declare namespace DartListMixin {
+    type Constructors = DartList.Constructors | 'DartListMixin';
+    type Interface<X> = Omit<DartListMixin<X>, Constructors>;
+}
 /**
  * Abstract implementation of a list.
  *
@@ -2721,6 +2733,10 @@ declare class DartListBase<E> extends DartListMixin<E> {
      * to a string ends up converting [list] to a string again.
      */
     static listToString<E>(list: DartList<E>): string;
+}
+export declare namespace DartListBase {
+    type Constructors = DartListMixin.Constructors | never;
+    type Interface<X> = Omit<DartListBase<X>, Constructors>;
 }
 /**
  * Mixin implementing a [Map].
@@ -6737,4 +6753,4 @@ declare class DartExpando<T> {
     static _createKey(): string;
     static _checkType(object: any): void;
 }
-export { DartIterable, DartEfficientLengthIterable, DartSetMixin, AbstractDartMap, DartConstantMap, DartHashMap, DartHashSet, DartLinkedHashSet, DartList, DartLinkedHashMap, DartMap, DartSet, DartStringBuffer, ArgumentError, ConcurrentModificationError, DartArrayIterator, DartConstantMapView, DartEfficientLengthMappedIterable, DartError, DartEs6LinkedHashMap, DartExpandIterable, DartExpandIterator, DartIterableBase, DartIterableMixin, DartJsLinkedHashMap, DartLinkedHashMapKeyIterable, DartLinkedHashMapKeyIterator, DartListBase, DartListIterator, DartListMapView, DartListMixin, DartMapBase, DartMapMixin, DartMappedIterable, DartMappedListIterable, DartPrimitives, DartRandom, DartReversedListIterable, DartFixedLengthListMixin, DartSetBase, DartSkipIterable, DartSkipWhileIterable, DartSort, DartSubListIterable, DartTakeIterable, DartTakeWhileIterable, DartUnmodifiableListBase, DartUnmodifiableListMixin, DartUnmodifiableMapView, DartWhereIterable, DartWhereIterator, FixedLengthListBase, IndexError, JSFixedArray, JSMutableArray, JSUnmodifiableArray, LinkedHashMapCell, RangeError, StateError, UnmodifiableMapBase, UnsupportedError, DartObject, DartStackTrace, DartDuration, DartIntegerDivisionByZeroException, NullThrownError, DartSink, DartStopwatch, DartDateTime, FormatException, DartPattern, DartRegExp, DartMatch, DartBidirectionalIterator, DartString, DartStringMatch, DartRunes, DartRuneIterator, DartCodeUnits, JSNumber, JSInt, JSDouble, DartNumber, DartInt, DartDouble, iter, toDartIterable, JSIterable, JSIterator, print, DartExpando, DartMapView };
+export { DartEfficientLengthIterable, DartSetMixin, AbstractDartMap, DartConstantMap, DartHashMap, DartHashSet, DartLinkedHashSet, DartLinkedHashMap, DartMap, DartSet, DartStringBuffer, ArgumentError, ConcurrentModificationError, DartArrayIterator, DartConstantMapView, DartEfficientLengthMappedIterable, DartError, DartEs6LinkedHashMap, DartExpandIterable, DartExpandIterator, DartIterableBase, DartIterableMixin, DartJsLinkedHashMap, DartLinkedHashMapKeyIterable, DartLinkedHashMapKeyIterator, DartListBase, DartListIterator, DartListMapView, DartMapBase, DartMapMixin, DartMappedIterable, DartMappedListIterable, DartPrimitives, DartRandom, DartReversedListIterable, DartFixedLengthListMixin, DartSetBase, DartSkipIterable, DartSkipWhileIterable, DartSort, DartSubListIterable, DartTakeIterable, DartTakeWhileIterable, DartUnmodifiableListBase, DartUnmodifiableListMixin, DartUnmodifiableMapView, DartWhereIterable, DartWhereIterator, FixedLengthListBase, IndexError, JSFixedArray, JSMutableArray, JSUnmodifiableArray, LinkedHashMapCell, RangeError, StateError, UnmodifiableMapBase, UnsupportedError, DartObject, DartStackTrace, DartDuration, DartIntegerDivisionByZeroException, NullThrownError, DartSink, DartStopwatch, DartDateTime, FormatException, DartPattern, DartRegExp, DartMatch, DartBidirectionalIterator, DartString, DartStringMatch, DartRunes, DartRuneIterator, DartCodeUnits, JSNumber, JSInt, JSDouble, DartNumber, DartInt, DartDouble, iter, toDartIterable, JSIterable, JSIterator, print, DartExpando, DartMapView };
