@@ -40,10 +40,7 @@ export var useEm: () => void = (): void => {
 
 export namespace SomeClass {
     export type Constructors = "SomeClass" | "withName" | "withOrg";
-
-    export interface Interface extends Omit<SomeClass, Constructors> {
-
-    }
+    export type Interface = Omit<SomeClass, Constructors> ;
 }
 
 @DartClass
@@ -87,7 +84,7 @@ export class SomeClass implements SomeClass.Interface {
     withOrg(ord: number) {
         this.ord = 4;
         this.message = "no msg";
-        SomeClass.prototype.withName.call(this,'org');
+        SomeClass.prototype.withName.call(this, 'org');
     }
 
     static withOrg: new(ord: number) => SomeClass;
