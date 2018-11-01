@@ -1,4 +1,4 @@
-import { OperatorMethods } from "./utils";
+import { OperatorMethods, Omit } from "./utils";
 import * as core from "./core";
 import * as async from "./async";
 import * as typed_data from "./typed_data";
@@ -21,6 +21,10 @@ export declare class Encoding extends Codec<string, core.DartList<number>> {
     readonly name: string;
     static _nameToEncoding: core.DartMap<string, Encoding>;
     static getByName(name: string): Encoding;
+}
+export declare namespace Converter {
+    type Constructors = "Converter";
+    type Interface<S, T> = Omit<Converter<S, T>, Constructors>;
 }
 export declare class Converter<S, T> implements async.DartStreamTransformer<S, T> {
     constructor();

@@ -1,6 +1,6 @@
 /** Library asset:sample_project/lib/convert/convert.dart */
 import {is, equals, isNot} from "./_common";
-import {defaultConstructor, namedConstructor, namedFactory, defaultFactory, DartClass, Implements, op, Op, OperatorMethods, DartClassAnnotation, DartMethodAnnotation, DartPropertyAnnotation, Abstract, AbstractProperty} from "./utils";
+import {defaultConstructor, namedConstructor, namedFactory, defaultFactory, DartClass, Implements, op, Op, OperatorMethods, DartClassAnnotation, DartMethodAnnotation, DartPropertyAnnotation, Abstract, AbstractProperty, Omit} from "./utils";
 import * as _common from "./_common";
 import * as core from "./core";
 import * as async from "./async";
@@ -105,6 +105,10 @@ export class Encoding extends Codec<string, core.DartList<number>> {
     }
 }
 
+export namespace Converter {
+    export type Constructors = "Converter";
+    export type Interface<S,T> = Omit<Converter<S,T>,Constructors>
+}
 
 @DartClass
 @Implements(async.DartStreamTransformer)
