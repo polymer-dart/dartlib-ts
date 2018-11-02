@@ -2312,7 +2312,7 @@ const _ERROR: int = 8;
 
 @DartClass
 @Implements(Future)
-class _Future<T> implements Future<T> {
+export class _Future<T> implements Future<T> {
 
 
     /** Whether the future is complete, and as what. */
@@ -3026,7 +3026,7 @@ const STATE_CATCHERROR_TEST: int = MASK_ERROR | MASK_TEST_ERROR;
 const STATE_WHENCOMPLETE: int = MASK_WHENCOMPLETE;
 
 @DartClass
-class _FutureListener<S, T> {
+export class _FutureListener<S, T> {
 
     // Listeners on the same future are linked through this link.
     _nextListener: _FutureListener<any, any> = null;
@@ -3322,7 +3322,7 @@ type  ForkHandler = (self: DartZone, parent: DartZoneDelegate, zone: DartZone,
                      specification: DartZoneSpecification, zoneValues: DartMap<any, any>) => DartZone;
 
 /** Pair of error and stack trace. Returned by [Zone.errorCallback]. */
-class DartAsyncError extends Error {
+export class DartAsyncError extends Error {
     error: any;
     stackTrace: DartStackTrace;
 

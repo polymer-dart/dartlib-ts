@@ -2803,6 +2803,7 @@ _Future = _Future_1 = __decorate([
     DartClass,
     Implements(Future)
 ], _Future);
+export { _Future };
 Future._nullFuture = new _Future.value(null);
 let _Completer = class _Completer {
     constructor() {
@@ -2966,6 +2967,7 @@ __decorate([
 _FutureListener = __decorate([
     DartClass
 ], _FutureListener);
+export { _FutureListener };
 // Copyright (c) 2012, the Dart project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
@@ -3101,7 +3103,7 @@ DartTimer = DartTimer_1 = __decorate([
     DartClass
 ], DartTimer);
 /** Pair of error and stack trace. Returned by [Zone.errorCallback]. */
-class DartAsyncError extends Error {
+export class DartAsyncError extends Error {
     constructor(error, stackTrace) {
         super();
         this.error = error;

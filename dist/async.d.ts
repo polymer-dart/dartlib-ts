@@ -989,7 +989,7 @@ declare class DartZone {
      */
     get(key: any): any;
 }
-class _Future<T> implements Future<T> {
+export declare class _Future<T> implements Future<T> {
     /** Whether the future is complete, and as what. */
     _state: int;
     /**
@@ -1078,7 +1078,7 @@ type _FutureOnValue<S, T> = (value: S) => FutureOr<T>;
 type _FutureErrorTest = (error: any) => bool;
 /** Used by [WhenFuture]. */
 type _FutureAction = () => any;
-class _FutureListener<S, T> {
+export declare class _FutureListener<S, T> {
     _nextListener: _FutureListener<any, any>;
     result: _Future<T>;
     state: int;
@@ -1202,7 +1202,7 @@ type CreatePeriodicTimerHandler = (self: DartZone, parent: DartZoneDelegate, zon
 type PrintHandler = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, line: string) => void;
 type ForkHandler = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, specification: DartZoneSpecification, zoneValues: DartMap<any, any>) => DartZone;
 /** Pair of error and stack trace. Returned by [Zone.errorCallback]. */
-class DartAsyncError extends Error {
+export declare class DartAsyncError extends Error {
     error: any;
     stackTrace: DartStackTrace;
     constructor(error: any, stackTrace: DartStackTrace);
