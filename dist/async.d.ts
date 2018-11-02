@@ -1,5 +1,5 @@
 import { DartDuration, DartIterable, DartList, DartMap, DartSet, DartStackTrace, DartSink } from "./core";
-import { bool, int } from "./utils";
+import { bool, int, Omit } from "./utils";
 export declare type FutureOr<T> = Future<T> | T;
 /**
  * An object representing a delayed computation.
@@ -989,7 +989,7 @@ declare class DartZone {
      */
     get(key: any): any;
 }
-declare class _Future<T> implements Future<T> {
+class _Future<T> implements Future<T> {
     /** Whether the future is complete, and as what. */
     _state: int;
     /**
@@ -1073,12 +1073,12 @@ declare class _Future<T> implements Future<T> {
     readonly [Symbol.toStringTag]: "Promise";
 }
 /** The onValue and onError handlers return either a value or a future */
-declare type _FutureOnValue<S, T> = (value: S) => FutureOr<T>;
+type _FutureOnValue<S, T> = (value: S) => FutureOr<T>;
 /** Test used by [Future.catchError] to handle skip some errors. */
-declare type _FutureErrorTest = (error: any) => bool;
+type _FutureErrorTest = (error: any) => bool;
 /** Used by [WhenFuture]. */
-declare type _FutureAction = () => any;
-declare class _FutureListener<S, T> {
+type _FutureAction = () => any;
+class _FutureListener<S, T> {
     _nextListener: _FutureListener<any, any>;
     result: _Future<T>;
     state: int;
@@ -1185,24 +1185,24 @@ declare class DartTimer {
     static _createTimer(duration: DartDuration, callback: () => any): DartTimer;
     static _createPeriodicTimer(duration: DartDuration, callback: (timer: DartTimer) => any): DartTimer;
 }
-declare type ZoneCallback<R> = () => R;
-declare type ZoneUnaryCallback<R, T> = (arg: T) => R;
-declare type ZoneBinaryCallback<R, T1, T2> = (arg1: T1, arg2: T2) => R;
-declare type HandleUncaughtErrorHandler<R> = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, error: any, stackTrace: DartStackTrace) => R;
-declare type RunHandler<R> = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: () => R) => R;
-declare type RunUnaryHandler<R, T> = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: (arg: T) => R, arg: T) => R;
-declare type RunBinaryHandler<R, T1, T2> = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: (arg1: T1, arg2: T2) => R, arg1: T1, arg2: T2) => R;
-declare type RegisterCallbackHandler<R> = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: () => R) => ZoneCallback<R>;
-declare type RegisterUnaryCallbackHandler<R, T> = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: (arg: T) => R) => ZoneUnaryCallback<R, T>;
-declare type RegisterBinaryCallbackHandler<R, T1, T2> = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: (arg1: T1, arg2: T2) => R) => ZoneBinaryCallback<R, T1, T2>;
-declare type ErrorCallbackHandler = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, error: any, stackTrace: DartStackTrace) => DartAsyncError;
-declare type ScheduleMicrotaskHandler = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: () => any) => void;
-declare type CreateTimerHandler = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, duration: DartDuration, f: () => any) => DartTimer;
-declare type CreatePeriodicTimerHandler = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, period: DartDuration, f: (timer: DartTimer) => any) => DartTimer;
-declare type PrintHandler = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, line: string) => void;
-declare type ForkHandler = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, specification: DartZoneSpecification, zoneValues: DartMap<any, any>) => DartZone;
+type ZoneCallback<R> = () => R;
+type ZoneUnaryCallback<R, T> = (arg: T) => R;
+type ZoneBinaryCallback<R, T1, T2> = (arg1: T1, arg2: T2) => R;
+type HandleUncaughtErrorHandler<R> = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, error: any, stackTrace: DartStackTrace) => R;
+type RunHandler<R> = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: () => R) => R;
+type RunUnaryHandler<R, T> = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: (arg: T) => R, arg: T) => R;
+type RunBinaryHandler<R, T1, T2> = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: (arg1: T1, arg2: T2) => R, arg1: T1, arg2: T2) => R;
+type RegisterCallbackHandler<R> = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: () => R) => ZoneCallback<R>;
+type RegisterUnaryCallbackHandler<R, T> = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: (arg: T) => R) => ZoneUnaryCallback<R, T>;
+type RegisterBinaryCallbackHandler<R, T1, T2> = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: (arg1: T1, arg2: T2) => R) => ZoneBinaryCallback<R, T1, T2>;
+type ErrorCallbackHandler = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, error: any, stackTrace: DartStackTrace) => DartAsyncError;
+type ScheduleMicrotaskHandler = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, f: () => any) => void;
+type CreateTimerHandler = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, duration: DartDuration, f: () => any) => DartTimer;
+type CreatePeriodicTimerHandler = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, period: DartDuration, f: (timer: DartTimer) => any) => DartTimer;
+type PrintHandler = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, line: string) => void;
+type ForkHandler = (self: DartZone, parent: DartZoneDelegate, zone: DartZone, specification: DartZoneSpecification, zoneValues: DartMap<any, any>) => DartZone;
 /** Pair of error and stack trace. Returned by [Zone.errorCallback]. */
-declare class DartAsyncError extends Error {
+class DartAsyncError extends Error {
     error: any;
     stackTrace: DartStackTrace;
     constructor(error: any, stackTrace: DartStackTrace);
@@ -2297,6 +2297,10 @@ interface DartStreamSink<S> extends DartEventSink<S>, DartStreamConsumer<S> {
      *   (for example by cancelling a stream subscription).
      */
     readonly done: Future<any>;
+}
+export declare namespace DartStreamTransformer {
+    type Constructors = never;
+    type Interface<S, T> = Omit<DartStreamTransformer<S, T>, Constructors>;
 }
 /**
  * Transforms a Stream.

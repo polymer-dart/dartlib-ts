@@ -54,7 +54,7 @@ import {
     RangeError,
     DartSink, DartIterator, DartError, DartObject, DartStopwatch, DartIterableBase, JSIterator
 } from "./core";
-import {$with, Abstract, AbstractProperty, bool, DartClass, defaultConstructor, defaultFactory, Implements, int, namedConstructor, namedFactory, Op, Operator, OperatorMethods, With} from "./utils";
+import {$with, Abstract, AbstractProperty, bool, DartClass, defaultConstructor, defaultFactory, Implements, int, namedConstructor, namedFactory, Op, Operator, OperatorMethods, With, Omit} from "./utils";
 import {is, equals, isNot} from './_common';
 import {printToZone, printToConsole} from "./_internal";
 /*
@@ -6278,7 +6278,10 @@ interface DartStreamSink<S> extends DartEventSink<S>, DartStreamConsumer<S> {
      */
     readonly done: Future<any>;
 }
-
+export namespace DartStreamTransformer {
+    export type Constructors = never;
+    export type Interface<S,T> = Omit<DartStreamTransformer<S,T>,Constructors>
+}
 /**
  * Transforms a Stream.
  *
