@@ -5911,6 +5911,9 @@ let NativeByteBufferMixin = class NativeByteBufferMixin {
     slice(begin, end) {
         throw 'abstract';
     }
+    get [Symbol.toStringTag]() {
+        return 'NativeByteBufferMixin';
+    }
 };
 __decorate([
     Abstract
@@ -5980,6 +5983,9 @@ let NativeByteBuffer = class NativeByteBuffer extends ArrayBuffer {
     }
     asByteData(offsetInBytes, length) {
         throw 'abstract';
+    }
+    get [Symbol.toStringTag]() {
+        return 'NativeByteBuffer';
     }
 };
 __decorate([

@@ -1638,7 +1638,7 @@ export declare class NativeByteBufferMixin implements ByteBuffer {
     asByteData(offsetInBytes?: number, length?: number): ByteData;
     readonly byteLength: number;
     slice(begin: number, end?: number): ArrayBuffer;
-    readonly [Symbol.toStringTag]: "ArrayBuffer";
+    readonly [Symbol.toStringTag]: any;
 }
 export declare class NativeByteBuffer extends ArrayBuffer implements ByteBuffer, NativeByteBufferMixin {
     constructor(len: any);
@@ -1658,6 +1658,7 @@ export declare class NativeByteBuffer extends ArrayBuffer implements ByteBuffer,
     asFloat32x4List(offsetInBytes?: number, length?: number): Float32x4List;
     asFloat64x2List(offsetInBytes?: number, length?: number): Float64x2List;
     asByteData(offsetInBytes?: number, length?: number): ByteData;
+    readonly [Symbol.toStringTag]: any;
 }
 export declare class NativeFloat32x4List extends Float32x4List {
     _storage: NativeFloat32List;

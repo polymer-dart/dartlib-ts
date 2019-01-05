@@ -5256,7 +5256,9 @@ export class NativeByteBufferMixin implements ByteBuffer {
         throw 'abstract';
     }
 
-    readonly [Symbol.toStringTag]: "ArrayBuffer";
+    get [Symbol.toStringTag]():any {
+        return 'NativeByteBufferMixin';
+    } 
 }
 
 // Add the mixin to the ArrayBuffer directly
@@ -5348,6 +5350,10 @@ export class NativeByteBuffer extends ArrayBuffer implements ByteBuffer, NativeB
     asByteData(offsetInBytes?: number, length?: number): ByteData {
         throw 'abstract'
     }
+
+    get [Symbol.toStringTag]():any {
+        return 'NativeByteBuffer';
+    } 
 }
 
 @DartClass
