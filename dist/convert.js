@@ -2123,7 +2123,7 @@ let _JsonMap = _JsonMap_1 = class _JsonMap {
         ;
         let keys = this._data;
         if (keys == null) {
-            keys = this._data = _JsonMap_1._getPropertyNames(this._original);
+            keys = this._data = new core.DartList.fromArray(_JsonMap_1._getPropertyNames(this._original));
         }
         return keys /* JS('JSExtendableArray', '#', keys) */;
     }
