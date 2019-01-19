@@ -1,3 +1,6 @@
+### v0.1.28
+   - some fixes 
+
 ### v0.1.17
    - string methods accept both string and patterns
    
