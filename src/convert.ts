@@ -107,7 +107,7 @@ export class Encoding extends Codec<string, core.DartList<number>> {
 
 export namespace Converter {
     export type Constructors = "Converter";
-    export type Interface<S,T> = Omit<Converter<S,T>,Constructors>
+    export type Interface<S, T> = Omit<Converter<S, T>, Constructors>
 }
 
 @DartClass
@@ -2142,7 +2142,7 @@ export class _JsonMap implements core.DartMap<string, any> {
         ;
         let keys: core.DartList<any> = this._data;
         if (keys == null) {
-            keys = this._data = _JsonMap._getPropertyNames(this._original);
+            keys = this._data = new core.DartList.fromArray(_JsonMap._getPropertyNames(this._original));
         }
         return keys/* JS('JSExtendableArray', '#', keys) */;
     }
@@ -2190,7 +2190,7 @@ export class _JsonMap implements core.DartMap<string, any> {
     }
 
     static _isUnprocessed(object: any): boolean {
-        return typeof(object) == "undefined"/* JS('bool', 'typeof(#)=="undefined"', object) */;
+        return typeof (object) == "undefined"/* JS('bool', 'typeof(#)=="undefined"', object) */;
     }
 
     static _newJavaScriptObject() {

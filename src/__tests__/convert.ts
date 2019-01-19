@@ -1,6 +1,7 @@
 import {properties} from "../convert";
 import {is} from "../_common";
 import {DartList, DartMap} from "../core";
+import {Op, op} from "../utils";
 
 describe('convert', () => {
     it('decodes some json', () => {
@@ -56,6 +57,27 @@ describe('convert', () => {
     it('decodes utf8', () => {
         let res = properties.UTF8.decode(new DartList.literal(72, 101, 108, 108, 111, 33));
         expect(res).toEqual("Hello!");
+    });
+
+    it('Works with fromJsonMap', () => {
+        const fromJSONMap: (json: any, translator: (dynamic: any) => any) => DartMap<any, any> = (json: any, translator: (dynamic: any) => any): DartMap<any, any> => {
+            if (op(Op.EQUALS, json, null) || !(is(json, DartMap))) {
+                return null;
+            }
+            return new DartMap.fromIterable((json as DartMap<any, any>).keys, {
+                key: (k: any) => {
+                    return k;
+                }, value: (k: any) => {
+                    return translator(json.get(k));
+                }
+            });
+        };
+
+        const json = properties.JSON.decode('{ "key1":5,"key2":6}');
+        const res = fromJSONMap(json, n => n + 1);
+
+        expect(res.get('key1')).toEqual(6);
+        expect(res.get('key2')).toEqual(7);
     });
 
 });
