@@ -1,5 +1,5 @@
 import {DartDateTime, DartDuration, DartIterable, DartList} from "../core";
-import {dartAsync, DartCompleter, DartStream, Future, stream} from "../async";
+import {dartAsync, DartCompleter, DartStream, DartStreamController, Future, stream} from "../async";
 import {$with} from "../utils";
 
 describe("async", () => {
@@ -67,18 +67,44 @@ describe("async", () => {
             expect(await str).toEqual('4 secs');
         });
 
-        it('catches async errors',async()=>{
+        it('catches async errors', async () => {
             let error = "not";
             try {
                 let c = new DartCompleter();
-                await new Future.delayed(new DartDuration({seconds:1})).then(()=>{
+                await new Future.delayed(new DartDuration({seconds: 1})).then(() => {
                     c.completeError("error");
                 });
                 await c.future;
             } catch (er) {
-                error=er;
+                error = er;
             }
             expect(error).toEqual('error');
+        });
+    });
+
+    describe('broadcast', () => {
+        it('creates stream with broadcast', async () => {
+            let controller = new DartStreamController.broadcast<number>();
+
+            let counter = 0;
+            controller.stream.listen((e) => counter += e);
+
+            let counter2 = 0;
+            let futureList = controller.stream.map((n) => n + 1).listen((x) => counter2 += x);
+
+            await new Future.delayed(new DartDuration({seconds: 1})).then((_) => controller.add(1));
+
+            await new Future.delayed(new DartDuration({seconds: 1})).then((_) => controller.add(1));
+
+            await new Future.delayed(new DartDuration({seconds: 1}));
+
+            expect(counter).toBe(2);
+
+
+            expect(counter2).toBe(4);
+
+            controller.close();
+
         });
     });
 

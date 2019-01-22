@@ -15,7 +15,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var Future_1, _RootZone_1, DartZone_1, _Future_1, DartTimer_1, DartZoneSpecification_1, _PendingEvents_1, _DistinctStream_1, _ControllerStream_1;
+var Future_1, _RootZone_1, DartZone_1, _Future_1, DartTimer_1, DartZoneSpecification_1, _PendingEvents_1, _DistinctStream_1, _ControllerStream_1, _BroadcastStreamController_1;
 //part of dart.async;
 /// A type representing values that are either `Future<T>` or `T`.
 ///
@@ -6321,9 +6321,9 @@ let _GeneratedStreamImpl = class _GeneratedStreamImpl extends _StreamImpl {
      */
     constructor(_peding) {
         super();
-        this._isUsed = false;
     }
     _GeneratedStreamImpl(_pending) {
+        this._isUsed = false;
         super._init();
         this._pending = _pending;
     }
@@ -7410,9 +7410,10 @@ let DartStreamController = class DartStreamController {
      */
     static _broadcast(_) {
         let { onListen, onCancel, sync } = Object.assign({ sync: false }, _);
-        return sync
+        let _controller = sync
             ? new _SyncBroadcastStreamController(onListen, onCancel)
             : new _AsyncBroadcastStreamController(onListen, onCancel);
+        return _controller;
     }
     /**
      * The callback which is called when the stream is listened to.
@@ -7702,7 +7703,6 @@ class _StreamControllerLifecycle extends DartObject {
 class _StreamController extends DartObject {
     constructor(onListen, onPause, onResume, onCancel) {
         super();
-        /** Current state of the controller. */
         this._state = _StreamController._STATE_INITIAL;
         this.onListen = onListen;
         this.onPause = onPause;
@@ -8047,6 +8047,22 @@ __decorate([
 __decorate([
     Abstract
 ], _StreamController.prototype, "_sendError", null);
+/** The controller is in its initial state with no subscription. */
+_StreamController._STATE_INITIAL = 0;
+/** The controller has a subscription, but hasn't been closed or canceled. */
+_StreamController._STATE_SUBSCRIBED = 1;
+/** The subscription is canceled. */
+_StreamController._STATE_CANCELED = 2;
+/** Mask for the subscription state. */
+_StreamController._STATE_SUBSCRIPTION_MASK = 3;
+_StreamController._STATE_CLOSED = 4;
+/**
+ * The controller is in the middle of an [addStream] operation.
+ *
+ * While adding events from a stream, no new events can be added directly
+ * on the controller.
+ */
+_StreamController._STATE_ADDSTREAM = 8;
 let _SyncStreamControllerDispatch = class _SyncStreamControllerDispatch extends _StreamController {
     get _state() {
         throw 'abstract';
@@ -8282,12 +8298,17 @@ class _BroadcastSubscription extends _ControllerSubscription {
 _BroadcastSubscription._STATE_EVENT_ID = 1;
 _BroadcastSubscription._STATE_FIRING = 2;
 _BroadcastSubscription._STATE_REMOVE_AFTER_FIRING = 4;
-class _BroadcastStreamController extends DartStreamController {
+let _BroadcastStreamController = _BroadcastStreamController_1 = class _BroadcastStreamController extends DartStreamController {
     constructor(onListen, onCancel) {
         super();
         this.onListen = onListen;
         this.onCancel = onCancel;
-        this._state = _BroadcastStreamController._STATE_INITIAL;
+        this._state = _BroadcastStreamController_1._STATE_INITIAL;
+    }
+    _BroadcastStreamController(onListen, onCancel) {
+        this.onListen = onListen;
+        this.onCancel = onCancel;
+        this._state = _BroadcastStreamController_1._STATE_INITIAL;
     }
     get onPause() {
         throw new UnsupportedError("Broadcast stream controllers do not support pause callbacks");
@@ -8309,7 +8330,7 @@ class _BroadcastStreamController extends DartStreamController {
         return new _StreamSinkWrapper(this);
     }
     get isClosed() {
-        return (this._state & _BroadcastStreamController._STATE_CLOSED) != 0;
+        return (this._state & _BroadcastStreamController_1._STATE_CLOSED) != 0;
     }
     /**
      * A broadcast controller is never paused.
@@ -8335,13 +8356,13 @@ class _BroadcastStreamController extends DartStreamController {
     }
     /** Whether an event is being fired (sent to some, but not all, listeners). */
     get _isFiring() {
-        return (this._state & _BroadcastStreamController._STATE_FIRING) != 0;
+        return (this._state & _BroadcastStreamController_1._STATE_FIRING) != 0;
     }
     get _isAddingStream() {
-        return (this._state & _BroadcastStreamController._STATE_ADDSTREAM) != 0;
+        return (this._state & _BroadcastStreamController_1._STATE_ADDSTREAM) != 0;
     }
     get _mayAddEvent() {
-        return (this._state < _BroadcastStreamController._STATE_CLOSED);
+        return (this._state < _BroadcastStreamController_1._STATE_CLOSED);
     }
     _ensureDoneFuture() {
         if (this._doneFuture != null)
@@ -8355,7 +8376,7 @@ class _BroadcastStreamController extends DartStreamController {
     /** Adds subscription to linked list of active listeners. */
     _addListener(subscription) {
         //assert(identical(subscription._next, subscription));
-        subscription._eventState = (this._state & _BroadcastStreamController._STATE_EVENT_ID);
+        subscription._eventState = (this._state & _BroadcastStreamController_1._STATE_EVENT_ID);
         // Insert in linked list as last subscription.
         let oldLast = this._lastSubscription;
         this._lastSubscription = subscription;
@@ -8457,7 +8478,7 @@ class _BroadcastStreamController extends DartStreamController {
         }
         if (!this._mayAddEvent)
             throw this._addEventError();
-        this._state |= _BroadcastStreamController._STATE_CLOSED;
+        this._state |= _BroadcastStreamController_1._STATE_CLOSED;
         let doneFuture = this._ensureDoneFuture();
         this._sendDone();
         return doneFuture;
@@ -8469,7 +8490,7 @@ class _BroadcastStreamController extends DartStreamController {
         let { cancelOnError } = Object.assign({ cancelOnError: true }, _);
         if (!this._mayAddEvent)
             throw this._addEventError();
-        this._state |= _BroadcastStreamController._STATE_ADDSTREAM;
+        this._state |= _BroadcastStreamController_1._STATE_ADDSTREAM;
         this._addStreamState = new _AddStreamState(this, stream, cancelOnError);
         return this._addStreamState.addStreamFuture;
     }
@@ -8484,7 +8505,7 @@ class _BroadcastStreamController extends DartStreamController {
         //assert(_isAddingStream);
         let addState = this._addStreamState;
         this._addStreamState = null;
-        this._state &= ~_BroadcastStreamController._STATE_ADDSTREAM;
+        this._state &= ~_BroadcastStreamController_1._STATE_ADDSTREAM;
         addState.complete();
     }
     // Event handling.
@@ -8495,14 +8516,14 @@ class _BroadcastStreamController extends DartStreamController {
         if (this._isEmpty)
             return;
         // Get event id of this event.
-        let id = (this._state & _BroadcastStreamController._STATE_EVENT_ID);
+        let id = (this._state & _BroadcastStreamController_1._STATE_EVENT_ID);
         // Start firing (set the _BroadcastStreamController._STATE_FIRING bit). We don't do [onCancel]
         // callbacks while firing, and we prevent reentrancy of this function.
         //
         // Set [_state]'s event id to the next event's id.
         // Any listeners added while firing this event will expect the next event,
         // not this one, and won't get notified.
-        this._state ^= _BroadcastStreamController._STATE_EVENT_ID | _BroadcastStreamController._STATE_FIRING;
+        this._state ^= _BroadcastStreamController_1._STATE_EVENT_ID | _BroadcastStreamController_1._STATE_FIRING;
         let subscription = this._firstSubscription;
         while (subscription != null) {
             if (subscription._expectsEvent(id)) {
@@ -8520,7 +8541,7 @@ class _BroadcastStreamController extends DartStreamController {
                 subscription = subscription._next;
             }
         }
-        this._state &= ~_BroadcastStreamController._STATE_FIRING;
+        this._state &= ~_BroadcastStreamController_1._STATE_FIRING;
         if (this._isEmpty) {
             this._callOnCancel();
         }
@@ -8548,12 +8569,15 @@ class _BroadcastStreamController extends DartStreamController {
     get hashCode() {
         throw 'abstract';
     }
-}
+};
 _BroadcastStreamController._STATE_INITIAL = 0;
 _BroadcastStreamController._STATE_EVENT_ID = 1;
 _BroadcastStreamController._STATE_FIRING = 2;
 _BroadcastStreamController._STATE_CLOSED = 4;
 _BroadcastStreamController._STATE_ADDSTREAM = 8;
+__decorate([
+    defaultConstructor
+], _BroadcastStreamController.prototype, "_BroadcastStreamController", null);
 __decorate([
     Abstract
 ], _BroadcastStreamController.prototype, "_sendData", null);
@@ -8569,6 +8593,9 @@ __decorate([
 __decorate([
     Abstract
 ], _BroadcastStreamController.prototype, "hashCode", null);
+_BroadcastStreamController = _BroadcastStreamController_1 = __decorate([
+    DartClass
+], _BroadcastStreamController);
 class _SyncBroadcastStreamController extends _BroadcastStreamController {
     constructor(onListen, onCancel) {
         super(onListen, onCancel);
@@ -8620,9 +8647,12 @@ class _SyncBroadcastStreamController extends _BroadcastStreamController {
         }
     }
 }
-class _AsyncBroadcastStreamController extends _BroadcastStreamController {
+let _AsyncBroadcastStreamController = class _AsyncBroadcastStreamController extends _BroadcastStreamController {
     constructor(onListen, onCancel) {
         super(onListen, onCancel);
+    }
+    _AsyncBroadcastStreamController(onListen, onCancel) {
+        super._BroadcastStreamController(onListen, onCancel);
     }
     // EventDispatch interface.
     _sendData(data) {
@@ -8647,7 +8677,13 @@ class _AsyncBroadcastStreamController extends _BroadcastStreamController {
             this._doneFuture._asyncComplete(null);
         }
     }
-}
+};
+__decorate([
+    defaultConstructor
+], _AsyncBroadcastStreamController.prototype, "_AsyncBroadcastStreamController", null);
+_AsyncBroadcastStreamController = __decorate([
+    DartClass
+], _AsyncBroadcastStreamController);
 /**
  * Stream controller that is used by [Stream.asBroadcastStream].
  *

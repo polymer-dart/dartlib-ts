@@ -2410,9 +2410,9 @@ export class _Future<T> implements Future<T> {
     }
 
 
-    then<E>(f: (value: T) => FutureOr<E>, _?: { onError?: Function }|Function): Future<E> {
+    then<E>(f: (value: T) => FutureOr<E>, _?: { onError?: Function } | Function): Future<E> {
         if (typeof _ === 'function') {
-            _ = {onError:_};
+            _ = {onError: _};
         }
         let {onError} = Object.assign({}, _);
         let currentZone: DartZone = DartZone.current;
@@ -6278,10 +6278,12 @@ interface DartStreamSink<S> extends DartEventSink<S>, DartStreamConsumer<S> {
      */
     readonly done: Future<any>;
 }
+
 export namespace DartStreamTransformer {
     export type Constructors = never;
-    export type Interface<S,T> = Omit<DartStreamTransformer<S,T>,Constructors>
+    export type Interface<S, T> = Omit<DartStreamTransformer<S, T>, Constructors>
 }
+
 /**
  * Transforms a Stream.
  *
@@ -7172,7 +7174,7 @@ type  _EventGenerator<T> = () => _PendingEvents<T>;
 @DartClass
 class _GeneratedStreamImpl<T> extends _StreamImpl<T> {
     _pending: _EventGenerator<T>;
-    _isUsed: bool = false;
+    _isUsed: bool;
 
     /**
      * Initializes the stream to have only the events provided by a
@@ -7186,6 +7188,7 @@ class _GeneratedStreamImpl<T> extends _StreamImpl<T> {
 
     @defaultConstructor
     protected _GeneratedStreamImpl(_pending: _EventGenerator<T>) {
+        this._isUsed = false;
         super._init();
         this._pending = _pending;
     }
@@ -8516,9 +8519,12 @@ class DartStreamController<T> implements DartStreamSink<T> {
     protected static _broadcast<T>(
         _?: { onListen?: () => any, onCancel?: () => any, sync?: bool }): DartStreamController<T> {
         let {onListen, onCancel, sync} = Object.assign({sync: false}, _);
-        return sync
+
+        let _controller = sync
             ? new _SyncBroadcastStreamController<T>(onListen, onCancel)
             : new _AsyncBroadcastStreamController<T>(onListen, onCancel);
+
+        return _controller;
     }
 
     static broadcast: new<T>(_?: { onListen?: () => any, onCancel?: () => any, sync?: bool }) => DartStreamController<T>;
@@ -8876,7 +8882,7 @@ class _StreamController<T> extends DartObject
     _varData: any;
 
     /** Current state of the controller. */
-    _state = _StreamController._STATE_INITIAL;
+    _state;
 
     /**
      * Future completed when the stream sends its last event.
@@ -8895,6 +8901,7 @@ class _StreamController<T> extends DartObject
 
     constructor(onListen: ControllerCallback, onPause: ControllerCallback, onResume: ControllerCallback, onCancel: ControllerCancelCallback) {
         super();
+        this._state = _StreamController._STATE_INITIAL;
         this.onListen = onListen;
         this.onPause = onPause;
         this.onResume = onResume;
@@ -9231,6 +9238,25 @@ class _StreamController<T> extends DartObject
     }
 }
 
+
+/** The controller is in its initial state with no subscription. */
+_StreamController._STATE_INITIAL = 0;
+/** The controller has a subscription, but hasn't been closed or canceled. */
+_StreamController._STATE_SUBSCRIBED = 1;
+/** The subscription is canceled. */
+_StreamController._STATE_CANCELED = 2;
+/** Mask for the subscription state. */
+_StreamController._STATE_SUBSCRIPTION_MASK = 3;
+
+_StreamController._STATE_CLOSED = 4;
+/**
+ * The controller is in the middle of an [addStream] operation.
+ *
+ * While adding events from a stream, no new events can be added directly
+ * on the controller.
+ */
+_StreamController._STATE_ADDSTREAM = 8;
+
 @DartClass
 @Implements(SynchronousStreamController)
 class _SyncStreamControllerDispatch<T>
@@ -9525,6 +9551,7 @@ class _BroadcastSubscription<T> extends _ControllerSubscription<T> {
     // _onCancel is inherited.
 }
 
+@DartClass
 class _BroadcastStreamController<T>
     extends DartStreamController<T>
     implements _StreamControllerLifecycle<T>,
@@ -9566,6 +9593,13 @@ class _BroadcastStreamController<T>
 
     constructor(onListen: ControllerCallback, onCancel: ControllerCancelCallback) {
         super();
+        this.onListen = onListen;
+        this.onCancel = onCancel;
+        this._state = _BroadcastStreamController._STATE_INITIAL;
+    }
+
+    @defaultConstructor
+    protected _BroadcastStreamController(onListen: ControllerCallback, onCancel: ControllerCancelCallback) {
         this.onListen = onListen;
         this.onCancel = onCancel;
         this._state = _BroadcastStreamController._STATE_INITIAL;
@@ -9927,9 +9961,15 @@ class _SyncBroadcastStreamController<T> extends _BroadcastStreamController<T>
     }
 }
 
+@DartClass
 class _AsyncBroadcastStreamController<T> extends _BroadcastStreamController<T> {
     constructor(onListen: () => any, onCancel: () => any) {
         super(onListen, onCancel);
+    }
+
+    @defaultConstructor
+    _AsyncBroadcastStreamController(onListen: () => any, onCancel: () => any) {
+        super._BroadcastStreamController(onListen, onCancel);
     }
 
     // EventDispatch interface.
