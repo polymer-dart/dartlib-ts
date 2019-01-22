@@ -4875,7 +4875,7 @@ let DartStream = class DartStream {
         this.listen((data) => {
             result.add(data);
         }, {
-            onError: future._completeError,
+            onError: future._completeError.bind(future),
             onDone: () => {
                 future._complete(result);
             },
@@ -8301,9 +8301,6 @@ _BroadcastSubscription._STATE_REMOVE_AFTER_FIRING = 4;
 let _BroadcastStreamController = _BroadcastStreamController_1 = class _BroadcastStreamController extends DartStreamController {
     constructor(onListen, onCancel) {
         super();
-        this.onListen = onListen;
-        this.onCancel = onCancel;
-        this._state = _BroadcastStreamController_1._STATE_INITIAL;
     }
     _BroadcastStreamController(onListen, onCancel) {
         this.onListen = onListen;
@@ -8596,9 +8593,12 @@ __decorate([
 _BroadcastStreamController = _BroadcastStreamController_1 = __decorate([
     DartClass
 ], _BroadcastStreamController);
-class _SyncBroadcastStreamController extends _BroadcastStreamController {
+let _SyncBroadcastStreamController = class _SyncBroadcastStreamController extends _BroadcastStreamController {
     constructor(onListen, onCancel) {
         super(onListen, onCancel);
+    }
+    _SyncBroadcastStreamController(onListen, onCancel) {
+        super._BroadcastStreamController(onListen, onCancel);
     }
     // EventDispatch interface.
     get _mayAddEvent() {
@@ -8646,7 +8646,13 @@ class _SyncBroadcastStreamController extends _BroadcastStreamController {
             this._doneFuture._asyncComplete(null);
         }
     }
-}
+};
+__decorate([
+    defaultConstructor
+], _SyncBroadcastStreamController.prototype, "_SyncBroadcastStreamController", null);
+_SyncBroadcastStreamController = __decorate([
+    DartClass
+], _SyncBroadcastStreamController);
 let _AsyncBroadcastStreamController = class _AsyncBroadcastStreamController extends _BroadcastStreamController {
     constructor(onListen, onCancel) {
         super(onListen, onCancel);
@@ -8911,14 +8917,16 @@ _StreamSinkTransformer = __decorate([
  * listening to this stream is the sink-mapper invoked. The result is used
  * to create a StreamSubscription that transforms events.
  */
-class _BoundSinkStream extends DartStream {
+let _BoundSinkStream = class _BoundSinkStream extends DartStream {
     constructor(_stream, _sinkMapper) {
         super();
-        this._stream = _stream;
-        this._sinkMapper = _sinkMapper;
     }
     get isBroadcast() {
         return this._stream.isBroadcast;
+    }
+    _BoundSinkStream(_stream, _sinkMapper) {
+        this._stream = _stream;
+        this._sinkMapper = _sinkMapper;
     }
     listen(onData, _) {
         let { onError, onDone, cancelOnError } = Object.assign({}, _);
@@ -8926,7 +8934,13 @@ class _BoundSinkStream extends DartStream {
         let subscription = new _SinkTransformerStreamSubscription(this._stream, this._sinkMapper, onData, onError, onDone, cancelOnError);
         return subscription;
     }
-}
+};
+__decorate([
+    defaultConstructor
+], _BoundSinkStream.prototype, "_BoundSinkStream", null);
+_BoundSinkStream = __decorate([
+    DartClass
+], _BoundSinkStream);
 /**
  * Wraps handlers (from [StreamTransformer.fromHandlers]) into an `EventSink`.
  *

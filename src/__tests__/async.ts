@@ -1,6 +1,7 @@
 import {DartDateTime, DartDuration, DartIterable, DartList} from "../core";
-import {dartAsync, DartCompleter, DartStream, DartStreamController, Future, stream} from "../async";
+import {dartAsync, DartCompleter, DartStream, DartStreamController, Future, stream, toDartStream} from "../async";
 import {$with} from "../utils";
+import {JsonDecoder, properties} from "../convert";
 
 describe("async", () => {
     describe('future', () => {
@@ -104,6 +105,22 @@ describe("async", () => {
             expect(counter2).toBe(4);
 
             controller.close();
+
+        });
+
+        it('works with json decoder ?', async () => {
+            let source = stream(async function* () {
+                for (let i = 0; i < 4; i++) {
+                    await new Future.delayed(new DartDuration({milliseconds: 200}));
+                    yield `{ "val": ${i}}`;
+                }
+            });
+
+            let result = await source.map((x)=>properties.JSON.decode(x)).toList();
+
+            expect(result[0].get('val')).toBe(0);
+            expect(result[1].get('val')).toBe(1);
+
 
         });
     });

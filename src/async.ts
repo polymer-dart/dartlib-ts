@@ -5432,7 +5432,7 @@ class DartStream<T> implements AsyncIterable<T> {
             (data: T) => {
                 result.add(data);
             }, {
-                onError: future._completeError,
+                onError: future._completeError.bind(future),
                 onDone: () => {
                     future._complete(result);
                 },
@@ -9593,9 +9593,7 @@ class _BroadcastStreamController<T>
 
     constructor(onListen: ControllerCallback, onCancel: ControllerCancelCallback) {
         super();
-        this.onListen = onListen;
-        this.onCancel = onCancel;
-        this._state = _BroadcastStreamController._STATE_INITIAL;
+
     }
 
     @defaultConstructor
@@ -9905,10 +9903,16 @@ class _BroadcastStreamController<T>
     }
 }
 
+@DartClass
 class _SyncBroadcastStreamController<T> extends _BroadcastStreamController<T>
     implements SynchronousStreamController<T> {
     constructor(onListen: () => any, onCancel: () => any) {
         super(onListen, onCancel);
+    }
+
+    @defaultConstructor
+    _SyncBroadcastStreamController(onListen: () => any, onCancel: () => any) {
+        super._BroadcastStreamController(onListen, onCancel);
     }
 
     // EventDispatch interface.
@@ -10267,6 +10271,7 @@ class _StreamSinkTransformer<S, T> implements DartStreamTransformer<S, T> {
  * listening to this stream is the sink-mapper invoked. The result is used
  * to create a StreamSubscription that transforms events.
  */
+@DartClass
 class _BoundSinkStream<S, T> extends DartStream<T> {
     _sinkMapper: _SinkMapper<S, T>;
     _stream: DartStream<S>;
@@ -10277,6 +10282,12 @@ class _BoundSinkStream<S, T> extends DartStream<T> {
 
     constructor(_stream: DartStream<S>, _sinkMapper: _SinkMapper<S, T>) {
         super();
+
+    }
+
+    @defaultConstructor
+    _BoundSinkStream(_stream: DartStream<S>, _sinkMapper: _SinkMapper<S, T>) {
+
         this._stream = _stream;
         this._sinkMapper = _sinkMapper
     }
