@@ -648,6 +648,11 @@ class Future<T> implements Promise<T> {
         throw 'abstract';
     }
 
+    @Abstract
+    finally(onfinally?: (() => void) | undefined | null): Promise<T> {
+        throw 'abstract';
+    }
+
     /**
      * Handles errors emitted by this [Future].
      *
@@ -2423,6 +2428,10 @@ export class _Future<T> implements Future<T> {
             }
         }
         return this._thenNoZoneRegistration<E>(f, onError);
+    }
+
+    finally(onfinally?: (() => void) | undefined | null): Promise<T> {
+        return this.whenComplete(onfinally);
     }
 
 

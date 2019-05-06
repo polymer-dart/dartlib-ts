@@ -560,6 +560,9 @@ let Future = Future_1 = class Future {
     then(onfulfilled, onrejected) {
         throw 'abstract';
     }
+    finally(onfinally) {
+        throw 'abstract';
+    }
     /**
      * Handles errors emitted by this [Future].
      *
@@ -707,6 +710,9 @@ let Future = Future_1 = class Future {
 __decorate([
     Abstract
 ], Future.prototype, "then", null);
+__decorate([
+    Abstract
+], Future.prototype, "finally", null);
 __decorate([
     Abstract
 ], Future.prototype, "catchError", null);
@@ -2290,6 +2296,9 @@ let _Future = _Future_1 = class _Future {
             }
         }
         return this._thenNoZoneRegistration(f, onError);
+    }
+    finally(onfinally) {
+        return this.whenComplete(onfinally);
     }
     // This method is used by async/await.
     _thenNoZoneRegistration(f, onError) {

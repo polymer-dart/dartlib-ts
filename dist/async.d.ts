@@ -310,6 +310,7 @@ declare class Future<T> implements Promise<T> {
     then<S, TResult2 = never>(onValue?: (value: T) => Future<S> | PromiseLike<S> | S, _?: ((reason: any) => (PromiseLike<TResult2> | TResult2)) | {
         onError?: Function;
     }): Future<S>;
+    finally(onfinally?: (() => void) | undefined | null): Promise<T>;
     /**
      * Handles errors emitted by this [Future].
      *
@@ -1035,6 +1036,7 @@ export declare class _Future<T> implements Future<T> {
     then<E>(f: (value: T) => FutureOr<E>, _?: {
         onError?: Function;
     } | Function): Future<E>;
+    finally(onfinally?: (() => void) | undefined | null): Promise<T>;
     _thenNoZoneRegistration<E>(f: (value: T) => FutureOr<E>, onError: Function): Future<E>;
     catchError(onError: Function, _?: {
         test: (error: any) => bool;
