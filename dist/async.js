@@ -2283,6 +2283,7 @@ let _Future = _Future_1 = class _Future {
         this._state = _CHAINED;
         this._resultOrListeners = source;
     }
+    // @ts-ignore
     then(f, _) {
         if (typeof _ === 'function') {
             _ = { onError: _ };

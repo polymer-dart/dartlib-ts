@@ -2414,7 +2414,7 @@ export class _Future<T> implements Future<T> {
         this._resultOrListeners = source;
     }
 
-
+    // @ts-ignore
     then<E>(f: (value: T) => FutureOr<E>, _?: { onError?: Function } | Function): Future<E> {
         if (typeof _ === 'function') {
             _ = {onError: _};

@@ -1033,6 +1033,7 @@ export declare class _Future<T> implements Future<T> {
     readonly _isComplete: bool;
     readonly _hasError: bool;
     _setChained(source: _Future<any>): void;
+    // @ts-ignore
     then<E>(f: (value: T) => FutureOr<E>, _?: {
         onError?: Function;
     } | Function): Future<E>;
